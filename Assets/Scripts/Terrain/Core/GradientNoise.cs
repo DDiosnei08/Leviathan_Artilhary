@@ -39,9 +39,12 @@ namespace Leviathan.Terrain
         {
             unchecked
             {
-                uint h = ((uint)x * 0x9E3779B1u) ^ ((uint)z * 0x85EBCA77u) ^ (seed * 0xC2B2AE3Du);
+                // Mistura em etapas: x entra antes do primeiro embaralhamento e z depois dele.
+                // (Um XOR simples de x*A e z*B tinha simetria: (x, z) e (-x, -z) davam o mesmo hash.)
+                uint h = (seed * 0xC2B2AE3Du) ^ ((uint)x * 0x9E3779B1u);
                 h ^= h >> 15;
                 h *= 0x2C1B3C6Du;
+                h ^= (uint)z * 0x85EBCA77u;
                 h ^= h >> 12;
                 h *= 0x297A2D39u;
                 h ^= h >> 15;

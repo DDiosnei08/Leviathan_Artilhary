@@ -1,6 +1,6 @@
 # Fase 0 e Fase 1: altura base e pré-visualização
 
-**Estado: Implementado, não validado.** O código foi escrito sem poder compilar nem abrir a Unity; a validação é feita por você, seguindo os passos abaixo.
+**Estado: Implementado; validação em andamento.** Compilou na Unity, a pré-visualização funciona e 30/31 testes passaram. O teste que falhou revelou uma simetria no hash, corrigida (GeneratorVersion continua 1, pois nenhum terreno foi exportado ainda). Falta rodar os 31 testes de novo.
 
 ## Objetivo
 
@@ -49,8 +49,8 @@ Calculados por uma implementação independente em Python, com a **semente 12345
 
 | Medida | Valor |
 | --- | --- |
-| Altura mínima / máxima / média | 233,8 m / 832,4 m / 477,8 m |
-| Área plana (< 3°) | 23,3% |
+| Altura mínima / máxima / média | 188,7 m / 856,6 m / 476,2 m |
+| Área plana (< 3°) | 21,2% |
 | Área íngreme (> 30°) | 1,1% |
 | Inclinação máxima dentro das zonas planas | 2,5° |
 

@@ -80,12 +80,12 @@ namespace Leviathan.Terrain.Tests
             // semente 12345 e os parâmetros padrão. Se estes valores mudarem, o gerador mudou:
             // aumente HeightParams.GeneratorVersion e atualize esta tabela de propósito.
             TerrainHeightSampler sampler = CreateSampler(ReferenceSeed);
-            AssertReference(sampler, 1000f, 1000f, 370.4507f, -0.296510f, 0.023544f, 0.0000f);
-            AssertReference(sampler, 5000f, 12000f, 639.6177f, 0.181477f, -0.181256f, 0.0000f);
-            AssertReference(sampler, 20000f, 300f, 402.2791f, 0.136112f, -0.070891f, 0.1929f);
-            AssertReference(sampler, 10200f, 10200f, 500.5134f, -0.390530f, 0.001265f, 0.0000f);
-            AssertReference(sampler, 15555f, 7777f, 817.5843f, -0.104536f, -0.097320f, 0.0184f);
-            AssertReference(sampler, 333f, 19999f, 494.9160f, 0.011203f, -0.136234f, 0.3794f);
+            AssertReference(sampler, 1000f, 1000f, 335.1686f, -0.112982f, -0.035172f, 0.0000f);
+            AssertReference(sampler, 5000f, 12000f, 581.9484f, 0.356992f, 0.337863f, 0.0000f);
+            AssertReference(sampler, 20000f, 300f, 414.3561f, 0.069551f, -0.034946f, 0.1564f);
+            AssertReference(sampler, 10200f, 10200f, 338.5093f, 0.005728f, 0.091106f, 0.7701f);
+            AssertReference(sampler, 15555f, 7777f, 333.6903f, -0.174819f, -0.063282f, 0.1274f);
+            AssertReference(sampler, 333f, 19999f, 336.7895f, 0.043048f, 0.127268f, 0.1942f);
         }
 
         static void AssertReference(TerrainHeightSampler sampler, float x, float z, float height, float dhdx, float dhdz, float mask)
@@ -101,7 +101,7 @@ namespace Leviathan.Terrain.Tests
         [Test]
         public void DefaultTerrain_HasBothMountainsAndPlains()
         {
-            // Referência (Python, semente 12345, grade 256): mín 233,8 m; máx 832,4 m; plana 23,3 %; íngreme 1,1 %.
+            // Referência (Python, semente 12345, grade 256): mín 188,7 m; máx 856,6 m; plana 21,2 %; íngreme 1,1 %.
             HeightGrid grid = HeightGrid.BakeDomain(CreateSampler(ReferenceSeed), 256);
             HeightGridStats stats = grid.ComputeStats();
 
