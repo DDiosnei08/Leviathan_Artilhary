@@ -1,0 +1,19 @@
+{
+    "name": "Leviathan.Terrain.Editor",
+    "rootNamespace": "Leviathan.Terrain.Editor",
+    "references": [
+        "Leviathan.Terrain.Core",
+        "Leviathan.Terrain"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

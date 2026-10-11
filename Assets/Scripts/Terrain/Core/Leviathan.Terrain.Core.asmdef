@@ -1,0 +1,14 @@
+{
+    "name": "Leviathan.Terrain.Core",
+    "rootNamespace": "Leviathan.Terrain",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
