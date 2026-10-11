@@ -87,6 +87,18 @@ public class ArtilleryTestController : MonoBehaviour
         } 
     }
 
+    public void AddElevation(float amount)
+    {
+        Elevation = Mathf.Clamp(Elevation + amount, 0f, 85f);
+        UpdateVisuals();
+    }
+
+    public void AddAzimuth(float amount)
+    {
+        Azimuth = Mathf.Repeat(Azimuth + amount, 360f);
+        UpdateVisuals();
+    }
+
     void Start()
     {
         UpdateVisuals();
