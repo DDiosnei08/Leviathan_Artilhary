@@ -1,6 +1,6 @@
 # Fase 0 e Fase 1: altura base e pré-visualização
 
-**Estado: Implementado; validação em andamento.** Compilou na Unity, a pré-visualização funciona e 30/31 testes passaram. O teste que falhou revelou uma simetria no hash, corrigida (GeneratorVersion continua 1, pois nenhum terreno foi exportado ainda). Falta rodar os 31 testes de novo.
+**Estado: Validado** (11/10/2026, pelo desenvolvedor na Unity 6000.6.3f1). Console sem erros, testes passando e pré-visualização com 24,0% de área plana, 0,8% íngreme, altura de 150 a 781 m (semente 703110054). Um teste revelou uma simetria no hash das células, corrigida antes da validação.
 
 ## Objetivo
 
