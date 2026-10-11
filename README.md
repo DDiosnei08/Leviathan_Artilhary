@@ -11,8 +11,8 @@ Nada vira Validado sem o desenvolvedor testar na Unity.
 
 | Fase | O que é | Estado |
 | --- | --- | --- |
-| 0 | Fundação: projeto limpo, assemblies, testes | Em desenvolvimento (falta abrir na Unity e conferir o Console) |
-| 1 | Altura base determinística + pré-visualização mínima | Implementado, **não validado** |
+| 0 | Fundação: projeto limpo, assemblies, testes | **Validado** (abre sem erros, testes rodam) |
+| 1 | Altura base determinística + pré-visualização mínima | **Validado** (Console limpo, testes passando, preview com planícies e relevo) |
 | 2 | Protótipo isolado do filtro de erosão por gradiente | Planejado |
 | 3 | Terrain Baker completo (exportar `.lvh`) | Planejado |
 | 4 | Chunks, LOD e malha | Planejado |
