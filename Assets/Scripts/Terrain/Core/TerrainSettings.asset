@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5af1d18f19af4ca79c19967a5fec5a75, type: 3}
+  m_Name: TerrainSettings
+  m_EditorClassIdentifier: Leviathan.Terrain::Leviathan.Terrain.TerrainSettings
+  seed: 703110054
+  maxHeightMeters: 1000
+  reliefContrast: 3
+  missionAreaMeters: 20000
+  layers:
+  - name: Continentes
+    scaleMeters: 9000
+    strength: 0.3
+    octaves: 3
+    persistence: 0.4
+    lacunarity: 2
+  - name: Montanhas
+    scaleMeters: 3000
+    strength: 0.15
+    octaves: 3
+    persistence: 0.4
+    lacunarity: 2
+  - name: Colinas
+    scaleMeters: 600
+    strength: 0.04
+    octaves: 2
+    persistence: 0.4
+    lacunarity: 2
+  flatZones:
+    enabled: 1
+    scaleMeters: 4000
+    octaves: 2
+    threshold: 0.45
+    blendWidth: 0.3
+    maskContrast: 2.5
+    minLevel: 0.25
+    maxLevel: 0.55
