@@ -73,17 +73,18 @@ public class ArtilleryTestController : MonoBehaviour
         if (elevationPivot != null)
             elevationPivot.localRotation = Quaternion.Euler(-Elevation, 0f, 0f);
 
-        if (azimuthNeedle != null)
-            azimuthNeedle.localRotation = Quaternion.Euler(0f, 0f, -Azimuth);
-
-        if (elevationNeedle != null)
-            elevationNeedle.localRotation = Quaternion.Euler(0f, 0f, -Elevation);
-
         if (azimuthText != null)
-            azimuthText.text = $"AZIMUTE  {Azimuth:000.0}°";
+            azimuthText.text = $"AZIMUTE: {Azimuth:000}°";
 
         if (elevationText != null)
-            elevationText.text = $"ELEVAÇÃO  {Elevation:00.0}°";
+            elevationText.text = $"ELEVAÇÃO: {Elevation:00.0}°";
+        if (azimuthNeedle != null)
+            azimuthNeedle.localRotation = Quaternion.Euler(0f, 0f, -Azimuth);
+        if (elevationNeedle != null)
+        {
+            float dialAngle = 90f - (Elevation / 75f) * 180f;
+            elevationNeedle.localRotation = Quaternion.Euler(0f, 0f, dialAngle);
+        } 
     }
 
     void Start()
