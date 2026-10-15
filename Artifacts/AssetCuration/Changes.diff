@@ -1,0 +1,456 @@
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs"
+index 4385c05..06bf255 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs"
+@@ -4,6 +4,7 @@ using UnityEngine;
+ namespace ProjectLeviathan.Base
+ {
+     public interface IHeightSource { float GetBaseHeight(float x, float z); }
++    public interface IBaseSiteSuitability { bool IsDry(float x,float z); }
+     public enum BaseFacingMode { TowardsPoint, AwayFromPoint, Random }
+     [Serializable]
+     public sealed class BaseSiteSettings
+@@ -13,7 +14,7 @@ namespace ProjectLeviathan.Base
+         public float minDistance = 150, maxDistance = 700, preferredDistance = 300;
+         [Range(16, 2000)] public int candidates = 600;
+         public float waterLevel, minAboveWater = 4.5f, maxAltitude = 1000;
+-        public float checkRadius = 30, maxHeightRange = 1f, maxSlopeDeg = 3f;
++        public float checkRadius = 30, maxHeightRange = .25f, maxSlopeDeg = 2f;
+         [Range(3, 15)] public int gridSteps = 9;
+         public float prominenceRadius = 150, prominenceWeight = 0;
+         public float flatRadius = 28, blendRadius = 0, carveRadius = 21.9f, carveRamp = .2f;
+@@ -64,6 +65,7 @@ namespace ProjectLeviathan.Base
+         public static BaseSiteData Solve(IHeightSource source, BaseSiteSettings s)
+         {
+             if (source == null) throw new ArgumentNullException(nameof(source));
++            var suitability=source as IBaseSiteSuitability;
+             var random = new System.Random(s.seed);
+             var candidates = new Vector2[Mathf.Max(1,s.candidates)];
+             int n = Mathf.Clamp(s.gridSteps | 1,3,15);
+@@ -89,17 +91,19 @@ namespace ProjectLeviathan.Base
+                     float step = 2 * radius / (n-1);
+                     float low = float.PositiveInfinity, high = float.NegativeInfinity, sum = 0;
+                     int count = 0;
++                    bool dry=true;
+                     for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+                     {
+                         Vector2 p = c + new Vector2(-radius+x*step,-radius+y*step);
+                         float d = Vector2.Distance(p,c); inside[x,y] = d <= radius;
+                         if (!inside[x,y]) continue;
++                        if(suitability!=null && !suitability.IsDry(p.x,p.y)) dry=false;
+                         float h = source.GetBaseHeight(p.x,p.y); heights[x,y] = h;
+                         low = Mathf.Min(low,h); high = Mathf.Max(high,h);
+                         if (d <= s.flatRadius) { sum += h; count++; }
+                     }
+                     // Water and altitude remain hard constraints, even in the earthworks fallback.
+-                    if (!float.IsFinite(low) || high > s.maxAltitude || low < s.waterLevel + Mathf.Max(s.minAboveWater,s.pitDepth+0.5f)) continue;
++                    if (!dry || !float.IsFinite(low) || high > s.maxAltitude || low < s.waterLevel + Mathf.Max(s.minAboveWater,s.pitDepth+0.5f)) continue;
+                     float slope = 0;
+                     for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+                     {
+@@ -109,6 +113,20 @@ namespace ProjectLeviathan.Base
+                     }
+                     float range = high-low;
+                     if (range > s.maxHeightRange*relax || slope > s.maxSlopeDeg*relax) continue;
++                    // Verify the support annulus and interior independently of the coarse grid.
++                    // This rejects small ridges between samples instead of leaving the rim floating.
++                    bool supported=true;
++                    for(int ringIndex=1;ringIndex<=4 && supported;ringIndex++) for(int q=0;q<64;q++)
++                    {
++                        float a=q*Mathf.PI/32, r=radius*ringIndex/4;
++                        if(suitability!=null && !suitability.IsDry(c.x+Mathf.Cos(a)*r,c.y+Mathf.Sin(a)*r)) {supported=false;break;}
++                        float h=source.GetBaseHeight(c.x+Mathf.Cos(a)*r,c.y+Mathf.Sin(a)*r);
++                        if(!float.IsFinite(h)) {supported=false;break;}
++                        low=Mathf.Min(low,h);high=Mathf.Max(high,h);
++                        if(high-low>s.maxHeightRange || low<s.waterLevel+Mathf.Max(s.minAboveWater,s.pitDepth+.5f)) {supported=false;break;}
++                    }
++                    if(!supported) continue;
++                    range=high-low;
+                     float ground = high + .02f;
+                     float ring = 0;
+                     for (int q = 0; q < 8; q++) { float a=q*Mathf.PI/4; ring+=source.GetBaseHeight(c.x+Mathf.Cos(a)*s.prominenceRadius,c.y+Mathf.Sin(a)*s.prominenceRadius); }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs"
+index aeb0175..187f489 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs"
+@@ -24,6 +24,61 @@ namespace ProjectLeviathan.Base
+         float nextCheck;
+         int attemptedSeed;
+         bool attempted;
++        public Vector3 FoundationOffset {get;private set;}
++        public void ConfigureFootprint()
++        {
++            if(basePrefab==null) return;
++            foreach(var filter in basePrefab.GetComponentsInChildren<MeshFilter>(true))
++            {
++                if(filter.name!="Fosso_Piso" || filter.sharedMesh==null) continue;
++                var meshBounds=filter.sharedMesh.bounds;var local=new Bounds();bool first=true;
++                for(int i=0;i<8;i++)
++                {
++                    Vector3 corner=meshBounds.center+Vector3.Scale(meshBounds.extents,new Vector3((i&1)==0 ? -1 : 1,(i&2)==0 ? -1 : 1,(i&4)==0 ? -1 : 1));
++                    Vector3 point=basePrefab.transform.InverseTransformPoint(filter.transform.TransformPoint(corner));
++                    if(first) {local=new Bounds(point,Vector3.zero);first=false;}else local.Encapsulate(point);
++                }
++                FoundationOffset=new Vector3(local.center.x,0,local.center.z);
++                float radius=Mathf.Max(local.extents.x,local.extents.z);
++                settings.flatRadius=Mathf.Max(settings.flatRadius,radius+4);
++                settings.checkRadius=Mathf.Max(settings.checkRadius,radius+7);
++                settings.exclusionRadius=Mathf.Max(settings.exclusionRadius,radius+8);
++                settings.carveRadius=Mathf.Max(.1f,radius-.25f);
++                settings.blendRadius=0;break;
++            }
++        }
++        public Vector3 RootPosition(BaseSiteData site) => new Vector3(site.center.x,site.groundHeight,site.center.y)-Quaternion.Euler(0,site.yaw,0)*FoundationOffset;
++#if UNITY_EDITOR
++        public bool RebuildEditorPreview()
++        {
++            if(Application.isPlaying || heightSource==null || heightSource.terrain==null || previewInstance==null) return false;
++            var terrain=heightSource.terrain;var source=terrain.terrainSettings;if(source==null) return false;
++            ConfigureFootprint();settings.seed=source.noiseSettings.seed;
++            var generation=source.CaptureGenerationSettings(false);
++            settings.waterLevel=generation.EvaluateHeight(generation.lakeThreshold)*generation.heightMultiplier;
++            settings.maxAltitude=generation.heightMultiplier*2;settings.constrainToMap=terrain.useFiniteMap;
++            int radius=source.finiteMapChunksPerSide/2;settings.minimumWorldPosition=Vector2.one*(-radius*source.chunkSize);
++            settings.maximumWorldPosition=Vector2.one*((radius+1)*source.chunkSize);
++            heightSource.ResetCache();var next=BaseSiteSolver.Solve(heightSource,settings);previewSite=next;
++            source.RuntimeBaseSite=next;previewInstance.SetActive(next.valid);
++            if(next.valid)
++            {
++                previewInstance.transform.SetPositionAndRotation(RootPosition(next),Quaternion.Euler(0,next.yaw,0));
++                var chart=previewInstance.GetComponentInChildren<BasePhysicalMap>();if(chart!=null) chart.SetWorld(source,next);
++                var assembly=previewInstance.GetComponent<BaseAssembly>();
++                foreach(var rig in FindObjectsByType<BaseGameRig>(FindObjectsSortMode.None)) if(rig.spawner==this && assembly!=null)
++                {
++                    rig.player.transform.SetPositionAndRotation(assembly.playerSpawn.position,assembly.playerSpawn.rotation);
++                    rig.overviewCamera.transform.position=previewInstance.transform.TransformPoint(new Vector3(-47,32,-45));
++                    rig.overviewCamera.transform.LookAt(previewInstance.transform.position+Vector3.up*3);
++                    terrain.viewer=rig.overviewCamera.transform;
++                }
++            }
++            terrain.RegenerateTerrain();UnityEditor.EditorUtility.SetDirty(this);
++            if(!next.valid) Debug.LogWarning("[BaseSpawner] No naturally supported dry site. Preview hidden; enlarge the search area.",this);
++            return next.valid;
++        }
++#endif
+ #if UNITY_EDITOR
+         [SerializeField,HideInInspector] TerrainSettings editorTerrainAsset;
+         [UnityEditor.InitializeOnLoadMethod]
+@@ -106,6 +161,7 @@ namespace ProjectLeviathan.Base
+                 if (!BaseSiteRegistry.Set(BaseSiteRegistry.Site,this)) { Debug.LogError("[BaseSpawner] Another spawner already owns the base.",this); return; }
+             }
+             var terrain=heightSource.terrain;
++            ConfigureFootprint();
+             settings.seed=terrain.terrainSettings.noiseSettings.seed;
+             settings.constrainToMap=terrain.useFiniteMap;
+             int radius=terrain.terrainSettings.finiteMapChunksPerSide/2;
+@@ -137,7 +193,7 @@ namespace ProjectLeviathan.Base
+             }
+             if (Instance==null) Instance=Instantiate(basePrefab);
+             Instance.name="BaseGiratoria_Unica";
+-            Instance.transform.SetPositionAndRotation(new Vector3(Site.center.x,Site.groundHeight,Site.center.y),Quaternion.Euler(0,Site.yaw,0));
++            Instance.transform.SetPositionAndRotation(RootPosition(Site),Quaternion.Euler(0,Site.yaw,0));
+             Instance.SetActive(true);
+             var chart=Instance.GetComponentInChildren<BasePhysicalMap>();
+             if(chart!=null) chart.SetWorld(terrain.terrainSettings,Site);
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\BasePhysicalMap.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BasePhysicalMap.cs"
+index 712dbcc..f89bb58 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\BasePhysicalMap.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BasePhysicalMap.cs"
+@@ -34,7 +34,7 @@ namespace ProjectLeviathan.Base
+                 else if(minor<extent/resolution*.6f) shade=Mathf.Lerp(shade,.65f,.3f);
+                 colors[y*resolution+x]=new Color(shade,shade,shade,1);
+             }
+-            if(texture!=null) Destroy(texture);
++            ReleaseTexture();
+             texture=new Texture2D(resolution,resolution,TextureFormat.RGBA32,false) { name="Seed chart "+site.seed,wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear };
+             texture.SetPixels32(colors); texture.Apply(false,true);
+             if(properties==null) properties=new MaterialPropertyBlock();
+@@ -42,6 +42,12 @@ namespace ProjectLeviathan.Base
+             if(baseMarker!=null) baseMarker.localPosition=new Vector3(((site.center.x-minimum)/extent-.5f)*paperSize,.035f,((site.center.y-minimum)/extent-.5f)*paperSize);
+             if(Application.isPlaying) Destroy(coarse); else DestroyImmediate(coarse);
+         }
+-        void OnDestroy() { if(texture!=null) Destroy(texture); }
++        void ReleaseTexture()
++        {
++            if(texture==null) return;
++            if(Application.IsPlaying(gameObject)) Destroy(texture);else DestroyImmediate(texture);
++            texture=null;
++        }
++        void OnDestroy() => ReleaseTexture();
+     }
+ }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\ProceduralHeightSource.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\ProceduralHeightSource.cs"
+index 9da2bcf..f892504 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\Gameplay\\Base\\ProceduralHeightSource.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\ProceduralHeightSource.cs"
+@@ -4,14 +4,14 @@ using UnityEngine;
+ 
+ namespace ProjectLeviathan.Base
+ {
+-    public sealed class ProceduralHeightSource : MonoBehaviour, IHeightSource
++    public sealed class ProceduralHeightSource : MonoBehaviour, IHeightSource, IBaseSiteSuitability
+     {
+         public TerrainWorldController terrain;
+         readonly Dictionary<Vector2Int,HeightMap> cache = new Dictionary<Vector2Int,HeightMap>();
+         TerrainGenerationSettings naturalSettings;
+         public void ResetCache()
+         { cache.Clear(); naturalSettings=terrain.terrainSettings.CaptureGenerationSettings(false); }
+-        public float GetBaseHeight(float x,float z)
++        HeightMap SampleMap(float x,float z,out float gx,out float gy)
+         {
+             if (naturalSettings==null) ResetCache();
+             float size=naturalSettings.chunkSize;
+@@ -21,7 +21,17 @@ namespace ProjectLeviathan.Base
+                 map=HeightMapGenerator.GenerateHeightMap(naturalSettings,naturalSettings.chunkResolution,naturalSettings.chunkResolution,new Vector2(coordinate.x*size,coordinate.y*size));
+                 cache.Add(coordinate,map);
+             }
+-            float gx=(x-coordinate.x*size)/size*(map.Width-1), gy=(1-(z-coordinate.y*size)/size)*(map.Height-1);
++            gx=(x-coordinate.x*size)/size*(map.Width-1);gy=(1-(z-coordinate.y*size)/size)*(map.Height-1);
++            return map;
++        }
++        public bool IsDry(float x,float z)
++        {
++            var map=SampleMap(x,z,out float gx,out float gy);int xx=Mathf.Min((int)gx,map.Width-2),yy=Mathf.Min((int)gy,map.Height-2);
++            return map.Water[xx,yy]<.01f && map.Water[xx+1,yy]<.01f && map.Water[xx,yy+1]<.01f && map.Water[xx+1,yy+1]<.01f;
++        }
++        public float GetBaseHeight(float x,float z)
++        {
++            var map=SampleMap(x,z,out float gx,out float gy);
+             int ix=Mathf.Min(Mathf.FloorToInt(gx),map.Width-2), iy=Mathf.Min(Mathf.FloorToInt(gy),map.Height-2);
+             float fx=gx-ix,fy=gy-iy;
+             return fx+fy<=1 ? map.WorldHeights[ix,iy]*(1-fx-fy)+map.WorldHeights[ix+1,iy]*fx+map.WorldHeights[ix,iy+1]*fy
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs"
+index db64b40..68e32e9 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs"
+@@ -71,7 +71,7 @@ namespace ProjectLeviathan.Vegetation
+                 float px=(x+.15f+Random(hash+1)*.7f)*spacing,pz=(z+.15f+Random(hash+2)*.7f)*spacing;
+                 Vector3 world=chunk.GameObject.transform.TransformPoint(new Vector3(px,0,pz));
+                 float grove=Mathf.PerlinNoise(world.x/c.groveScale+settings.noiseSettings.seed%10000,world.z/c.groveScale+911);
+-                if(grove<c.groveThreshold) continue;
++                if(grove<c.groveThreshold && Random(hash+8)>c.scatteredDensity) continue;
+                 float gx=px/settings.chunkSize*(map.Width-1),gy=(1-pz/settings.chunkSize)*(map.Height-1);
+                 int mx=Mathf.Clamp(Mathf.RoundToInt(gx),0,map.Width-1),my=Mathf.Clamp(Mathf.RoundToInt(gy),0,map.Height-1);
+                 if(map.Values[mx,my]<c.normalizedAltitude.x || map.Values[mx,my]>c.normalizedAltitude.y ||
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
+index 75b12dd..1615f3f 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
+@@ -129,19 +129,19 @@ PrefabInstance:
+     m_Modifications:
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalPosition.x
+-      value: 1826.5474
++      value: -243.51239
+       objectReference: {fileID: 0}
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalPosition.y
+-      value: 269.70486
++      value: 278.13934
+       objectReference: {fileID: 0}
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalPosition.z
+-      value: -362.6681
++      value: -140.67041
+       objectReference: {fileID: 0}
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalRotation.w
+-      value: 0.77290106
++      value: 0.8660858
+       objectReference: {fileID: 0}
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalRotation.x
+@@ -149,7 +149,7 @@ PrefabInstance:
+       objectReference: {fileID: 0}
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalRotation.y
+-      value: -0.63452655
++      value: 0.49989536
+       objectReference: {fileID: 0}
+     - target: {fileID: 3711735918878294777, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalRotation.z
+@@ -181,11 +181,11 @@ PrefabInstance:
+       objectReference: {fileID: 0}
+     - target: {fileID: 8642203001887980105, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalPosition.x
+-      value: 0.22847451
++      value: -0.15712486
+       objectReference: {fileID: 0}
+     - target: {fileID: 8642203001887980105, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+       propertyPath: m_LocalPosition.z
+-      value: -0.17932053
++      value: -0.13796802
+       objectReference: {fileID: 0}
+     m_RemovedComponents: []
+     m_RemovedGameObjects: []
+@@ -230,24 +230,24 @@ MonoBehaviour:
+   heightSource: {fileID: 69986091}
+   basePrefab: {fileID: 5727514241576554500, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+   settings:
+-    seed: -265324695
++    seed: -1204466725
+     searchCenter: {x: 600, y: 600}
+     minDistance: 120
+     maxDistance: 1800
+     preferredDistance: 600
+-    candidates: 1200
++    candidates: 1800
+     waterLevel: 130
+     minAboveWater: 4.5
+     maxAltitude: 2000
+     checkRadius: 30
+-    maxHeightRange: 1
+-    maxSlopeDeg: 3
+-    gridSteps: 13
++    maxHeightRange: 0.25
++    maxSlopeDeg: 2
++    gridSteps: 15
+     prominenceRadius: 150
+     prominenceWeight: 0
+     flatRadius: 28
+     blendRadius: 0
+-    carveRadius: 21.9
++    carveRadius: 21.75
+     carveRamp: 0.2
+     pitDepth: 3.8
+     exclusionRadius: 30
+@@ -260,14 +260,14 @@ MonoBehaviour:
+   previewInstance: {fileID: 9178567}
+   previewSite:
+     valid: 1
+-    seed: -265324695
+-    center: {x: 1826.5474, y: -362.6681}
+-    groundHeight: 269.70486
+-    yaw: -78.76976
+-    score: 0.80505586
++    seed: -1204466725
++    center: {x: -243.51239, y: -140.67041}
++    groundHeight: 278.13934
++    yaw: 59.986156
++    score: 0.55670935
+     flatRadius: 28
+     blendRadius: 0
+-    carveRadius: 21.9
++    carveRadius: 21.75
+     carveRamp: 0.2
+     pitDepth: 3.8
+     exclusionRadius: 30
+@@ -701,8 +701,8 @@ Transform:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 893720955}
+   serializedVersion: 2
+-  m_LocalRotation: {x: -0, y: -0.63452655, z: -0, w: 0.77290106}
+-  m_LocalPosition: {x: 1840.5736, y: 269.80487, z: -365.45303}
++  m_LocalRotation: {x: -0, y: 0.49989536, z: -0, w: 0.8660858}
++  m_LocalPosition: {x: -255.89482, y: 278.23935, z: -147.8234}
+   m_LocalScale: {x: 1, y: 1, z: 1}
+   m_ConstrainProportionsScale: 0
+   m_Children:
+@@ -867,6 +867,53 @@ Transform:
+   m_Children: []
+   m_Father: {fileID: 0}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!1 &1750613292
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 1750613294}
++  - component: {fileID: 1750613293}
++  m_Layer: 0
++  m_Name: Cenario Procedural
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!114 &1750613293
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1750613292}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: b80343b6f99e22c40a60cfe1667689f9, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.Vegetation.WorldSceneryManager
++  terrain: {fileID: 133175589}
++  configuration: {fileID: 11400000, guid: db59cce96224e2c408954e655839170f, type: 2}
++  player: {fileID: 893720957}
++--- !u!4 &1750613294
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1750613292}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 0, z: 0}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 0}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+ --- !u!1 &1927004541
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -944,8 +991,8 @@ Transform:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 1927004541}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0.20084776, y: -0.27849373, z: 0.059676256, w: 0.93730474}
+-  m_LocalPosition: {x: 1859.3688, y: 300.70486, z: -413.02435}
++  m_LocalRotation: {x: 0.124899074, y: 0.7823399, z: -0.16644529, w: 0.587061}
++  m_LocalPosition: {x: -305.9879, y: 310.13934, z: -122.482315}
+   m_LocalScale: {x: 1, y: 1, z: 1}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+@@ -1065,3 +1112,4 @@ SceneRoots:
+   - {fileID: 743599087}
+   - {fileID: 668874905}
+   - {fileID: 135269767}
++  - {fileID: 1750613294}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
+index 4d4ba33..7c6b774 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\AssetCuration\\Before\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
+@@ -13,21 +13,22 @@ MonoBehaviour:
+   m_Name: ProceduralTrees
+   m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.Vegetation.TreeConfiguration
+   material: {fileID: 2100000, guid: 7435b77387ef5da43bbf960dbaad153c, type: 2}
+-  broadleafNear: {fileID: 4300000, guid: 3b2a63cea18f27b43a9f998ff03b93a9, type: 2}
+-  broadleafFar: {fileID: 4300000, guid: a2433eb4652459a4faa669187b193bb7, type: 2}
+-  pineNear: {fileID: 4300000, guid: fe68c15857ef18d44ae2dc5cfde57d79, type: 2}
+-  pineFar: {fileID: 4300000, guid: 25d7c399cddb1be41aacf510e5995a75, type: 2}
+-  spacing: 18
+-  density: 0.28
+-  groveScale: 240
+-  groveThreshold: 0.42
+-  maximumTreesPerChunk: 650
++  broadleafNear: {fileID: 4300000, guid: d1b1bd9911cc12448b9efa92f194190d, type: 2}
++  broadleafFar: {fileID: 4300000, guid: 55c49a9952260a44590f052998a0de8f, type: 2}
++  pineNear: {fileID: 4300000, guid: 7c48e1aebcc7fbe47b2dace9ab6e7769, type: 2}
++  pineFar: {fileID: 4300000, guid: 22d8f449c86ecf24aabe7be8d5c92b23, type: 2}
++  spacing: 14
++  density: 0.68
++  scatteredDensity: 0.12
++  groveScale: 220
++  groveThreshold: 0.49
++  maximumTreesPerChunk: 1400
+   heights: {x: 7, y: 13}
+   normalizedAltitude: {x: 0.15, y: 0.76}
+   maximumSlope: 26
+-  nearDistance: 150
++  nearDistance: 125
+   farDistance: 700
+-  shadowDistance: 100
++  shadowDistance: 75
+   windDirection: {x: 0.7, y: 0.3}
+   windStrength: 0.025
+   buildsPerFrame: 1

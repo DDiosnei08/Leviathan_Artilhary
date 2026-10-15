@@ -1,0 +1,192 @@
+using System;
+using ProjectLeviathan.ProceduralTerrain;
+using UnityEngine;
+
+namespace ProjectLeviathan.Base
+{
+    [DefaultExecutionOrder(-200)]
+    [ExecuteAlways]
+    public sealed class BaseSpawner : MonoBehaviour
+    {
+        public ProceduralHeightSource heightSource;
+        public GameObject basePrefab;
+        public BaseSiteSettings settings = new BaseSiteSettings();
+        public bool generateOnAwake = true;
+        [Tooltip("Editor-only preview, hidden while the single runtime base is active.")]
+        public GameObject previewInstance;
+        public BaseSiteData previewSite;
+        public Transform player;
+        [Min(0)] public float activateDistance;
+        public BaseSiteData Site { get; private set; }
+        public GameObject Instance { get; private set; }
+        public event Action<BaseSpawner> Generated;
+        TerrainSettings originalSettings, ownedSettings;
+        float nextCheck;
+        int attemptedSeed;
+        bool attempted;
+#if UNITY_EDITOR
+        [SerializeField,HideInInspector] TerrainSettings editorTerrainAsset;
+        [UnityEditor.InitializeOnLoadMethod]
+        static void RegisterEditorCleanup()
+        {
+            UnityEditor.EditorApplication.playModeStateChanged-=RestoreAfterPlay;
+            UnityEditor.EditorApplication.playModeStateChanged+=RestoreAfterPlay;
+        }
+        static void RestoreAfterPlay(UnityEditor.PlayModeStateChange state)
+        {
+            if(state!=UnityEditor.PlayModeStateChange.EnteredEditMode) return;
+            RestoreEditorReferences();
+            UnityEditor.EditorApplication.delayCall-=RestoreEditorReferences;
+            UnityEditor.EditorApplication.delayCall+=RestoreEditorReferences;
+        }
+        static void RestoreEditorReferences()
+        {
+            foreach(var spawner in FindObjectsByType<BaseSpawner>(FindObjectsSortMode.None))
+            {
+                if(spawner.originalSettings!=null) spawner.CleanupRuntime();
+                // The no-scene-reload restoration can reapply a serialized reference to the
+                // destroyed runtime clone after OnDisable. Keep the persistent asset explicitly.
+                if(spawner.editorTerrainAsset!=null && spawner.heightSource!=null && spawner.heightSource.terrain!=null)
+                {
+                    spawner.heightSource.terrain.terrainSettings=spawner.editorTerrainAsset;
+                    spawner.editorTerrainAsset.RuntimeBaseSite=spawner.previewSite;
+                }
+            }
+        }
+#endif
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void PreparePlaySession()
+        {
+            // ExecuteAlways callbacks are not guaranteed to run again with both reload options off.
+            foreach(var spawner in FindObjectsByType<BaseSpawner>(FindObjectsSortMode.None))
+                if(Application.IsPlaying(spawner.gameObject)) spawner.InitializeRuntime();
+        }
+        void Awake() => InitializeRuntime();
+        void Start() => InitializeRuntime();
+        void InitializeRuntime()
+        {
+            if (!Application.isPlaying || ownedSettings!=null) return;
+#if UNITY_EDITOR
+            // ExecuteAlways can receive an enable callback while the Editor is leaving Play.
+            if(!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode) return;
+#endif
+            if (heightSource != null && heightSource.terrain != null && heightSource.terrain.terrainSettings != null)
+            {
+                originalSettings=heightSource.terrain.terrainSettings;
+#if UNITY_EDITOR
+                if(UnityEditor.EditorUtility.IsPersistent(originalSettings)) editorTerrainAsset=originalSettings;
+#endif
+                ownedSettings=Instantiate(originalSettings); ownedSettings.name=originalSettings.name+" (Runtime)";
+                ownedSettings.hideFlags=HideFlags.DontSave;
+                heightSource.terrain.terrainSettings=ownedSettings;
+            }
+            if (previewInstance!=null) previewInstance.SetActive(false);
+            if (generateOnAwake) Generate();
+        }
+        void OnEnable()
+        {
+            if (Application.isPlaying) { InitializeRuntime(); return; }
+#if UNITY_EDITOR
+            if(heightSource!=null && heightSource.terrain!=null && UnityEditor.EditorUtility.IsPersistent(heightSource.terrain.terrainSettings))
+                editorTerrainAsset=heightSource.terrain.terrainSettings;
+#endif
+            if (!Application.isPlaying && heightSource!=null && heightSource.terrain!=null && heightSource.terrain.terrainSettings!=null)
+                heightSource.terrain.terrainSettings.RuntimeBaseSite=previewSite;
+        }
+        [ContextMenu("Gerar base unica (Play)")]
+        public void Generate()
+        {
+            if(!Application.isPlaying)
+            { Debug.LogWarning("[BaseSpawner] Use Leviathan > Base Giratoria > Criar ou reconstruir cena for an editor preview.",this);return; }
+            if (heightSource == null || heightSource.terrain == null || heightSource.terrain.terrainSettings == null || basePrefab == null)
+            { Debug.LogError("[BaseSpawner] Configure terrain, height source and prefab.",this); return; }
+            if (BaseSiteRegistry.HasSite && Instance==null && BaseSiteRegistry.Site.valid)
+            {
+                // Registry ownership also guards multiple spawners accidentally added to the scene.
+                if (!BaseSiteRegistry.Set(BaseSiteRegistry.Site,this)) { Debug.LogError("[BaseSpawner] Another spawner already owns the base.",this); return; }
+            }
+            var terrain=heightSource.terrain;
+            settings.seed=terrain.terrainSettings.noiseSettings.seed;
+            settings.constrainToMap=terrain.useFiniteMap;
+            int radius=terrain.terrainSettings.finiteMapChunksPerSide/2;
+            settings.minimumWorldPosition=Vector2.one*(-radius*terrain.terrainSettings.chunkSize);
+            settings.maximumWorldPosition=Vector2.one*((radius+1)*terrain.terrainSettings.chunkSize);
+            attempted=true;attemptedSeed=settings.seed;
+            var natural=terrain.terrainSettings.CaptureGenerationSettings(false);
+            settings.waterLevel=natural.EvaluateHeight(natural.lakeThreshold)*natural.heightMultiplier;
+            settings.maxAltitude=Mathf.Max(settings.waterLevel+100,natural.heightMultiplier*2);
+            heightSource.ResetCache();
+            BaseSiteData next=BaseSiteSolver.Solve(heightSource,settings);
+            if (!next.valid)
+            {
+                BaseSiteRegistry.Clear(this);Site=default;terrain.terrainSettings.RuntimeBaseSite=default;
+                if(Instance!=null) {Instance.SetActive(false);Destroy(Instance);Instance=null;}
+                if(terrain.GeneratedChunkCount>0) terrain.RegenerateTerrain();
+                Generated?.Invoke(this);
+                Debug.LogError("[BaseSpawner] No dry base site was found. Adjust the search area or terrain settings.",this);
+                return;
+            }
+            if (!BaseSiteRegistry.Set(next,this)) { Debug.LogError("[BaseSpawner] Another spawner already owns the base.",this); return; }
+            bool same=Site.valid && Site.seed==next.seed && Site.center==next.center && Mathf.Approximately(Site.groundHeight,next.groundHeight) && Mathf.Approximately(Site.yaw,next.yaw);
+            Site=next; terrain.terrainSettings.RuntimeBaseSite=Site;
+            if (!same && Instance!=null)
+            {
+                Instance.SetActive(false);
+                if (Application.isPlaying) Destroy(Instance); else DestroyImmediate(Instance);
+                Instance=null;
+            }
+            if (Instance==null) Instance=Instantiate(basePrefab);
+            Instance.name="BaseGiratoria_Unica";
+            Instance.transform.SetPositionAndRotation(new Vector3(Site.center.x,Site.groundHeight,Site.center.y),Quaternion.Euler(0,Site.yaw,0));
+            Instance.SetActive(true);
+            var chart=Instance.GetComponentInChildren<BasePhysicalMap>();
+            if(chart!=null) chart.SetWorld(terrain.terrainSettings,Site);
+            if (terrain.GeneratedChunkCount>0) terrain.RegenerateTerrain();
+            Generated?.Invoke(this);
+        }
+        void Update()
+        {
+            if (!Application.isPlaying) { if(originalSettings!=null) CleanupRuntime(); return; }
+            // ExecuteAlways.Awake may already have run in Edit mode when scene reload is disabled.
+            InitializeRuntime();
+            if (ownedSettings != null && (!Site.valid || ownedSettings.noiseSettings.seed != Site.seed) &&
+                (!attempted || attemptedSeed!=ownedSettings.noiseSettings.seed)) Generate();
+            if (Instance==null || player==null || activateDistance<=0 || Time.time<nextCheck) return;
+            nextCheck=Time.time+.5f;
+            bool active=(player.position-Instance.transform.position).sqrMagnitude<activateDistance*activateDistance;
+            if (Instance.activeSelf!=active) Instance.SetActive(active);
+        }
+        void OnDisable() { if(originalSettings!=null) CleanupRuntime(); }
+        void OnDestroy() => CleanupRuntime();
+        void CleanupRuntime()
+        {
+            BaseSiteRegistry.Clear(this);
+            if (heightSource!=null && heightSource.terrain!=null && originalSettings!=null)
+            {
+                heightSource.terrain.terrainSettings=originalSettings;
+                originalSettings.RuntimeBaseSite=previewSite;
+            }
+            if(Instance!=null)
+            {
+                Instance.SetActive(false);
+                if(Application.isPlaying) Destroy(Instance);else DestroyImmediate(Instance);
+            }
+            if (ownedSettings!=null) { if(Application.isPlaying) Destroy(ownedSettings);else DestroyImmediate(ownedSettings); }
+            Instance=null; ownedSettings=null;originalSettings=null;Site=default;attempted=false;
+            if(previewInstance!=null) previewInstance.SetActive(true);
+        }
+        void OnDrawGizmosSelected()
+        {
+            if (!Site.valid) return;
+            Vector3 center=new Vector3(Site.center.x,Site.groundHeight,Site.center.y);
+            Gizmos.color=Color.cyan; Circle(center,Site.InfluenceRadius);
+            Gizmos.color=Color.yellow; Circle(center,Site.flatRadius);
+            Gizmos.color=Color.red; Circle(center,Site.carveRadius);
+        }
+        static void Circle(Vector3 center,float radius)
+        {
+            Vector3 previous=center+Vector3.right*radius;
+            for(int i=1;i<=64;i++) { float a=i*Mathf.PI*2/64; Vector3 point=center+new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius); Gizmos.DrawLine(previous,point); previous=point; }
+        }
+    }
+}

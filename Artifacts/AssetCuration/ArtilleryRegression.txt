@@ -1,0 +1,49 @@
+PASS No Unity errors during startup
+PASS Site registry emits no per-frame regeneration events
+PASS Flat-height solver is deterministic
+PASS Submerged terrain rejects a floating base
+PASS Base-site solver rejects positions outside the finite map
+PASS Exactly one base for the seed
+PASS No HUD or Canvas
+PASS Both imported cannon hierarchies connected
+PASS Positive elevation aims above the horizon
+PASS Terrain streaming generated chunks
+PASS Chunk uses immutable base-site snapshot (-2, -2)
+PASS Chunk uses immutable base-site snapshot (-1, -2)
+PASS Chunk uses immutable base-site snapshot (0, -2)
+PASS Chunk uses immutable base-site snapshot (-2, -1)
+PASS Chunk uses immutable base-site snapshot (-1, -1)
+PASS Chunk uses immutable base-site snapshot (0, -1)
+PASS The geometric pit opening does not cover the FBX floor
+PASS Physical wheel drives imported elevation pivot
+PASS Physical button collider is reachable: Botao_MUNICAO
+PASS Mouse raycast selects ammunition through physical button
+PASS Physical button collider is reachable: Botao_MUNICAO
+PASS Physical button cycles back to HE
+PASS Empty cannon rejects firing
+PASS Independent simultaneous loading
+PASS Busy cannon rejects duplicate loading
+PASS Ammunition selection locked during loading
+PASS Each loaded shell consumes one stock unit
+PASS Independent elevations on the same heading
+PASS FBX elevation axis calibrated
+PASS Moving base rejects a shot
+PASS Platform yaw uses Unity vertical axis and stops at target
+PASS Both cannons fire simultaneously while stationary
+PASS Firing does not consume a second shell
+PASS Recoil returns to imported rest pose
+PASS Cannon can reload after recovery
+PASS Canceled loading refunds the reserved shell
+PASS Regeneration repeats deterministic site
+PASS Regeneration retains one base
+PASS Changing terrain seed relocates base
+PASS Seed change creates one replacement base
+PASS Third seed remains unique
+PASS Returning to original seed restores original position
+PASS No Unity exceptions during load, fire, rotation and regeneration
+PASS Exit Play restores the editor preview
+PASS Exit Play restores the terrain asset, not a runtime clone (BaseGiratoriaTerrain)
+PASS A second Play session still creates exactly one active base
+PASS A second Play session restores the deterministic site
+PASS Cameras survive exiting Play without scene reload
+PASS Repeated Play session has no gameplay errors

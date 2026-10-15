@@ -1,0 +1,93 @@
+Base root=(1826.55, 269.70, -362.67) site=(1826.55, -362.67)
+Fosso_Parede Center: (1826.55, 268.35, -362.67), Extents: (25.86, 1.65, 25.86)
+Fosso_Piso Center: (1826.55, 266.50, -362.67), Extents: (25.86, 0.20, 25.86)
+Fosso_Trilho_Circular Center: (1826.55, 266.90, -362.67), Extents: (19.02, 0.18, 19.02)
+Modulo_D_Grade_Fosso Center: (1829.18, 270.12, -352.49), Extents: (2.20, 0.04, 1.57)
+Modulo_E_Grade_Fosso Center: (1825.09, 270.12, -373.08), Extents: (2.20, 0.04, 1.57)
+Plataforma_Disco Center: (1826.55, 269.10, -362.67), Extents: (22.34, 0.60, 22.34)
+  material=Free_Tree shader=Standard
+  mesh=Oak vertices=5120 submeshes=1 colors=0
+Assets/Darth_Artisan/Free_Trees/Prefabs/Oak_Tree.prefab bounds=Center: (0.04, 2.65, 0.10), Extents: (1.98, 2.66, 1.42) vertices=5120
+  material=Free_Tree shader=Standard
+  mesh=Fir-tree vertices=1676 submeshes=1 colors=0
+Assets/Darth_Artisan/Free_Trees/Prefabs/Fir_Tree.prefab bounds=Center: (0.00, 2.86, 0.00), Extents: (1.89, 2.86, 1.89) vertices=1676
+  material=Free_Tree shader=Standard
+  mesh=Poplar vertices=4695 submeshes=1 colors=0
+Assets/Darth_Artisan/Free_Trees/Prefabs/Poplar_Tree.prefab bounds=Center: (0.04, 2.90, 0.00), Extents: (1.35, 2.91, 1.48) vertices=4695
+  material=Free_Tree shader=Standard
+  mesh=Palm-tree vertices=2070 submeshes=1 colors=0
+Assets/Darth_Artisan/Free_Trees/Prefabs/Palm_Tree.prefab bounds=Center: (-0.35, 2.71, -0.46), Extents: (1.62, 2.70, 1.62) vertices=2070
+  material=Stones shader=Universal Render Pipeline/Lit
+  mesh=Stone_1 vertices=115 submeshes=1 colors=0
+Assets/Free/Stones/Mesh/Stone_1.fbx bounds=Center: (0.00, 0.01, -0.01), Extents: (0.16, 0.11, 0.11) vertices=115
+  material=Stones shader=Universal Render Pipeline/Lit
+  mesh=Stone_3 vertices=123 submeshes=1 colors=0
+Assets/Free/Stones/Mesh/Stone_3.fbx bounds=Center: (0.01, 0.01, 0.00), Extents: (0.14, 0.14, 0.14) vertices=123
+  material=rock1_Albedo shader=Standard
+  material=rock1_Albedo shader=Standard
+  material=rock1_Albedo shader=Standard
+  material=rock1_Albedo shader=Standard
+  mesh=rock1 vertices=1489 submeshes=1 colors=1489
+  mesh=rock1 vertices=1000 submeshes=1 colors=1000
+  mesh=rock1 vertices=525 submeshes=1 colors=525
+  mesh=Cube vertices=24 submeshes=1 colors=0
+Assets/RockFREE/LODGroups/rock1_LOD0.prefab bounds=Center: (0.53, 0.05, 0.05), Extents: (4.05, 3.82, 3.87) vertices=3038
+  material=Wood2 shader=Standard
+  material=Wood2 shader=Standard
+  material=Wood2 shader=Standard
+  material=Wood2 shader=Standard
+  material=Black shader=Standard
+  material=Black shader=Standard
+  material=Black shader=Standard
+  material=Black shader=Standard
+  material=Black shader=Standard
+  material=Black shader=Standard
+  material=Black shader=Standard
+  mesh=Cylinder.056 vertices=150 submeshes=1 colors=0
+  mesh=Cube.043 vertices=24 submeshes=1 colors=0
+  mesh=Cube.044 vertices=24 submeshes=1 colors=0
+  mesh=Cube.045 vertices=24 submeshes=1 colors=0
+  mesh=Cylinder.057 vertices=650 submeshes=1 colors=0
+  mesh=Cylinder.058 vertices=650 submeshes=1 colors=0
+  mesh=Cylinder.059 vertices=650 submeshes=1 colors=0
+  mesh=Cylinder.060 vertices=48 submeshes=1 colors=0
+  mesh=Cylinder.061 vertices=48 submeshes=1 colors=0
+  mesh=Cylinder.062 vertices=48 submeshes=1 colors=0
+  mesh=Cylinder.063 vertices=48 submeshes=1 colors=0
+Assets/Industrial Props/Prefabs/LightPole.prefab bounds=Center: (-0.02, 5.68, 0.16), Extents: (2.66, 6.04, 0.49) vertices=2364
+  material=Concrete2 shader=Standard
+  mesh=Cube.039 vertices=228 submeshes=1 colors=0
+Assets/Industrial Props/Prefabs/RoadDivider.prefab bounds=Center: (-0.35, 0.70, 0.10), Extents: (0.50, 0.79, 2.01) vertices=228
+  material=Wood5 shader=Standard
+  material=Wood3 shader=Standard
+  material=Wood4 shader=Standard
+  material=Wood5 shader=Standard
+  material=Wood4 shader=Standard
+  material=Wood3 shader=Standard
+  material=Wood4 shader=Standard
+  material=Wood5 shader=Standard
+  mesh=Cube.031 vertices=24 submeshes=1 colors=0
+  mesh=Cube.032 vertices=54 submeshes=1 colors=0
+  mesh=Cube.033 vertices=54 submeshes=1 colors=0
+  mesh=Cube.034 vertices=54 submeshes=1 colors=0
+  mesh=Cube.035 vertices=54 submeshes=1 colors=0
+  mesh=Cube.036 vertices=54 submeshes=1 colors=0
+  mesh=Cube.037 vertices=54 submeshes=1 colors=0
+  mesh=Cube.038 vertices=24 submeshes=1 colors=0
+Assets/Industrial Props/Prefabs/Fence.prefab bounds=Center: (0.50, 2.01, -0.10), Extents: (1.81, 2.00, 0.10) vertices=372
+  material=M_Box Concrete_Set1 shader=Universal Render Pipeline/Lit
+  mesh=Cube.001 vertices=464 submeshes=1 colors=0
+Assets/Sector Warzone/Concrete Barriers/Prefabs/PRE_Concrete Barrier_1.prefab bounds=Center: (0.00, 0.60, 0.00), Extents: (1.84, 0.61, 0.30) vertices=464
+  material=M_rsg_military_sandbox_01 shader=Universal Render Pipeline/Lit
+  mesh=rsg_military_sandbox_01 vertices=7455 submeshes=1 colors=0
+Assets/RSG/URP/Prefabs/P_rsg_military_sandbox_01.prefab bounds=Center: (0.00, 0.65, 0.00), Extents: (0.59, 0.65, 0.60) vertices=7455
+  material=M_rsg_military_antitank_hedgehog_01 shader=Universal Render Pipeline/Lit
+  mesh=rsg_military_antitank_hedgehog_01 vertices=1831 submeshes=1 colors=0
+Assets/RSG/URP/Prefabs/P_rsg_military_antitank_hedgehog_01.prefab bounds=Center: (0.00, 0.54, 0.00), Extents: (0.62, 0.54, 0.59) vertices=1831
+  material=military prop pack shader=Universal Render Pipeline/Lit
+  mesh=sandbag barricade vertices=728 submeshes=1 colors=0
+Assets/Defensive_props/Prefabs/fortifications/sandbag barricade.prefab bounds=Center: (0.02, 0.36, -0.03), Extents: (1.46, 0.35, 0.27) vertices=728
+  material=Wood_bright shader=Universal Render Pipeline/Lit
+  material=Wood_dark shader=Universal Render Pipeline/Lit
+  mesh=Crate2 vertices=530 submeshes=2 colors=0
+Assets/Lowpoly_Crates/Meshes/Crate_01.fbx bounds=Center: (0.00, -0.02, 0.00), Extents: (0.80, 0.44, 1.00) vertices=530

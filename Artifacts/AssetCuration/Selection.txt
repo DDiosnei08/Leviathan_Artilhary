@@ -1,0 +1,10 @@
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Oak_Tree.prefab -> Assets/Models/Environment/Curated/Oak_Tree.asset vertices=5120
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Fir_Tree.prefab -> Assets/Models/Environment/Curated/Fir_Tree.asset vertices=1676
+Assets/ThirdParty/Environment/Free/Stones/Mesh/Stone_1.fbx -> Assets/Models/Environment/Curated/Stone_1.asset vertices=115
+Assets/ThirdParty/Environment/Free/Stones/Mesh/Stone_3.fbx -> Assets/Models/Environment/Curated/Stone_3.asset vertices=123
+Assets/ThirdParty/Environment/Free/Stones/Mesh/Stone_5.fbx -> Assets/Models/Environment/Curated/Stone_5.asset vertices=116
+Assets/ThirdParty/Environment/Industrial Props/Prefabs/LightPole.prefab -> Assets/Models/Environment/Curated/LightPole.asset vertices=2364
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Prefabs/PRE_Concrete Barrier_1.prefab -> Assets/Models/Environment/Curated/PRE_Concrete_Barrier_1.asset vertices=464
+Assets/ThirdParty/Environment/Defensive_props/Prefabs/fortifications/sandbag barricade.prefab -> Assets/Models/Environment/Curated/sandbag_barricade.asset vertices=728
+Assets/ThirdParty/Environment/Lowpoly_Crates/Meshes/Crate_01.fbx -> Assets/Models/Environment/Curated/Crate_01.asset vertices=530
+Base=(-243.51, -140.67) ground=278,1393 opening=21,75
