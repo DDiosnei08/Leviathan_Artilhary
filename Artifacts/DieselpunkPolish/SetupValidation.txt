@@ -1,0 +1,4 @@
+PASS Visual setup preserves sampled natural heights, world seed and editor base placement.
+Seed=-1204466725
+Height fingerprint=12432387714559666803
+Base center=(-243.51, -140.67)

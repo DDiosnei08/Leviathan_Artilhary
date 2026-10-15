@@ -1,0 +1,221 @@
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Events;
+
+public enum CannonState { Empty, Preparing, Loading, Loaded, Recoiling }
+
+[Serializable]
+public class AmmoType
+{
+    public string name = "HE";
+    public GameObject projectilePrefab;
+    [Tooltip("Velocidade de saida em m/s")]
+    public float muzzleVelocity = 250f;
+    public int stock = 10;
+}
+
+/// <summary>
+/// Controla UM canhao: elevacao, ciclo de carga (abaixa para 5 graus, abre o ferrolho, carrega,
+/// fecha), disparo e recuo da culatra. Independente de input: chame os metodos publicos.
+///
+/// Ligue no Inspector os pivos importados do FBX:
+///   elevationPivot = Canhao_X_PIVO_Elevacao   (gira no munhao)
+///   recoilPivot    = Canhao_X_PIVO_Recuo      (desliza para tras)
+///   doorHinge      = Canhao_X_PIVO_Ferrolho   (dobradica do ferrolho)
+///   muzzle         = Canhao_X_BOCA            (ponta do cano)
+///
+/// Se algo girar para o lado errado, ajuste os eixos/sinais abaixo (os eixos locais dos
+/// empties dependem de como a Unity importou o FBX).
+/// </summary>
+public class CannonController : MonoBehaviour
+{
+    [Header("Pivos (do FBX)")]
+    public Transform elevationPivot;
+    public Transform recoilPivot;
+    public Transform doorHinge;
+    public Transform muzzle;
+
+    [Header("Eixos locais (ajuste se invertido)")]
+    public Vector3 elevationAxis = Vector3.right;
+    public Vector3 recoilAxis = Vector3.forward;      // direcao do cano; o recuo vai no sentido oposto
+    public Vector3 doorAxis = Vector3.up;
+    [Tooltip("Direcao do tiro no espaco local do 'muzzle'")]
+    public Vector3 muzzleLocalDirection = Vector3.forward;
+    public bool invertElevation = false;
+
+    [Header("Elevacao (graus)")]
+    public float minElevation = 0f;
+    public float maxElevation = 40f;
+    public float loadElevation = 5f;
+    [Tooltip("Graus por segundo")]
+    public float elevationSpeed = 6f;
+
+    [Header("Ciclo de carga")]
+    public float doorOpenAngle = 100f;                // invertido no lado D se a porta abrir para dentro
+    public float doorTime = 1.2f;
+    public float loadTime = 2.5f;
+
+    [Header("Recuo")]
+    public float recoilDistance = 1f;
+    public float recoilTime = 0.12f;
+    public float recoverTime = 1.6f;
+
+    [Header("Municao")]
+    public AmmoType[] ammo;
+    public int selectedAmmo = 0;
+
+    [Header("Eventos (som, particulas, camera shake, HUD)")]
+    public UnityEvent onLoadStart;
+    public UnityEvent onLoadFinished;
+    public UnityEvent onFire;
+    public UnityEvent<CannonState> onStateChanged;
+
+    public CannonState State { get; private set; } = CannonState.Empty;
+    public float Elevation { get; private set; }
+    public AmmoType CurrentAmmo => (ammo != null && selectedAmmo >= 0 && selectedAmmo < ammo.Length) ? ammo[selectedAmmo] : null;
+
+    Quaternion elevRest, doorRest;
+    Vector3 recoilRest;
+    float elevInput;
+    bool busy;
+
+    void Awake()
+    {
+        elevRest = elevationPivot.localRotation;
+        recoilRest = recoilPivot.localPosition;
+        doorRest = doorHinge.localRotation;
+        Elevation = Mathf.Clamp(loadElevation, minElevation, maxElevation);
+        ApplyElevation();
+    }
+
+    // ------------------------------------------------------------ API publica
+    /// <summary>-1 (abaixa) .. +1 (sobe). Ignorado durante a carga e o recuo.</summary>
+    public void SetElevationInput(float v) => elevInput = Mathf.Clamp(v, -1f, 1f);
+
+    public void SelectAmmo(int index)
+    {
+        if (State == CannonState.Empty && ammo != null && index >= 0 && index < ammo.Length)
+            selectedAmmo = index;
+    }
+
+    public bool RequestLoad()
+    {
+        var a = CurrentAmmo;
+        if (State != CannonState.Empty || busy || a == null || a.stock <= 0) return false;
+        StartCoroutine(LoadRoutine());
+        return true;
+    }
+
+    public bool Fire()
+    {
+        if (State != CannonState.Loaded || busy) return false;
+        StartCoroutine(FireRoutine());
+        return true;
+    }
+
+    // ------------------------------------------------------------ loop
+    void Update()
+    {
+        if (busy || Mathf.Approximately(elevInput, 0f)) return;
+        Elevation = Mathf.Clamp(Elevation + elevInput * elevationSpeed * Time.deltaTime, minElevation, maxElevation);
+        ApplyElevation();
+    }
+
+    void ApplyElevation()
+    {
+        float sign = invertElevation ? -1f : 1f;
+        elevationPivot.localRotation = elevRest * Quaternion.AngleAxis(sign * Elevation, elevationAxis);
+    }
+
+    void SetState(CannonState s)
+    {
+        State = s;
+        onStateChanged?.Invoke(s);
+    }
+
+    // ------------------------------------------------------------ corrotinas
+    IEnumerator LoadRoutine()
+    {
+        busy = true;
+        SetState(CannonState.Preparing);
+
+        // 1) volta para o angulo de carga
+        float target = Mathf.Clamp(loadElevation, minElevation, maxElevation);
+        while (!Mathf.Approximately(Elevation, target))
+        {
+            Elevation = Mathf.MoveTowards(Elevation, target, elevationSpeed * 1.5f * Time.deltaTime);
+            ApplyElevation();
+            yield return null;
+        }
+
+        // 2) abre o ferrolho
+        yield return RotateDoor(0f, doorOpenAngle, doorTime);
+
+        // 3) carrega (aqui voce anima o elevador/bandeja/projetil, toca som, etc.)
+        SetState(CannonState.Loading);
+        onLoadStart?.Invoke();
+        yield return new WaitForSeconds(loadTime);
+        CurrentAmmo.stock--;
+
+        // 4) fecha o ferrolho
+        yield return RotateDoor(doorOpenAngle, 0f, doorTime);
+
+        onLoadFinished?.Invoke();
+        SetState(CannonState.Loaded);
+        busy = false;
+    }
+
+    IEnumerator RotateDoor(float from, float to, float time)
+    {
+        for (float t = 0f; t < time; t += Time.deltaTime)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, t / time);
+            doorHinge.localRotation = doorRest * Quaternion.AngleAxis(Mathf.Lerp(from, to, k), doorAxis);
+            yield return null;
+        }
+        doorHinge.localRotation = doorRest * Quaternion.AngleAxis(to, doorAxis);
+    }
+
+    IEnumerator FireRoutine()
+    {
+        busy = true;
+        SetState(CannonState.Recoiling);
+
+        // projetil
+        var a = CurrentAmmo;
+        if (a != null && a.projectilePrefab != null && muzzle != null)
+        {
+            var go = Instantiate(a.projectilePrefab, muzzle.position, muzzle.rotation);
+            if (go.TryGetComponent(out Rigidbody rb))
+            {
+                Vector3 dir = muzzle.TransformDirection(muzzleLocalDirection).normalized;
+                go.transform.rotation = Quaternion.LookRotation(dir);
+                rb.AddForce(dir * a.muzzleVelocity, ForceMode.VelocityChange);
+            }
+        }
+        onFire?.Invoke();
+
+        Vector3 back = recoilRest - recoilAxis.normalized * recoilDistance;
+
+        // recuo rapido (ease-out)
+        for (float t = 0f; t < recoilTime; t += Time.deltaTime)
+        {
+            float k = 1f - Mathf.Pow(1f - t / recoilTime, 3f);
+            recoilPivot.localPosition = Vector3.Lerp(recoilRest, back, k);
+            yield return null;
+        }
+        recoilPivot.localPosition = back;
+
+        // retorno lento (ease in-out)
+        for (float t = 0f; t < recoverTime; t += Time.deltaTime)
+        {
+            recoilPivot.localPosition = Vector3.Lerp(back, recoilRest, Mathf.SmoothStep(0f, 1f, t / recoverTime));
+            yield return null;
+        }
+        recoilPivot.localPosition = recoilRest;
+
+        SetState(CannonState.Empty);
+        busy = false;
+    }
+}

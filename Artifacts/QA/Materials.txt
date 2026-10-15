@@ -1,0 +1,59 @@
+PASS Polished scene starts without gameplay or shader errors
+PASS Supported shader: Leviathan/Dieselpunk Surface
+PASS Supported shader: Leviathan/Cartoon Terrain
+PASS Supported shader: Leviathan/Cartoon Water
+PASS Supported shader: Leviathan/Cartoon Trees
+PASS Supported shader: Leviathan/Procedural Grass
+PASS One base, with no extra gameplay objects
+PASS No player overlays introduced
+PASS Biome texture remains assigned on (-3, -3)
+PASS Biome texture remains assigned on (-2, -3)
+PASS Biome texture remains assigned on (-1, -3)
+PASS Biome texture remains assigned on (0, -3)
+PASS Biome texture remains assigned on (1, -3)
+PASS Biome texture remains assigned on (-3, -2)
+PASS Biome texture remains assigned on (-2, -2)
+PASS Biome texture remains assigned on (-1, -2)
+PASS Biome texture remains assigned on (0, -2)
+PASS Biome texture remains assigned on (1, -2)
+PASS Biome texture remains assigned on (-3, -1)
+PASS Biome texture remains assigned on (-2, -1)
+PASS Biome texture remains assigned on (-1, -1)
+PASS Biome texture remains assigned on (0, -1)
+PASS Biome texture remains assigned on (1, -1)
+PASS Biome texture remains assigned on (-3, 0)
+PASS Biome texture remains assigned on (-2, 0)
+PASS Biome texture remains assigned on (-1, 0)
+PASS Biome texture remains assigned on (0, 0)
+PASS Biome texture remains assigned on (1, 0)
+PASS Biome texture remains assigned on (-3, 1)
+PASS Biome texture remains assigned on (-2, 1)
+PASS Biome texture remains assigned on (-1, 1)
+PASS Biome texture remains assigned on (0, 1)
+PASS Biome texture remains assigned on (1, 1)
+PASS All scenery archetypes have instanced material overrides
+PASS GPU grass remains generated with unchanged density; blades=192110
+PASS Map and paper are excluded from weathering
+PASS Restrained color grade enabled: Camera Geral
+PASS Restrained color grade enabled: Camera Jogador
+PASS Restrained color grade enabled: Camera Instrumentos
+PASS No error materials in 01_Base_Dieselpunk
+PASS Image has visible tonal contrast: 01_Base_Dieselpunk
+PASS No error materials in 02_Instrumentos
+PASS Image has visible tonal contrast: 02_Instrumentos
+PASS Physical handwheel works with polished materials
+PASS No error materials in 03_Mapa_Fisico
+PASS Image has visible tonal contrast: 03_Mapa_Fisico
+PASS Physical map retains its renderer
+PASS No error materials in 04_Paisagem
+PASS Image has visible tonal contrast: 04_Paisagem
+INFO No water in the loaded window; animation is checked on an isolated shader fixture.
+PASS Water shader animates in an isolated GPU render; average channel delta=53,49679
+PASS Disabling scenery releases all material overrides
+PASS Material overrides preserve deterministic scenery regeneration
+PASS Supported shader: Leviathan/Dieselpunk Surface
+PASS Supported shader: Leviathan/Cartoon Terrain
+PASS Supported shader: Leviathan/Cartoon Water
+PASS Supported shader: Leviathan/Cartoon Trees
+PASS Supported shader: Leviathan/Procedural Grass
+PASS Rendering, controls, water animation and regeneration have no gameplay errors

@@ -1,0 +1,8 @@
+PASS Compute shader supported and compiles on AMD Radeon RX 6600
+PASS One integrated base remains
+PASS Scenery and tree exclusion radius is preserved
+FAIL System.NullReferenceException: Object reference not set to an instance of an object
+  at BaseGrassEdgeValidation.CheckDistribution (System.Boolean fixedTest) [0x0004e] in C:\ProjetoENTEC\GrassBaseEdgeWork\Assets\Editor\Grass\BaseGrassEdgeValidation.cs:155 
+  at BaseGrassEdgeValidation.IntegratedStep (System.Double now) [0x000e4] in C:\ProjetoENTEC\GrassBaseEdgeWork\Assets\Editor\Grass\BaseGrassEdgeValidation.cs:234 
+  at BaseGrassEdgeValidation.Tick () [0x000aa] in C:\ProjetoENTEC\GrassBaseEdgeWork\Assets\Editor\Grass\BaseGrassEdgeValidation.cs:82 
+ERROR NullReferenceException: Object reference not set to an instance of an object

@@ -1,0 +1,13 @@
+PASS Compute shader supported and compiles on AMD Radeon RX 6600
+PASS One integrated base remains
+PASS Scenery and tree exclusion radius is preserved
+PASS Grass generated: 629512
+PASS Grass returns close to concrete instead of the old 30 m scenery exclusion; near blades=2568
+INFO Closest accepted root distance=23,27277
+PASS Regeneration preserves seed and base position
+PASS Grass generated: 629512
+PASS Grass returns close to concrete instead of the old 30 m scenery exclusion; near blades=2568
+INFO Closest accepted root distance=23,27277
+PASS No overlays introduced
+PASS Grass LateUpdate remains zero GC over 30 steady-state samples
+PASS Integrated Play and terrain regeneration have no errors

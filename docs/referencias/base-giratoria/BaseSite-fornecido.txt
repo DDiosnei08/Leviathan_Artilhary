@@ -1,0 +1,249 @@
+using System;
+using UnityEngine;
+
+/// <summary>
+/// Implemente isto no seu gerador de terreno. Deve devolver a altura NATURAL do terreno
+/// (a funcao de ruido, SEM o achatamento da base), em metros, no ponto (x, z) do mundo.
+/// </summary>
+public interface IHeightSource
+{
+    float GetBaseHeight(float x, float z);
+}
+
+public enum BaseFacingMode { TowardsPoint, AwayFromPoint, Random }
+
+[Serializable]
+public class BaseSiteSettings
+{
+    public int seed = 12345;
+
+    [Header("Busca do local")]
+    public Vector2 searchCenter = Vector2.zero;
+    public float minDistance = 150f;
+    public float maxDistance = 700f;
+    [Tooltip("Distancia ideal ate o centro da busca (o local mais proximo disso pontua melhor)")]
+    public float preferredDistance = 300f;
+    public int candidates = 600;
+
+    [Header("Restricoes do terreno")]
+    public float waterLevel = 0f;
+    public float minAboveWater = 3f;
+    public float maxAltitude = 800f;
+    [Tooltip("Raio da area analisada. Deve ser >= flatRadius")]
+    public float checkRadius = 45f;
+    [Tooltip("Amostras por lado da grade de analise (impar)")]
+    public int gridSteps = 9;
+    [Tooltip("Maior diferenca de altura aceita dentro da area analisada")]
+    public float maxHeightRange = 6f;
+    public float maxSlopeDeg = 12f;
+    [Tooltip("Prefere locais mais altos que a vizinhanca (bom campo de tiro)")]
+    public float prominenceRadius = 150f;
+    public float prominenceWeight = 0.5f;
+
+    [Header("Geometria da base (bate com o modelo)")]
+    [Tooltip("Raio do platô plano em volta da base. O fosso do modelo tem 22 m")]
+    public float flatRadius = 28f;
+    [Tooltip("Distancia ate o terreno natural voltar (suavizacao)")]
+    public float blendRadius = 45f;
+    [Tooltip("Dentro deste raio o terreno e rebaixado (fica sob o piso do fosso). Menor que 22")]
+    public float carveRadius = 21f;
+    public float carveRamp = 1f;
+    [Tooltip("Quanto o terreno e rebaixado dentro do fosso (maior que os 3,4 m do modelo)")]
+    public float pitDepth = 3.6f;
+    [Tooltip("Raio sem vegetacao, pedras ou grama")]
+    public float exclusionRadius = 34f;
+
+    [Header("Orientacao")]
+    public BaseFacingMode facingMode = BaseFacingMode.TowardsPoint;
+    public Vector2 facePoint = Vector2.zero;
+}
+
+[Serializable]
+public struct BaseSiteData
+{
+    public bool valid;
+    public Vector2 center;          // (x, z) no mundo
+    public float groundHeight;      // altura do convés (y = 0 do modelo)
+    public float yaw;               // graus, 0 = +Z
+    public float score;
+    public float flatRadius, blendRadius, carveRadius, carveRamp, pitDepth, exclusionRadius;
+
+    public float InfluenceRadius => flatRadius + blendRadius;
+}
+
+public static class BaseSiteSolver
+{
+    public static BaseSiteData Solve(IHeightSource src, BaseSiteSettings s)
+    {
+        var rng = new System.Random(s.seed);
+        var cands = new Vector2[Mathf.Max(1, s.candidates)];
+        float min2 = s.minDistance * s.minDistance, max2 = s.maxDistance * s.maxDistance;
+        for (int i = 0; i < cands.Length; i++)
+        {
+            float a = (float)(rng.NextDouble() * Math.PI * 2.0);
+            float r = Mathf.Sqrt(Mathf.Lerp(min2, max2, (float)rng.NextDouble()));   // uniforme em area
+            cands[i] = s.searchCenter + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+        }
+
+        BaseSiteData best = default;
+        float bestScore = float.MaxValue;
+
+        // tenta com as restricoes originais e vai relaxando (altura/inclinacao) se nao achar nada
+        float[] relaxSteps = { 1f, 1.6f, 2.2f, 3f, 100f };
+        foreach (float k in relaxSteps)
+        {
+            foreach (var c in cands)
+            {
+                if (Evaluate(src, c, s, k, out float score, out float ground) && score < bestScore)
+                {
+                    bestScore = score;
+                    best = new BaseSiteData { valid = true, center = c, groundHeight = ground, score = score };
+                }
+            }
+            if (best.valid) break;
+        }
+
+        if (!best.valid)
+        {
+            Debug.LogWarning("[BaseSite] Nenhum local valido. Aumente maxDistance/candidates ou reduza minAboveWater.");
+            return best;
+        }
+
+        best.flatRadius = s.flatRadius;
+        best.blendRadius = s.blendRadius;
+        best.carveRadius = s.carveRadius;
+        best.carveRamp = s.carveRamp;
+        best.pitDepth = s.pitDepth;
+        best.exclusionRadius = s.exclusionRadius;
+
+        switch (s.facingMode)
+        {
+            case BaseFacingMode.TowardsPoint: best.yaw = Yaw(s.facePoint - best.center); break;
+            case BaseFacingMode.AwayFromPoint: best.yaw = Yaw(best.center - s.facePoint); break;
+            default: best.yaw = (float)(rng.NextDouble() * 360.0); break;
+        }
+        return best;
+    }
+
+    static float Yaw(Vector2 dir) =>
+        dir.sqrMagnitude < 1e-6f ? 0f : Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg;
+
+    static bool Evaluate(IHeightSource src, Vector2 c, BaseSiteSettings s, float k, out float score, out float ground)
+    {
+        score = 0f; ground = 0f;
+        int n = Mathf.Max(3, s.gridSteps | 1);                  // forca numero impar
+        float R = Mathf.Max(s.checkRadius, s.flatRadius);
+        float step = 2f * R / (n - 1);
+
+        var h = new float[n, n];
+        var inside = new bool[n, n];
+        float min = float.MaxValue, max = float.MinValue, innerSum = 0f;
+        int innerCount = 0;
+
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+            {
+                float x = c.x - R + i * step, z = c.y - R + j * step;
+                float dx = x - c.x, dz = z - c.y;
+                float d = Mathf.Sqrt(dx * dx + dz * dz);
+                if (d > R) continue;
+                inside[i, j] = true;
+                float y = src.GetBaseHeight(x, z);
+                h[i, j] = y;
+                if (y < min) min = y;
+                if (y > max) max = y;
+                if (d <= s.flatRadius) { innerSum += y; innerCount++; }
+            }
+
+        if (max > s.maxAltitude || min < s.waterLevel + s.minAboveWater) return false;
+        float range = max - min;
+        if (range > s.maxHeightRange * k) return false;
+
+        float maxSlope = 0f;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+            {
+                if (!inside[i, j]) continue;
+                if (i + 1 < n && inside[i + 1, j]) maxSlope = Mathf.Max(maxSlope, Slope(h[i, j], h[i + 1, j], step));
+                if (j + 1 < n && inside[i, j + 1]) maxSlope = Mathf.Max(maxSlope, Slope(h[i, j], h[i, j + 1], step));
+            }
+        if (maxSlope > s.maxSlopeDeg * k) return false;
+
+        ground = innerCount > 0 ? innerSum / innerCount : (min + max) * 0.5f;
+
+        // destaque: a base e melhor em terreno mais alto que o entorno
+        float ringSum = 0f;
+        for (int q = 0; q < 8; q++)
+        {
+            float a = q * Mathf.PI / 4f;
+            ringSum += src.GetBaseHeight(c.x + Mathf.Cos(a) * s.prominenceRadius, c.y + Mathf.Sin(a) * s.prominenceRadius);
+        }
+        float prominence = Mathf.Clamp((ground - ringSum / 8f) / 20f, -1f, 1f);
+
+        float dist = (c - s.searchCenter).magnitude;
+        score = range / Mathf.Max(0.01f, s.maxHeightRange)
+              + 0.5f * maxSlope / Mathf.Max(0.01f, s.maxSlopeDeg)
+              + 0.4f * Mathf.Abs(dist - s.preferredDistance) / Mathf.Max(1f, s.preferredDistance)
+              - s.prominenceWeight * prominence;
+        return true;
+    }
+
+    static float Slope(float a, float b, float step) =>
+        Mathf.Atan(Mathf.Abs(b - a) / step) * Mathf.Rad2Deg;
+}
+
+/// <summary>
+/// Ponto unico de consulta do local da base. Chame ModifyHeight no FINAL do calculo de altura
+/// do seu terreno (em todos os LODs): e uma funcao pura, entao nao ha emendas entre tiles.
+/// </summary>
+public static class BaseSiteRegistry
+{
+    public static bool HasSite { get; private set; }
+    public static BaseSiteData Site { get; private set; }
+
+    /// <summary>Disparado quando o local muda: reconstrua os tiles que intersectam o raio de influencia.</summary>
+    public static event Action<BaseSiteData> OnSiteChanged;
+
+    public static void Set(BaseSiteData data)
+    {
+        Site = data;
+        HasSite = data.valid;
+        OnSiteChanged?.Invoke(data);
+    }
+
+    public static void Clear()
+    {
+        HasSite = false;
+        Site = default;
+    }
+
+    public static float ModifyHeight(float x, float z, float naturalHeight)
+    {
+        if (!HasSite) return naturalHeight;
+
+        float dx = x - Site.center.x, dz = z - Site.center.y;
+        float d = Mathf.Sqrt(dx * dx + dz * dz);
+        if (d > Site.InfluenceRadius) return naturalHeight;
+
+        // plato plano com transicao suave para o terreno natural
+        float tBlend = Mathf.InverseLerp(Site.flatRadius, Site.InfluenceRadius, d);
+        float h = Mathf.Lerp(naturalHeight, Site.groundHeight, 1f - Mathf.SmoothStep(0f, 1f, tBlend));
+
+        // rebaixa o miolo para ficar sob o piso do fosso (a rampa fica escondida dentro da parede)
+        if (d < Site.carveRadius)
+        {
+            float tp = Mathf.InverseLerp(Site.carveRadius, Site.carveRadius - Site.carveRamp, d);
+            h = Mathf.Lerp(h, Site.groundHeight - Site.pitDepth, Mathf.SmoothStep(0f, 1f, tp));
+        }
+        return h;
+    }
+
+    /// <summary>true se (x,z) esta na zona sem vegetacao/grama/pedras em volta da base.</summary>
+    public static bool IsExcluded(float x, float z, float margin = 0f)
+    {
+        if (!HasSite) return false;
+        float dx = x - Site.center.x, dz = z - Site.center.y;
+        float r = Site.exclusionRadius + margin;
+        return dx * dx + dz * dz < r * r;
+    }
+}

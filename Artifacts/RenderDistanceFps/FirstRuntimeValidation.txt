@@ -1,0 +1,21 @@
+PASS FPS counter is integrated and restricted to test builds
+PASS FPS and frame time are sampled
+PASS FPS and ms use the same averaged frame interval
+PASS Display label contains measured values
+PASS Terrain streams a 5 x 5 window
+PASS Grass distance and bounded residency increased together
+PASS Extended coverage is not capped by the old 80-patch budget: 158
+PASS Trees render to 1.4 km
+PASS Scenery renders to 900 m
+PASS Camera far planes accommodate the extended world
+PASS GPU culling draws grass beyond old range and respects 240 m: distant=39590, max=239,9909
+PASS FPS diagnostic introduces no Canvas or gameplay HUD
+PASS FPS uses unscaled time and continues while gameplay time is paused
+PASS F8 hides the diagnostic
+PASS F8 shows the diagnostic again
+PASS Counter remains active across camera changes
+FAIL System.InvalidOperationException: GPU culling draws grass beyond old range and respects 240 m: distant=0, max=91,80437
+  at RenderDistanceFpsValidation.Check (System.Boolean condition, System.String message) [0x00020] in C:\ProjetoENTEC\RenderDistanceFpsWork\Assets\Editor\RenderDistanceFpsValidation.cs:54 
+  at RenderDistanceFpsValidation.CheckExtendedGrass () [0x001d5] in C:\ProjetoENTEC\RenderDistanceFpsWork\Assets\Editor\RenderDistanceFpsValidation.cs:151 
+  at RenderDistanceFpsValidation.Tick () [0x0056f] in C:\ProjetoENTEC\RenderDistanceFpsWork\Assets\Editor\RenderDistanceFpsValidation.cs:106 
+ERROR InvalidOperationException: GPU culling draws grass beyond old range and respects 240 m: distant=0, max=91,80437

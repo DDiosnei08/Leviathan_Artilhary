@@ -1,0 +1,22 @@
+{
+    "unity": "6000.6.3f1",
+    "gpu": "AMD Radeon RX 6600",
+    "api": "Direct3D11",
+    "threading": "LegacyJobified",
+    "indirectApi": "DrawMeshInstancedIndirect compatibility",
+    "note": "Whole-frame A/B estimate, not an isolated GPU timestamp for grass passes. Other open GPU workloads can affect it.",
+    "width": 1920,
+    "height": 1080,
+    "samplesPerState": 1200,
+    "residentPatches": 49,
+    "renderScale": 1.0,
+    "density": 5.0,
+    "gpuOnMedianMs": 1.16528,
+    "gpuOffMedianMs": 0.9998,
+    "incrementalMedianMs": 0.16548000000000007,
+    "gpuOnP95Ms": 1.18908,
+    "gpuOffP95Ms": 1.01416,
+    "nearShadows": true,
+    "bufferBytes": 14357760,
+    "maximumGrassUpdateGcBytes": 0
+}

@@ -1,0 +1,24 @@
+PASS FPS counter is integrated and restricted to test builds
+PASS FPS and frame time are sampled
+PASS FPS and ms use the same averaged frame interval
+PASS Display label contains measured values
+PASS Terrain streams a 5 x 5 window
+PASS Grass distance and bounded residency increased together
+PASS Extended coverage is not capped by the old 80-patch budget: 236
+PASS Trees render to 1.4 km
+PASS Scenery renders to 900 m
+PASS Camera far planes accommodate the extended world
+PASS GPU culling draws grass beyond old range and respects 240 m: distant=28349, max=239,9909
+PASS FPS diagnostic introduces no Canvas or gameplay HUD
+PASS FPS uses unscaled time and continues while gameplay time is paused
+PASS F8 hides the diagnostic
+PASS F8 shows the diagnostic again
+PASS Counter remains active across camera changes
+PASS Grass follows the station camera frustum
+PASS GPU culling draws grass beyond old range and respects 240 m: distant=1170, max=239,9025
+PASS Regeneration preserves world seed and base location
+PASS One base remains after regeneration
+PASS GPU culling draws grass beyond old range and respects 240 m: distant=28349, max=239,9909
+PASS Extended scene, FPS input and regeneration run without errors
+INFO Offscreen camera captures do not include the IMGUI FPS overlay.
+INFO Grass buffer pool bytes=124852480; texture bytes=7320500

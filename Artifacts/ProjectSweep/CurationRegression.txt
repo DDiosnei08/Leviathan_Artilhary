@@ -1,0 +1,62 @@
+PASS Naturally supported base found for seed -1204466725
+PASS Dry support footprint for seed -1204466725; range=0,0489502
+PASS Base placement deterministic for seed -1204466725
+PASS Naturally supported base found for seed 12345
+PASS Dry support footprint for seed 12345; range=0,1391602
+PASS Base placement deterministic for seed 12345
+PASS Naturally supported base found for seed 9173
+PASS Dry support footprint for seed 9173; range=0,1217651
+PASS Base placement deterministic for seed 9173
+PASS Naturally supported base found for seed 77
+PASS Dry support footprint for seed 77; range=0,1263123
+PASS Base placement deterministic for seed 77
+PASS Naturally supported base found for seed 2026
+PASS Dry support footprint for seed 2026; range=0,07675171
+PASS Base placement deterministic for seed 2026
+PASS Naturally supported base found for seed 1
+PASS Dry support footprint for seed 1; range=0,043396
+PASS Base placement deterministic for seed 1
+PASS Naturally supported base found for seed 42
+PASS Dry support footprint for seed 42; range=0,02700806
+PASS Base placement deterministic for seed 42
+PASS Naturally supported base found for seed 777
+PASS Dry support footprint for seed 777; range=0,20047
+PASS Base placement deterministic for seed 777
+PASS Naturally supported base found for seed 654321
+PASS Dry support footprint for seed 654321; range=0,1292725
+PASS Base placement deterministic for seed 654321
+PASS Naturally supported base found for seed 9001
+PASS Dry support footprint for seed 9001; range=0,1596375
+PASS Base placement deterministic for seed 9001
+PASS Editor preview relocates after changing terrain seed
+PASS Editor preview and terrain seed stay synchronized
+PASS Streaming window follows the relocated preview
+PASS Editor preview returns to original seed
+PASS Curated rock, pole, barrier, sandbag and crate prototypes connected
+PASS Vertex-color mesh ready: Stone A
+PASS Vertex-color mesh ready: Stone B
+PASS Vertex-color mesh ready: Stone C
+PASS Vertex-color mesh ready: Utility pole
+PASS Vertex-color mesh ready: Concrete barrier
+PASS Vertex-color mesh ready: Sandbags
+PASS Vertex-color mesh ready: Supply crate
+PASS Downloaded oak has a reduced geometry LOD
+PASS Downloaded fir has a reduced geometry LOD
+PASS No Unity errors during curated-world startup
+PASS Exactly one base in Play
+PASS No overlay UI introduced
+PASS Scenery generated; count=1726
+PASS Downloaded trees generated; count=12549
+PASS Scenery avoids water, roads and the base footprint
+PASS Scenery rests on current terrain LOD; root error=0
+PASS Rocks, poles, barriers and supply crates all appear
+PASS Nearby props use a bounded collider pool; active=6
+INFO Role counts: rocks=1675 poles=37 barriers=10 crates=4
+PASS Terrain opening is centered, bounded and does not cover the imported pit
+PASS Physical pit center matches the terrain opening
+PASS No magenta materials in 01_Base_Integrada
+PASS No magenta materials in 02_Base_Vista_Superior
+PASS No magenta materials in 03_Bosque_Pedras
+PASS Curated materials render without shader errors
+PASS Scenery regeneration is deterministic
+PASS Regeneration has no Unity errors

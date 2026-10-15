@@ -1,0 +1,21 @@
+INFO Unity=6000.6.3f1 GPU=AMD Radeon RX 6600
+PASS Serialized external GUIDs resolve: 2245 references
+PASS Build scene reference: Assets/Scenes/Leviathan_BaseGiratoria.unity
+PASS Build scene reference: Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+PASS All prefab hierarchies have resolved scripts
+PASS Scene scripts resolve: Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+PASS Scene scripts resolve: Assets/Scenes/Tests/SurfaceSplineDemo.unity
+PASS Saved spline rebuilds without recreating demo: Spline Cone
+PASS Saved spline rebuilds without recreating demo: Spline Paisagem
+PASS Saved spline rebuilds without recreating demo: Spline Esfera
+PASS Scene scripts resolve: Assets/Scenes/Leviathan_BaseGiratoria.unity
+INFO Materials inspected=60
+PASS Shader supported: Assets/Shaders/Environment/CartoonWater.shader
+PASS Shader supported: Assets/Shaders/Vegetation/TreeCartoon.shader
+PASS Compute supported: Assets/Shaders/Grass/ProceduralGrass.compute
+PASS Shader supported: Assets/Shaders/Environment/LayeredSky.shader
+PASS Shader supported: Assets/Shaders/Environment/CartoonTerrain.shader
+PASS Shader supported: Assets/Shaders/Environment/SplineTrack.shader
+PASS Shader supported: Assets/Shaders/Environment/IndustrialMist.shader
+PASS Shader supported: Assets/Shaders/Grass/ProceduralGrass.shader
+PASS Shader supported: Assets/Shaders/Environment/DieselpunkSurface.shader

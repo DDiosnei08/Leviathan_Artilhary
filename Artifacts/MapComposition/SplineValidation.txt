@@ -1,0 +1,47 @@
+PASS Spline Cone: generated mesh
+PASS Spline Cone: every vertex has supporting surface
+PASS Spline Cone: continuous ribbon without rejected triangles (actual 0)
+PASS Spline Cone: surface contact error below 2mm; max=2,249236E-06
+PASS Spline Paisagem: generated mesh
+PASS Spline Paisagem: every vertex has supporting surface
+PASS Spline Paisagem: continuous ribbon without rejected triangles (actual 0)
+PASS Spline Paisagem: surface contact error below 2mm; max=9,83025E-07
+PASS Spline Esfera: generated mesh
+PASS Spline Esfera: every vertex has supporting surface
+PASS Spline Esfera: continuous ribbon without rejected triangles (actual 0)
+PASS Spline Esfera: surface contact error below 2mm; max=8,949434E-06
+PASS Closed seam vertex 0
+PASS Closed seam vertex 1
+PASS Closed seam vertex 2
+PASS Closed seam vertex 3
+PASS Closed seam vertex 4
+PASS Closed seam vertex 5
+PASS Closed seam vertex 6
+PASS Closed seam vertex 7
+PASS Closed seam vertex 8
+PASS Closed seam vertex 9
+PASS Closed seam vertex 10
+PASS Closed seam vertex 11
+PASS Closed seam vertex 12
+PASS Rebuild releases the previous owned mesh
+PASS Disable releases generated mesh
+PASS Missing surface produces no floating ribbon
+PASS Invalid direction reported without stale output
+PASS Spline Paisagem: generated mesh
+PASS Spline Paisagem: every vertex has supporting surface
+PASS Spline Paisagem: continuous ribbon without rejected triangles (actual 0)
+PASS Spline Paisagem: surface contact error below 2mm; max=9,83025E-07
+PASS Generated collider is updated and excluded from projection
+PASS Layer mask is honored even for explicit targets
+PASS Spline Paisagem: generated mesh
+PASS Spline Paisagem: every vertex has supporting surface
+PASS Spline Paisagem: continuous ribbon without rejected triangles (actual 0)
+PASS Spline Paisagem: surface contact error below 2mm; max=1,832843E-06
+PASS Gap cuts unsupported triangles while retaining supported segments
+PASS No triangle bridges the missing surface
+PASS GPU capture contains the intended yellow ribbon, pixels=38423
+PASS Demo Play does not spawn the fallback game terrain
+PASS Three independent spline surfaces remain in Play
+PASS Spline Paisagem: survives entering Play
+PASS Spline Cone: survives entering Play
+PASS Spline Esfera: survives entering Play

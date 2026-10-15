@@ -1,0 +1,158 @@
+#pragma kernel Generate
+#pragma kernel Cull
+#include "GrassData.hlsl"
+RWStructuredBuffer<GrassBlade> _Blades;
+RWByteAddressBuffer _GeneratedCount;
+AppendStructuredBuffer<uint> _Visible0;
+AppendStructuredBuffer<uint> _Visible1;
+AppendStructuredBuffer<uint> _Visible2;
+AppendStructuredBuffer<uint> _ShadowVisible;
+Texture2D<float> _HeightMap;
+Texture2D<float4> _NormalDensity;
+Texture2D<float4> _BiomeMap;
+SamplerState sampler_NormalDensity;
+SamplerState sampler_BiomeMap;
+StructuredBuffer<float4> _Exclusions;
+uint _ExclusionCount;
+uint _CandidateCount;
+uint _GridResolution;
+uint _Seed;
+uint _TerrainStride;
+uint _Resolution;
+uint _TerrainLod;
+uint _UseCulling;
+uint _CastShadows;
+float _PatchSize;
+float _TileSize;
+float2 _PatchOrigin;
+float2 _GlobalPatch;
+float2 _HeightRange;
+float2 _WidthRange;
+float2 _BendRange;
+float4x4 _TileToWorld;
+float3 _CameraPosition;
+float4 _Frustum[6];
+float4 _LodDistances; // near, middle, far, transition width
+float2 _DensityLods;
+float2 _TerrainLodBlend;
+float _ShadowDistance;
+float4 _BaseGrassSite; // world centre XZ, concrete radius, valid
+float4 _BaseGrassEdge; // clearance, density fade, outward variation, world noise scale
+
+float BaseEdgeNoise(float2 p)
+{
+    int2 cell = (int2)floor(p);
+    float2 f = frac(p);
+    f = f * f * (3 - 2 * f);
+    uint seed = _Seed ^ 0x6b8b4567u;
+    float a = GrassRandom(asuint(cell.x) ^ GrassHash(asuint(cell.y)) ^ seed);
+    float b = GrassRandom(asuint(cell.x + 1) ^ GrassHash(asuint(cell.y)) ^ seed);
+    float c = GrassRandom(asuint(cell.x) ^ GrassHash(asuint(cell.y + 1)) ^ seed);
+    float d = GrassRandom(asuint(cell.x + 1) ^ GrassHash(asuint(cell.y + 1)) ^ seed);
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float BaseGrassDensity(float2 world)
+{
+    if (_BaseGrassSite.w < 0.5) return 1;
+    float edgeDistance = distance(world, _BaseGrassSite.xy) - _BaseGrassSite.z - _BaseGrassEdge.x;
+    if (edgeDistance <= 0) return 0;
+    if (edgeDistance >= _BaseGrassEdge.y + _BaseGrassEdge.z) return 1;
+    // World-space, seeded noise is continuous across tiles; variation only expands the safe edge.
+    float offset = BaseEdgeNoise(world * _BaseGrassEdge.w) * _BaseGrassEdge.z;
+    return smoothstep(0, _BaseGrassEdge.y, edgeDistance - offset);
+}
+
+float2 GrassUV(float2 local) { return float2(local.x / _TileSize, 1 - local.y / _TileSize); }
+float SurfaceHeight(float2 local)
+{
+    float2 grid = saturate(GrassUV(local)) * (_Resolution - 1);
+    uint2 a = (uint2)floor(grid / _TerrainStride) * _TerrainStride;
+    a = min(a, _Resolution - 2);
+    uint2 b = min(a + _TerrainStride, _Resolution - 1);
+    float2 f = saturate((grid - a) / max((float2)(b - a), 1));
+    float h00 = _HeightMap.Load(int3(a, 0));
+    float h10 = _HeightMap.Load(int3(b.x, a.y, 0));
+    float h01 = _HeightMap.Load(int3(a.x, b.y, 0));
+    float h11 = _HeightMap.Load(int3(b, 0));
+    return f.x + f.y <= 1 ? h00 * (1 - f.x - f.y) + h10 * f.x + h01 * f.y
+        : h11 * (f.x + f.y - 1) + h10 * (1 - f.y) + h01 * (1 - f.x);
+}
+[numthreads(64,1,1)]
+void Generate(uint id : SV_DispatchThreadID)
+{
+    if (id >= _CandidateCount) return;
+    uint2 cell = uint2(id % _GridResolution, id / _GridResolution);
+    int2 globalCell = (int2)_GlobalPatch * (int)_GridResolution + (int2)cell;
+    uint seed = GrassHash(asuint(globalCell.x) ^ GrassHash(asuint(globalCell.y)) ^ _Seed);
+    float2 jitter = float2(GrassRandom(seed + 1), GrassRandom(seed + 2));
+    float2 local = _PatchOrigin + (cell + lerp(0.06, 0.94, jitter)) * (_PatchSize / _GridResolution);
+    GrassBlade blade = (GrassBlade)0;
+    blade.seed = seed;
+    if (any(local < 0) || any(local >= _TileSize)) { _Blades[id] = blade; return; }
+    float2 uv = GrassUV(local);
+    float2 maskUV = (uv * (_Resolution - 1) + 0.5) / _Resolution;
+    float4 surface = _NormalDensity.SampleLevel(sampler_NormalDensity, maskUV, 0);
+    // A wet/road/rock corner forbids the whole interpolation cell; do not grow over clipped shores.
+    uint2 sampleCell = min((uint2)floor(uv * (_Resolution - 1)), _Resolution - 2);
+    float safeDensity = min(min(_NormalDensity.Load(int3(sampleCell,0)).w, _NormalDensity.Load(int3(sampleCell + uint2(1,0),0)).w),
+        min(_NormalDensity.Load(int3(sampleCell + uint2(0,1),0)).w, _NormalDensity.Load(int3(sampleCell + 1,0)).w));
+    surface.w = min(surface.w, safeDensity);
+    float3 root = float3(local.x, SurfaceHeight(local) - 0.015, local.y);
+    float3 world = mul(_TileToWorld, float4(root, 1)).xyz;
+    surface.w *= BaseGrassDensity(world.xz);
+    bool excluded = false;
+    for (uint i = 0; i < _ExclusionCount; i++)
+    {
+        float4 minimum = _Exclusions[i * 2], maximum = _Exclusions[i * 2 + 1];
+        excluded = excluded || (all(world.xz >= minimum.xz) && all(world.xz <= maximum.xz));
+    }
+    if (excluded || surface.w <= 0 || GrassRandom(seed + 3) > surface.w) { _Blades[id] = blade; return; }
+    float clump = GrassRandom(GrassHash(asuint((int)floor(world.x / 3))) ^ asuint((int)floor(world.z / 3)) ^ _Seed);
+    float h = lerp(_HeightRange.x, _HeightRange.y, GrassRandom(seed + 4)) * lerp(0.8, 1.1, clump);
+    float w = lerp(_WidthRange.x, _WidthRange.y, GrassRandom(seed + 5));
+    blade.position = root;
+    blade.shape = PackGrassHalf2(float2(h, w));
+    blade.normal = PackGrassNormal(normalize(surface.xyz));
+    blade.directionBend = PackGrassHalf2(float2(GrassRandom(seed + 6) * 6.2831853,
+        lerp(_BendRange.x, _BendRange.y, lerp(clump, GrassRandom(seed + 7), 0.5))));
+    blade.color = PackGrassColor(_BiomeMap.SampleLevel(sampler_BiomeMap, uv, 0).rgb * lerp(0.85, 1.08, GrassRandom(seed + 8)));
+    _Blades[id] = blade;
+    uint ignored;
+    _GeneratedCount.InterlockedAdd(0, 1, ignored);
+}
+[numthreads(64,1,1)]
+void Cull(uint id : SV_DispatchThreadID)
+{
+    if (id >= _CandidateCount) return;
+    GrassBlade blade = _Blades[id];
+    if (blade.shape == 0) return;
+    // Refit on the GPU to the applied terrain mesh, without rebuilding the distribution.
+    blade.position.y = SurfaceHeight(blade.position.xz) - 0.015;
+    _Blades[id] = blade;
+    float3 root = mul(_TileToWorld, float4(blade.position, 1)).xyz;
+    float h = UnpackGrassHalf2(blade.shape).x;
+    float distanceToCamera = distance(root, _CameraPosition);
+    if (_CastShadows != 0 && distanceToCamera < _ShadowDistance && _TerrainLod < 2)
+        _ShadowVisible.Append(id);
+    if (_TerrainLod >= 3) return;
+    if (_UseCulling != 0)
+    {
+        if (distanceToCamera > _LodDistances.z) return;
+        float3 center = root + float3(0, h * 0.5, 0);
+        for (int p = 0; p < 6; p++)
+            if (dot(_Frustum[p].xyz, center) + _Frustum[p].w < -(h + 0.8)) return;
+    }
+    float mid = smoothstep(_LodDistances.x, _LodDistances.x + _LodDistances.w, distanceToCamera);
+    float far = smoothstep(_LodDistances.y, _LodDistances.y + _LodDistances.w, distanceToCamera);
+    float terrainWeight = smoothstep(_LodDistances.y, _LodDistances.y + _LodDistances.w, distanceToCamera);
+    mid = max(mid, _TerrainLodBlend.x * terrainWeight);
+    far = max(far, _TerrainLodBlend.y * terrainWeight);
+    float density = lerp(lerp(1, _DensityLods.x, mid), _DensityLods.y, far);
+    if (_UseCulling == 0) { mid = 0; far = 0; density = 1; }
+    if (GrassRandom(blade.seed + 19) > density) return;
+    float choice = GrassRandom(blade.seed + 23);
+    if (choice < far) _Visible2.Append(id);
+    else if (choice < mid) _Visible1.Append(id);
+    else _Visible0.Append(id);
+}

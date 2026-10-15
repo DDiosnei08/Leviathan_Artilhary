@@ -1,0 +1,24 @@
+PASS Eroded chunk borders match on both axes; max error=0
+PASS Normal sampling halos match across eroded chunk borders; max error=0
+PASS Erosion generation repeats exactly for the same seed
+PASS The scene has a valid naturally flat base site
+PASS Placing the base does not change any natural height sample
+PASS Erosion adds measurable surface relief; maximum change=13
+PASS The full base footprint fits natural flat ground; range=0,04675293
+PASS Base footprint is dry
+PASS Dense grass with valid meadow height variation is connected
+PASS URP tree shader imported
+PASS Play startup has no runtime or shader errors
+PASS Living trees generated across terrain chunks; count=34200
+PASS Exactly one base remains active
+PASS Environment adds no HUD or Canvas
+PASS Screenshot 01_Base_Terreno_Natural has no magenta error materials
+PASS Screenshot 02_Grama_Arvores has no magenta error materials
+PASS Tree frustum/distance culling retains visible trees
+PASS Trees avoid water, roads, POIs and the base footprint
+PASS Tree trunks follow their terrain LOD; max error=0,0003967285
+PASS GPU grass culling retains a populated field; visible blades=36199
+PASS Grass roots follow rendered terrain; max error=0,0001062015
+INFO Grass buffer bytes=124852480; CPU Update allocation=0
+PASS Tree regeneration preserves seeded positions and density
+PASS Rendering and regeneration have no Unity errors

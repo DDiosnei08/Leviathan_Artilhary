@@ -1,0 +1,219 @@
+Asset	Scene dependency	Direct referrer count	Direct referrers
+Assets/Documentation/BASE-PROVISORIA-INTEGRADA.md	False	0	
+Assets/Documentation/GUIA-RAPIDO.md	False	0	
+Assets/Documentation/TERRAIN-PROCEDURAL.md	False	0	
+Assets/Documentation/TEST-SCENES.md	False	0	
+Assets/Editor/BaseIntegration/BaseIntegrationBuilder.cs	False	0	
+Assets/Editor/BaseIntegration/BaseIntegrationValidation.cs	False	0	
+Assets/Editor/BaseIntegration/BaseModelInspection.cs	False	0	
+Assets/Editor/Environment/AssetCurationSetup.cs	False	0	
+Assets/Editor/Environment/AssetCurationValidation.cs	False	0	
+Assets/Editor/Environment/BasePreviewCoordinator.cs	False	0	
+Assets/Editor/Environment/CuratedMeshBaker.cs	False	0	
+Assets/Editor/Environment/DownloadedAssetSurvey.cs	False	0	
+Assets/Editor/Environment/EnvironmentEnrichmentSetup.cs	False	0	
+Assets/Editor/Environment/EnvironmentEnrichmentValidation.cs	False	0	
+Assets/Editor/Grass/GrassManagerEditor.cs	False	0	
+Assets/Editor/Grass/GrassValidation.cs	False	0	
+Assets/Editor/PhysicalInteractionValidation.cs	False	0	
+Assets/Editor/ProjectOrganizationValidator.cs	False	0	
+Assets/Editor/ProjectSweepValidation.cs	False	0	
+Assets/Editor/SceneBuilders/CartoonShaderSceneBuilder.cs	False	0	
+Assets/Editor/SceneBuilders/IntegratedBattlefieldSceneBuilder.cs	False	0	
+Assets/Editor/SceneBuilders/PhysicalInteractionSceneSetup.cs	False	0	
+Assets/Editor/Terrain/TerrainEditorWindow.cs	False	0	
+Assets/Editor/Terrain/TerrainWorldControllerEditor.cs	False	0	
+Assets/Materials/Base/BaseConcrete.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/Base/BaseMetal.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/Base/BaseSafety.mat	True	2	Assets/Prefabs/BaseGiratoria.prefab;Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Materials/Base/BaseSandbags.mat	False	0	
+Assets/Materials/Base/BaseSupplies.mat	False	0	
+Assets/Materials/BaseGiratoria/Agulha.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Aro.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Botoes.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/CARGA.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/CARREGADO.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/CARREGAR AMBOS.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/EM CARGA.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Aco_escuro.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Aco_oxidado.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Amarelo_Seguranca.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Canhao_Verde_Escuro.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Concreto.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Faixa_Clara.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Lampada_Quente.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Latao.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Papel_Mapa.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Projetil_Latao.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FBX_Verde_Militar.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FOGO AMBOS.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/FOGO.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Instrumentos.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Mapa.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Marcador.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Mesa.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Mostrador.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/MUNICAO.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/PROPELENTE.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Tinta.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/VAZIO.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/BaseGiratoria/Volantes.mat	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Materials/Environment/CuratedProps.mat	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Materials/Grass/ProceduralGrass.mat	True	2	Assets/Settings/Grass/BaseGiratoriaGrass.asset;Assets/Settings/Grass/ProceduralGrass.asset
+Assets/Materials/Legacy/MeshMaterial.mat	False	0	
+Assets/Materials/Terrain/TerrainCartoon.mat	True	5	Assets/Scenes/Leviathan_BaseGiratoria.unity;Assets/Settings/Terrain/BaseGiratoriaTerrain.asset;Assets/Settings/Terrain/BaseProvisoriaTerrain.asset;Assets/Settings/Terrain/CartoonShaderDemo.asset;Assets/Settings/Terrain/LeviathanTerrain.asset
+Assets/Materials/Vegetation/TreeCartoon.mat	True	1	Assets/Settings/Vegetation/ProceduralTrees.asset
+Assets/Materials/Water/WaterCartoon.mat	True	4	Assets/Settings/Terrain/BaseGiratoriaTerrain.asset;Assets/Settings/Terrain/BaseProvisoriaTerrain.asset;Assets/Settings/Terrain/CartoonShaderDemo.asset;Assets/Settings/Terrain/LeviathanTerrain.asset
+Assets/Models/Artillery/Gauges/ArtilleryGaugeSet.fbx	True	1	Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Models/Environment/Curated/Crate_01.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Environment/Curated/Fir_Tree.asset	True	1	Assets/Settings/Vegetation/ProceduralTrees.asset
+Assets/Models/Environment/Curated/Fir_Tree_LOD1.asset	True	1	Assets/Settings/Vegetation/ProceduralTrees.asset
+Assets/Models/Environment/Curated/LightPole.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Environment/Curated/Oak_Tree.asset	True	1	Assets/Settings/Vegetation/ProceduralTrees.asset
+Assets/Models/Environment/Curated/Oak_Tree_LOD1.asset	True	1	Assets/Settings/Vegetation/ProceduralTrees.asset
+Assets/Models/Environment/Curated/PRE_Concrete_Barrier_1.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Environment/Curated/sandbag_barricade.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Environment/Curated/Stone_1.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Environment/Curated/Stone_3.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Environment/Curated/Stone_5.asset	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Models/Vegetation/Broadleaf_LOD0.asset	False	0	
+Assets/Models/Vegetation/Broadleaf_LOD1.asset	False	0	
+Assets/Models/Vegetation/Pine_LOD0.asset	False	0	
+Assets/Models/Vegetation/Pine_LOD1.asset	False	0	
+Assets/Models/World/BaseGiratoria/BaseCompleta.fbx	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Models/World/BaseGiratoria/MapQuad.asset	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Prefabs/BaseGiratoria.prefab	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Samples/UnityTemplate/Readme.asset	False	0	
+Assets/Samples/UnityTemplate/TutorialInfo/Editor/ReadmeEditor.cs	False	0	
+Assets/Samples/UnityTemplate/TutorialInfo/Icons/URP.png	False	1	Assets/Samples/UnityTemplate/Readme.asset
+Assets/Samples/UnityTemplate/TutorialInfo/Layout.wlt	False	0	
+Assets/Samples/UnityTemplate/TutorialInfo/Readme.cs	False	1	Assets/Samples/UnityTemplate/Readme.asset
+Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets/ReadmeEditor.uss	False	1	Assets/Samples/UnityTemplate/Readme.asset
+Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets/ReadmeEditorDark.uss	False	1	Assets/Samples/UnityTemplate/Readme.asset
+Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets/ReadmeEditorLight.uss	False	1	Assets/Samples/UnityTemplate/Readme.asset
+Assets/Scenes/Leviathan_BaseGiratoria.unity	True	0	
+Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity	True	0	
+Assets/Scripts/CommandAndPlayerTest/CommandRoomTestSceneBuilder.cs	False	0	
+Assets/Scripts/Gameplay/Artillery/ArtilleryGaugeDriver.cs	True	1	Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Scripts/Gameplay/Artillery/ArtilleryTestController.cs	True	1	Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Scripts/Gameplay/Artillery/AzimuthDialLabels.cs	False	0	
+Assets/Scripts/Gameplay/Artillery/AzimuthDialMarks.cs	False	0	
+Assets/Scripts/Gameplay/Artillery/ElevationDialLabels.cs	False	0	
+Assets/Scripts/Gameplay/Artillery/ElevationDialMarks.cs	False	0	
+Assets/Scripts/Gameplay/Artillery/HandwheelInteraction.cs	True	1	Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Scripts/Gameplay/Base/BaseAssembly.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Base/BaseGameRig.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/Gameplay/Base/BaseGaugeDriver.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Base/BaseHandwheelInteraction.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Base/BasePhysicalMap.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Base/BaseSite.cs	False	0	
+Assets/Scripts/Gameplay/Base/BaseSpawner.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/Gameplay/Base/CannonController.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Base/PlatformRotator.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Base/ProceduralHeightSource.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/Gameplay/CommandRoom/ArtilleryCommandLever.cs	False	0	
+Assets/Scripts/Gameplay/CommandRoom/CommandRoomCameraFocusZone.cs	False	0	
+Assets/Scripts/Gameplay/CommandRoom/CommandRoomClickable.cs	False	0	
+Assets/Scripts/Gameplay/CommandRoom/CommandRoomInteractor.cs	True	2	Assets/Scenes/Leviathan_BaseGiratoria.unity;Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Scripts/Gameplay/CommandRoom/MechanicalDialIndicator.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/CommandRoom/PhysicalPushButton.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/CommandRoom/RotaryInstrumentInteraction.cs	True	1	Assets/Prefabs/BaseGiratoria.prefab
+Assets/Scripts/Gameplay/Player/LeviathanPlayerController.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/Gameplay/TerrainPlacer.cs	False	0	
+Assets/Scripts/Prototypes/ArtilleryTestSceneBuilder.cs	True	1	Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity
+Assets/Scripts/Prototypes/CartoonShaderShowcase.cs	False	0	
+Assets/Scripts/Prototypes/CommandRoomTestSceneBuilder.cs	False	0	
+Assets/Scripts/Prototypes/GrassShowcase.cs	False	0	
+Assets/Scripts/Prototypes/IntegratedBattlefieldRig.cs	False	0	
+Assets/Scripts/Prototypes/PhysicalInstrumentBuilder.cs	False	0	
+Assets/Scripts/World/Grass/GrassBenchmark.cs	False	0	
+Assets/Scripts/World/Grass/GrassBladeMesh.cs	False	0	
+Assets/Scripts/World/Grass/GrassBufferPool.cs	False	0	
+Assets/Scripts/World/Grass/GrassConfiguration.cs	True	2	Assets/Settings/Grass/BaseGiratoriaGrass.asset;Assets/Settings/Grass/ProceduralGrass.asset
+Assets/Scripts/World/Grass/GrassExclusionVolume.cs	False	0	
+Assets/Scripts/World/Grass/GrassManager.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/World/Grass/GrassTile.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/BaseTerrainMesh.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/FalloffGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/HeightMap.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/HeightMapGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/LODInfo.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/MeshData.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/MeshGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/Noise.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/NoiseSettings.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/ProceduralBattlefieldSetup.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/ProceduralTerrainBootstrap.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/SimpleTerrainErosion.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainBiomePreset.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainChunk.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainDebug.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainGenerationSettings.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainGizmos.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainPropGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainRoadMeshGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainSettings.cs	True	4	Assets/Settings/Terrain/BaseGiratoriaTerrain.asset;Assets/Settings/Terrain/BaseProvisoriaTerrain.asset;Assets/Settings/Terrain/CartoonShaderDemo.asset;Assets/Settings/Terrain/LeviathanTerrain.asset
+Assets/Scripts/World/ProceduralTerrain/TerrainType.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainWaterMeshGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TerrainWorldController.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/World/ProceduralTerrain/TerrainWorldFeatures.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/TextureGenerator.cs	False	0	
+Assets/Scripts/World/ProceduralTerrain/ThreadedTerrainGenerator.cs	False	0	
+Assets/Scripts/World/Vegetation/ProceduralTreeManager.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/World/Vegetation/TreeConfiguration.cs	True	1	Assets/Settings/Vegetation/ProceduralTrees.asset
+Assets/Scripts/World/Vegetation/TreeMeshFactory.cs	False	0	
+Assets/Scripts/World/Vegetation/WorldSceneryConfiguration.cs	True	1	Assets/Settings/Vegetation/WorldScenery.asset
+Assets/Scripts/World/Vegetation/WorldSceneryManager.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Scripts/World/WorldWeatherProvider.cs	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Settings/Grass/BaseGiratoriaGrass.asset	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Settings/Grass/ProceduralGrass.asset	False	0	
+Assets/Settings/Input/InputSystem_Actions.inputactions	False	0	
+Assets/Settings/Rendering/Mobile_Renderer.asset	False	1	Assets/Settings/Rendering/Mobile_RPAsset.asset
+Assets/Settings/Rendering/Mobile_RPAsset.asset	False	0	
+Assets/Settings/Rendering/PC_Renderer.asset	False	1	Assets/Settings/Rendering/PC_RPAsset.asset
+Assets/Settings/Rendering/PC_RPAsset.asset	False	0	
+Assets/Settings/Rendering/UniversalRenderPipelineGlobalSettings.asset	False	0	
+Assets/Settings/SampleSceneProfile.asset	False	0	
+Assets/Settings/Terrain/BaseGiratoriaTerrain.asset	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Settings/Terrain/BaseProvisoriaTerrain.asset	False	0	
+Assets/Settings/Terrain/CartoonShaderDemo.asset	False	0	
+Assets/Settings/Terrain/LeviathanTerrain.asset	False	0	
+Assets/Settings/Vegetation/ProceduralTrees.asset	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Settings/Vegetation/WorldScenery.asset	True	1	Assets/Scenes/Leviathan_BaseGiratoria.unity
+Assets/Settings/Volumes/DefaultVolumeProfile.asset	False	1	Assets/Settings/Rendering/UniversalRenderPipelineGlobalSettings.asset
+Assets/Settings/Volumes/SampleSceneProfile.asset	False	2	Assets/Settings/Rendering/Mobile_RPAsset.asset;Assets/Settings/Rendering/PC_RPAsset.asset
+Assets/Shaders/Environment/CartoonCommon.hlsl	False	0	
+Assets/Shaders/Environment/CartoonTerrain.shader	True	1	Assets/Materials/Terrain/TerrainCartoon.mat
+Assets/Shaders/Environment/CartoonWater.shader	True	1	Assets/Materials/Water/WaterCartoon.mat
+Assets/Shaders/Grass/GrassData.hlsl	False	0	
+Assets/Shaders/Grass/GrassRender.hlsl	False	0	
+Assets/Shaders/Grass/ProceduralGrass.compute	True	2	Assets/Settings/Grass/BaseGiratoriaGrass.asset;Assets/Settings/Grass/ProceduralGrass.asset
+Assets/Shaders/Grass/ProceduralGrass.shader	True	1	Assets/Materials/Grass/ProceduralGrass.mat
+Assets/Shaders/Vegetation/TreeCartoon.shader	True	2	Assets/Materials/Environment/CuratedProps.mat;Assets/Materials/Vegetation/TreeCartoon.mat
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Meshes/Fir_Tree.fbx	False	1	Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Fir_Tree.prefab
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Meshes/Materials/Free_Tree.mat	False	2	Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Fir_Tree.prefab;Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Oak_Tree.prefab
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Meshes/Oak_Tree.fbx	False	1	Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Oak_Tree.prefab
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Fir_Tree.prefab	False	0	
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Prefabs/Oak_Tree.prefab	False	0	
+Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Textures/tree_diffuse.png	False	1	Assets/ThirdParty/Environment/Darth_Artisan/Free_Trees/Meshes/Materials/Free_Tree.mat
+Assets/ThirdParty/Environment/Defensive_props/Materials/military prop pack.mat	False	2	Assets/ThirdParty/Environment/Defensive_props/models/Defensive_props.fbx;Assets/ThirdParty/Environment/Defensive_props/Prefabs/fortifications/sandbag barricade.prefab
+Assets/ThirdParty/Environment/Defensive_props/Materials/military prop pack_Metallic.png	False	1	Assets/ThirdParty/Environment/Defensive_props/Materials/military prop pack.mat
+Assets/ThirdParty/Environment/Defensive_props/Materials/military prop pack_Normal.png	False	1	Assets/ThirdParty/Environment/Defensive_props/Materials/military prop pack.mat
+Assets/ThirdParty/Environment/Defensive_props/Materials/warlow_military prop pack_BaseMap.png	False	1	Assets/ThirdParty/Environment/Defensive_props/Materials/military prop pack.mat
+Assets/ThirdParty/Environment/Defensive_props/models/Defensive_props.fbx	False	1	Assets/ThirdParty/Environment/Defensive_props/Prefabs/fortifications/sandbag barricade.prefab
+Assets/ThirdParty/Environment/Defensive_props/Prefabs/fortifications/sandbag barricade.prefab	False	0	
+Assets/ThirdParty/Environment/Free/Stones/Mesh/Stone_1.fbx	False	0	
+Assets/ThirdParty/Environment/Free/Stones/Mesh/Stone_3.fbx	False	0	
+Assets/ThirdParty/Environment/Free/Stones/Mesh/Stone_5.fbx	False	0	
+Assets/ThirdParty/Environment/Industrial Props/Materials 1/Black.mat	False	1	Assets/ThirdParty/Environment/Industrial Props/Prefabs/LightPole.prefab
+Assets/ThirdParty/Environment/Industrial Props/Materials 1/Wood2.mat	False	1	Assets/ThirdParty/Environment/Industrial Props/Prefabs/LightPole.prefab
+Assets/ThirdParty/Environment/Industrial Props/Mesh/LightPole.fbx	False	1	Assets/ThirdParty/Environment/Industrial Props/Prefabs/LightPole.prefab
+Assets/ThirdParty/Environment/Industrial Props/Prefabs/LightPole.prefab	False	0	
+Assets/ThirdParty/Environment/Industrial Props/Textures/Wood2.jpg	False	1	Assets/ThirdParty/Environment/Industrial Props/Materials 1/Wood2.mat
+Assets/ThirdParty/Environment/Lowpoly_Crates/Meshes/Crate_01.fbx	False	0	
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Materials/M_Box Concrete_Set1.mat	False	1	Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Prefabs/PRE_Concrete Barrier_1.prefab
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Models/SM_Concrete Barrier.fbx	False	1	Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Prefabs/PRE_Concrete Barrier_1.prefab
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Prefabs/PRE_Concrete Barrier_1.prefab	False	0	
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Textures/Set 1_Textures/Concrete Barrier1_AlbedoTransparency.tga	False	1	Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Materials/M_Box Concrete_Set1.mat
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Textures/Set 1_Textures/Concrete Barrier1_MetallicSmoothness.tga	False	1	Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Materials/M_Box Concrete_Set1.mat
+Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Textures/Set 1_Textures/Concrete Barrier1_Normal.tga	False	1	Assets/ThirdParty/Environment/Sector Warzone/Concrete Barriers/Materials/M_Box Concrete_Set1.mat

@@ -1,0 +1,5 @@
+Seed=-265324695
+Natural site=(1826.55, -362.67)
+Ground=269,7049
+Range limit=1
+Grass blades/m2=9

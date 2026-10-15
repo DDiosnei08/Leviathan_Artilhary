@@ -1,0 +1,20 @@
+PASS Integrated scene starts without Unity errors
+PASS Exactly one base in Play
+PASS No overlay UI
+PASS TerrainSettings.Validate: 0 allocated bytes / 1000 calls after warmup
+PASS Steady-state terrain Update: 0 allocated bytes / 100 calls
+PASS Terrain triangle statistics do not copy mesh index arrays
+PASS Triangle statistics retain the correct count
+PASS POI validation regression has a definition to duplicate
+PASS Duplicate POI identifiers are still rejected
+PASS Collider pool respects a reduced live capacity
+PASS Pool selects the nearest objects, not the first streamed chunk
+PASS Stable collider refresh: zero managed allocation / 100 calls
+PASS Zero collision distance disables existing colliders
+PASS Missing player clears stale colliders
+PASS Zero collider budget disables collision safely
+PASS Disabling scenery disables its colliders immediately
+PASS Capture creates its output directory in a fresh project
+PASS Capture test exercises a real output-file failure
+PASS Camera and active render target are restored after capture failure
+PASS No Unity errors during regression tests

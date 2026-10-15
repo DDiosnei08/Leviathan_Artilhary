@@ -1,0 +1,761 @@
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\README.md" "b/C:\\ProjetoENTEC\\Leviathan2\\README.md"
+index d482c9e..6b6c8d4 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\README.md"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\README.md"
+@@ -31,11 +31,12 @@ volantes, alavancas, manivela e botoes sobre a mesa, com ponteiros analogicos.
+ - `Assets/Scenes`: cena integrada e teste isolado de artilharia.
+ - `Assets/Models`: modelos importados, com seus arquivos `.meta`.
+ - `Assets/Materials`, `Assets/Shaders`, `Assets/Settings`: recursos visuais e configuracoes.
+-- `Assets/Samples/UnityTemplate`: recursos originais do template Unity.
+ - `Assets/Documentation`: guias consultaveis dentro do projeto.
+ - `docs`: especificacao do jogo e documentacao tecnica.
+ - `Artifacts`: capturas, logs e registro da reorganizacao.
+ 
+ Veja [estrutura e convencoes](docs/11-estrutura-do-projeto.md) para os caminhos completos.
++Veja [varredura e limpeza](docs/17-varredura-e-limpeza.md) para o inventario de dependencias,
++as correcoes de desempenho e os arquivos retirados de `Assets` de forma recuperavel.
+ Nao mover assets sem seus `.meta`; preferir a janela Project da Unity.
+ `Library`, `Temp`, `Logs`, `.csproj` e `.slnx` sao arquivos gerados, nao codigo do jogo.
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Editor\\BaseIntegration\\BaseIntegrationValidation.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\BaseIntegration\\BaseIntegrationValidation.cs"
+index abe421f..6aacc41 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Editor\\BaseIntegration\\BaseIntegrationValidation.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\BaseIntegration\\BaseIntegrationValidation.cs"
+@@ -57,10 +57,18 @@ static void Tick()
+             if(now-started>150) throw new InvalidOperationException("Play validation timeout at step "+step);
+             if(!EditorApplication.isPlaying)
+             {
+-                if(step==13 && !EditorApplication.isPlayingOrWillChangePlaymode && now-changed>1)
++                if(step==13 && !EditorApplication.isPlayingOrWillChangePlaymode)
+                 {
++                    // Teardown time is not Edit-mode settling time. Allow delayed restoration
++                    // after Unity reapplies serialized fields with scene reload disabled.
++                    step=15;changed=now;
++                }
++                else if(step==15 && now-changed>1)
++                {
++                    rig=Object.FindAnyObjectByType<BaseGameRig>();spawner=rig.spawner;
+                     Check(spawner.previewInstance!=null && spawner.previewInstance.activeSelf,"Exit Play restores the editor preview");
+-                    Check(!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(rig.terrain.terrainSettings)),"Exit Play restores the terrain asset, not a runtime clone ("+rig.terrain.terrainSettings.name+")");
++                    var restored=rig.terrain.terrainSettings;
++                    Check(restored!=null && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(restored)),"Exit Play restores the terrain asset, not a runtime clone");
+                     step=14;changed=now;EditorApplication.EnterPlaymode();
+                 }
+                 return;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Editor\\Environment\\BasePreviewCoordinator.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\BasePreviewCoordinator.cs"
+index f4d07b4..26c89ea 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Editor\\Environment\\BasePreviewCoordinator.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\BasePreviewCoordinator.cs"
+@@ -16,7 +16,7 @@ static void Update()
+         nextCheck=EditorApplication.timeSinceStartup+2;
+         foreach(var spawner in Object.FindObjectsByType<BaseSpawner>(FindObjectsSortMode.None))
+         {
+-            if(spawner.heightSource==null || spawner.heightSource.terrain==null || spawner.previewInstance==null) continue;
++            if(spawner.heightSource==null || spawner.heightSource.terrain==null || spawner.previewInstance==null || spawner.basePrefab==null) continue;
+             var settings=spawner.heightSource.terrain.terrainSettings;if(settings==null || !EditorUtility.IsPersistent(settings)) continue;
+             string signature=EditorJsonUtility.ToJson(settings)+JsonUtility.ToJson(spawner.settings)+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(spawner.basePrefab));
+             if(signatures.TryGetValue(spawner,out string previous) && previous==signature) continue;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Editor\\Environment\\DownloadedAssetSurvey.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\DownloadedAssetSurvey.cs"
+index 63e0f26..e13043a 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Editor\\Environment\\DownloadedAssetSurvey.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\DownloadedAssetSurvey.cs"
+@@ -87,10 +87,22 @@ public static void DiagnoseBaseBatch()
+     }
+     public static void Capture(Camera camera,string path,int width=1600,int height=900)
+     {
+-        var rt=new RenderTexture(width,height,24);rt.Create();var previous=camera.targetTexture;var active=RenderTexture.active;
+-        camera.targetTexture=rt;camera.Render();RenderTexture.active=rt;
+-        var image=new Texture2D(width,height,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,width,height),0,0);image.Apply();
+-        File.WriteAllBytes(path,image.EncodeToPNG());camera.targetTexture=previous;RenderTexture.active=active;
+-        rt.Release();Object.DestroyImmediate(rt);Object.DestroyImmediate(image);
++        string directory=Path.GetDirectoryName(path);
++        if(!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
++        var previous=camera.targetTexture;var active=RenderTexture.active;
++        var rt=new RenderTexture(width,height,24);Texture2D image=null;
++        try
++        {
++            rt.Create();camera.targetTexture=rt;camera.Render();RenderTexture.active=rt;
++            image=new Texture2D(width,height,TextureFormat.RGB24,false);
++            image.ReadPixels(new Rect(0,0,width,height),0,0);image.Apply();
++            File.WriteAllBytes(path,image.EncodeToPNG());
++        }
++        finally
++        {
++            camera.targetTexture=previous;RenderTexture.active=active;
++            rt.Release();Object.DestroyImmediate(rt);
++            if(image!=null) Object.DestroyImmediate(image);
++        }
+     }
+ }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs"
+index 06bf255..404740a 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSite.cs"
+@@ -78,66 +78,60 @@ public static BaseSiteData Solve(IHeightSource source, BaseSiteSettings s)
+                 candidates[i] = s.searchCenter + new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*r;
+             }
+             BaseSiteData best = default;
+-            float[] relaxation = {1};
+-            foreach (float relax in relaxation)
++            float bestScore = float.PositiveInfinity;
++            foreach (Vector2 c in candidates)
+             {
+-                float bestScore = float.PositiveInfinity;
+-                foreach (Vector2 c in candidates)
++                float influence = Mathf.Max(s.checkRadius,s.flatRadius+s.blendRadius);
++                if(s.constrainToMap && (c.x-influence<s.minimumWorldPosition.x || c.y-influence<s.minimumWorldPosition.y ||
++                    c.x+influence>s.maximumWorldPosition.x || c.y+influence>s.maximumWorldPosition.y)) continue;
++                float radius = Mathf.Max(s.checkRadius,s.flatRadius);
++                float step = 2 * radius / (n-1);
++                float low = float.PositiveInfinity, high = float.NegativeInfinity;
++                bool dry=true;
++                for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+                 {
+-                    float influence = Mathf.Max(s.checkRadius,s.flatRadius+s.blendRadius);
+-                    if(s.constrainToMap && (c.x-influence<s.minimumWorldPosition.x || c.y-influence<s.minimumWorldPosition.y ||
+-                        c.x+influence>s.maximumWorldPosition.x || c.y+influence>s.maximumWorldPosition.y)) continue;
+-                    float radius = Mathf.Max(s.checkRadius,s.flatRadius);
+-                    float step = 2 * radius / (n-1);
+-                    float low = float.PositiveInfinity, high = float.NegativeInfinity, sum = 0;
+-                    int count = 0;
+-                    bool dry=true;
+-                    for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+-                    {
+-                        Vector2 p = c + new Vector2(-radius+x*step,-radius+y*step);
+-                        float d = Vector2.Distance(p,c); inside[x,y] = d <= radius;
+-                        if (!inside[x,y]) continue;
+-                        if(suitability!=null && !suitability.IsDry(p.x,p.y)) dry=false;
+-                        float h = source.GetBaseHeight(p.x,p.y); heights[x,y] = h;
+-                        low = Mathf.Min(low,h); high = Mathf.Max(high,h);
+-                        if (d <= s.flatRadius) { sum += h; count++; }
+-                    }
+-                    // Water and altitude remain hard constraints, even in the earthworks fallback.
+-                    if (!dry || !float.IsFinite(low) || high > s.maxAltitude || low < s.waterLevel + Mathf.Max(s.minAboveWater,s.pitDepth+0.5f)) continue;
+-                    float slope = 0;
+-                    for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+-                    {
+-                        if (!inside[x,y]) continue;
+-                        if (x+1<n && inside[x+1,y]) slope = Mathf.Max(slope,Mathf.Atan(Mathf.Abs(heights[x,y]-heights[x+1,y])/step)*Mathf.Rad2Deg);
+-                        if (y+1<n && inside[x,y+1]) slope = Mathf.Max(slope,Mathf.Atan(Mathf.Abs(heights[x,y]-heights[x,y+1])/step)*Mathf.Rad2Deg);
+-                    }
+-                    float range = high-low;
+-                    if (range > s.maxHeightRange*relax || slope > s.maxSlopeDeg*relax) continue;
+-                    // Verify the support annulus and interior independently of the coarse grid.
+-                    // This rejects small ridges between samples instead of leaving the rim floating.
+-                    bool supported=true;
+-                    for(int ringIndex=1;ringIndex<=4 && supported;ringIndex++) for(int q=0;q<64;q++)
+-                    {
+-                        float a=q*Mathf.PI/32, r=radius*ringIndex/4;
+-                        if(suitability!=null && !suitability.IsDry(c.x+Mathf.Cos(a)*r,c.y+Mathf.Sin(a)*r)) {supported=false;break;}
+-                        float h=source.GetBaseHeight(c.x+Mathf.Cos(a)*r,c.y+Mathf.Sin(a)*r);
+-                        if(!float.IsFinite(h)) {supported=false;break;}
+-                        low=Mathf.Min(low,h);high=Mathf.Max(high,h);
+-                        if(high-low>s.maxHeightRange || low<s.waterLevel+Mathf.Max(s.minAboveWater,s.pitDepth+.5f)) {supported=false;break;}
+-                    }
+-                    if(!supported) continue;
+-                    range=high-low;
+-                    float ground = high + .02f;
+-                    float ring = 0;
+-                    for (int q = 0; q < 8; q++) { float a=q*Mathf.PI/4; ring+=source.GetBaseHeight(c.x+Mathf.Cos(a)*s.prominenceRadius,c.y+Mathf.Sin(a)*s.prominenceRadius); }
+-                    float score=range/Mathf.Max(.01f,s.maxHeightRange)+.5f*slope/Mathf.Max(.01f,s.maxSlopeDeg)+
+-                        .4f*Mathf.Abs(Vector2.Distance(c,s.searchCenter)-s.preferredDistance)/Mathf.Max(1,s.preferredDistance)-s.prominenceWeight*Mathf.Clamp((ground-ring/8)/20,-1,1);
+-                    if (score>=bestScore) continue;
+-                    bestScore=score;
+-                    best = new BaseSiteData {valid=true,seed=s.seed,center=c,groundHeight=ground,score=score,
+-                        flatRadius=s.flatRadius,blendRadius=s.blendRadius,carveRadius=s.carveRadius,carveRamp=s.carveRamp,pitDepth=s.pitDepth,exclusionRadius=s.exclusionRadius};
++                    Vector2 p = c + new Vector2(-radius+x*step,-radius+y*step);
++                    float d = Vector2.Distance(p,c); inside[x,y] = d <= radius;
++                    if (!inside[x,y]) continue;
++                    if(suitability!=null && !suitability.IsDry(p.x,p.y)) dry=false;
++                    float h = source.GetBaseHeight(p.x,p.y); heights[x,y] = h;
++                    low = Mathf.Min(low,h); high = Mathf.Max(high,h);
++                }
++                // Water, altitude and flatness are hard constraints; there is no hillside fallback.
++                if (!dry || !float.IsFinite(low) || high > s.maxAltitude || low < s.waterLevel + Mathf.Max(s.minAboveWater,s.pitDepth+0.5f)) continue;
++                float slope = 0;
++                for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
++                {
++                    if (!inside[x,y]) continue;
++                    if (x+1<n && inside[x+1,y]) slope = Mathf.Max(slope,Mathf.Atan(Mathf.Abs(heights[x,y]-heights[x+1,y])/step)*Mathf.Rad2Deg);
++                    if (y+1<n && inside[x,y+1]) slope = Mathf.Max(slope,Mathf.Atan(Mathf.Abs(heights[x,y]-heights[x,y+1])/step)*Mathf.Rad2Deg);
+                 }
+-                if (best.valid) break;
++                float range = high-low;
++                if (range > s.maxHeightRange || slope > s.maxSlopeDeg) continue;
++                // Verify the support annulus and interior independently of the coarse grid.
++                // This rejects small ridges between samples instead of leaving the rim floating.
++                bool supported=true;
++                for(int ringIndex=1;ringIndex<=4 && supported;ringIndex++) for(int q=0;q<64;q++)
++                {
++                    float a=q*Mathf.PI/32, r=radius*ringIndex/4;
++                    if(suitability!=null && !suitability.IsDry(c.x+Mathf.Cos(a)*r,c.y+Mathf.Sin(a)*r)) {supported=false;break;}
++                    float h=source.GetBaseHeight(c.x+Mathf.Cos(a)*r,c.y+Mathf.Sin(a)*r);
++                    if(!float.IsFinite(h)) {supported=false;break;}
++                    low=Mathf.Min(low,h);high=Mathf.Max(high,h);
++                    if(high-low>s.maxHeightRange || low<s.waterLevel+Mathf.Max(s.minAboveWater,s.pitDepth+.5f)) {supported=false;break;}
++                }
++                if(!supported) continue;
++                range=high-low;
++                float ground = high + .02f;
++                float ring = 0;
++                if (s.prominenceWeight != 0)
++                    for (int q = 0; q < 8; q++) { float a=q*Mathf.PI/4; ring+=source.GetBaseHeight(c.x+Mathf.Cos(a)*s.prominenceRadius,c.y+Mathf.Sin(a)*s.prominenceRadius); }
++                float score=range/Mathf.Max(.01f,s.maxHeightRange)+.5f*slope/Mathf.Max(.01f,s.maxSlopeDeg)+
++                    .4f*Mathf.Abs(Vector2.Distance(c,s.searchCenter)-s.preferredDistance)/Mathf.Max(1,s.preferredDistance)-s.prominenceWeight*Mathf.Clamp((ground-ring/8)/20,-1,1);
++                if (score>=bestScore) continue;
++                bestScore=score;
++                best = new BaseSiteData {valid=true,seed=s.seed,center=c,groundHeight=ground,score=score,
++                    flatRadius=s.flatRadius,blendRadius=s.blendRadius,carveRadius=s.carveRadius,carveRamp=s.carveRamp,pitDepth=s.pitDepth,exclusionRadius=s.exclusionRadius};
+             }
+             Vector2 direction=s.facingMode==BaseFacingMode.AwayFromPoint ? best.center-s.facePoint : s.facePoint-best.center;
+             best.yaw=s.facingMode==BaseFacingMode.Random ? (float)random.NextDouble()*360 : Mathf.Atan2(direction.x,direction.y)*Mathf.Rad2Deg;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs"
+index 187f489..e71e36e 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\Gameplay\\Base\\BaseSpawner.cs"
+@@ -81,6 +81,7 @@ public bool RebuildEditorPreview()
+ #endif
+ #if UNITY_EDITOR
+         [SerializeField,HideInInspector] TerrainSettings editorTerrainAsset;
++        static int editorRestoreFrames;
+         [UnityEditor.InitializeOnLoadMethod]
+         static void RegisterEditorCleanup()
+         {
+@@ -89,18 +90,48 @@ static void RegisterEditorCleanup()
+         }
+         static void RestoreAfterPlay(UnityEditor.PlayModeStateChange state)
+         {
++            if(state==UnityEditor.PlayModeStateChange.ExitingEditMode)
++            {
++                UnityEditor.EditorApplication.update-=CompleteEditorRestoration;
++                editorRestoreFrames=0;
++                foreach(var spawner in FindObjectsByType<BaseSpawner>())
++                {
++                    if(spawner.heightSource==null || spawner.heightSource.terrain==null) continue;
++                    var asset=spawner.heightSource.terrain.terrainSettings;
++                    if(asset==null || !UnityEditor.EditorUtility.IsPersistent(asset)) continue;
++                    spawner.editorTerrainAsset=asset;
++                    UnityEditor.SessionState.SetString(EditorTerrainKey(spawner),
++                        UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(asset)));
++                }
++                return;
++            }
+             if(state!=UnityEditor.PlayModeStateChange.EnteredEditMode) return;
+             RestoreEditorReferences();
+-            UnityEditor.EditorApplication.delayCall-=RestoreEditorReferences;
+-            UnityEditor.EditorApplication.delayCall+=RestoreEditorReferences;
++            editorRestoreFrames=3;
++            UnityEditor.EditorApplication.update-=CompleteEditorRestoration;
++            UnityEditor.EditorApplication.update+=CompleteEditorRestoration;
+         }
++        static void CompleteEditorRestoration()
++        {
++            if(!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode) RestoreEditorReferences();
++            if(--editorRestoreFrames<=0 || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
++                UnityEditor.EditorApplication.update-=CompleteEditorRestoration;
++        }
++        static string EditorTerrainKey(BaseSpawner spawner) => "Leviathan.BaseSpawner.TerrainAsset."+
++            UnityEditor.GlobalObjectId.GetGlobalObjectIdSlow(spawner);
+         static void RestoreEditorReferences()
+         {
+             foreach(var spawner in FindObjectsByType<BaseSpawner>(FindObjectsSortMode.None))
+             {
+                 if(spawner.originalSettings!=null) spawner.CleanupRuntime();
+-                // The no-scene-reload restoration can reapply a serialized reference to the
+-                // destroyed runtime clone after OnDisable. Keep the persistent asset explicitly.
++                // No-scene-reload restoration can overwrite managed references after OnDisable.
++                // A session GUID captured before Play survives both serialization and domain reload.
++                string guid=UnityEditor.SessionState.GetString(EditorTerrainKey(spawner),string.Empty);
++                if(!string.IsNullOrEmpty(guid))
++                {
++                    var asset=UnityEditor.AssetDatabase.LoadAssetAtPath<TerrainSettings>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
++                    if(asset!=null) spawner.editorTerrainAsset=asset;
++                }
+                 if(spawner.editorTerrainAsset!=null && spawner.heightSource!=null && spawner.heightSource.terrain!=null)
+                 {
+                     spawner.heightSource.terrain.terrainSettings=spawner.editorTerrainAsset;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\Grass\\GrassTile.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Grass\\GrassTile.cs"
+index 73913b4..8d94753 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\Grass\\GrassTile.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Grass\\GrassTile.cs"
+@@ -24,7 +24,6 @@ public sealed class GrassTile : IDisposable
+         internal int appliedLod = -1;
+         internal Vector2 lodBlend, lodFrom;
+         internal float lodStarted;
+-        private int cell;
+ 
+ 
+         public int ResidentPatches => patches.Count;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs"
+index 5e81a40..24b9f88 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs"
+@@ -239,6 +239,7 @@ public Vector2 GetChunkWorldOrigin(Vector2Int coordinate)
+         }
+ 
+         [System.NonSerialized] public ProjectLeviathan.Base.BaseSiteData RuntimeBaseSite;
++        [System.NonSerialized] private HashSet<string> poiIds;
+ 
+         public TerrainGenerationSettings CaptureGenerationSettings(bool includeBaseSite = true)
+         {
+@@ -354,7 +355,8 @@ public void Validate()
+                 poiDefinitions = new List<TerrainPOIDefinition>();
+             }
+ 
+-            HashSet<string> poiIds = new HashSet<string>(System.StringComparer.Ordinal);
++            if (poiIds == null) poiIds = new HashSet<string>(System.StringComparer.Ordinal);
++            poiIds.Clear();
+             for (int i = poiDefinitions.Count - 1; i >= 0; i--)
+             {
+                 TerrainPOIDefinition definition = poiDefinitions[i];
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldController.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldController.cs"
+index a1be830..9a9a3fe 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldController.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldController.cs"
+@@ -26,6 +26,8 @@ public class TerrainWorldController : MonoBehaviour
+         private bool featureGenerationAttempted;
+         private Vector2Int viewerChunkCoord;
+         private readonly HashSet<Vector2Int> visibleCoords = new HashSet<Vector2Int>();
++        private readonly HashSet<Vector2Int> requiredCoords = new HashSet<Vector2Int>();
++        private readonly List<Vector2Int> removedCoords = new List<Vector2Int>();
+         private ThreadedTerrainGenerator threadedGenerator;
+         private bool editorPreviewGenerated;
+         private bool editorPreviewSuppressed;
+@@ -120,7 +122,11 @@ public int GeneratedTriangleCount
+                 {
+                     if (chunk.MeshFilter != null && chunk.MeshFilter.sharedMesh != null)
+                     {
+-                        count += chunk.MeshFilter.sharedMesh.triangles.Length / 3;
++                        Mesh mesh = chunk.MeshFilter.sharedMesh;
++                        for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
++                        {
++                            count += (int)mesh.GetIndexCount(submesh) / 3;
++                        }
+                     }
+                 }
+ 
+@@ -305,7 +311,7 @@ void EnsureFiniteTerrain()
+         {
+             GetRequiredFiniteChunkBounds(out Vector2Int min, out Vector2Int max);
+             bool windowed = terrainSettings.UsesWindowedFiniteMap;
+-            HashSet<Vector2Int> requiredCoords = new HashSet<Vector2Int>();
++            requiredCoords.Clear();
+             for (int y = min.y; y <= max.y; y++)
+             {
+                 for (int x = min.x; x <= max.x; x++)
+@@ -319,7 +325,7 @@ void EnsureFiniteTerrain()
+                 }
+             }
+ 
+-            List<Vector2Int> removedCoords = new List<Vector2Int>();
++            removedCoords.Clear();
+             foreach (KeyValuePair<Vector2Int, TerrainChunk> pair in terrainChunks)
+             {
+                 if (!requiredCoords.Contains(pair.Key))
+@@ -518,17 +524,17 @@ void UpdateVisibleChunks()
+                 }
+             }
+ 
+-            List<Vector2Int> chunksToRemove = new List<Vector2Int>();
++            removedCoords.Clear();
+             foreach (var pair in terrainChunks)
+             {
+                 if (!visibleCoords.Contains(pair.Key))
+                 {
+                     pair.Value.SetVisible(false);
+-                    chunksToRemove.Add(pair.Key);
++                    removedCoords.Add(pair.Key);
+                 }
+             }
+ 
+-            foreach (Vector2Int coord in chunksToRemove)
++            foreach (Vector2Int coord in removedCoords)
+             {
+                 terrainChunks[coord].Dispose();
+                 terrainChunks.Remove(coord);
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
+index b5ef8f6..0194e3b 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
+@@ -33,7 +33,9 @@ public Vector3 NearestRock(Vector3 from)
+         Material material;
+         Transform colliderRoot;
+         MeshCollider[] colliders;
++        CollisionCandidate[] collisionCandidates;
+         float nextCollisionUpdate;
++        struct CollisionCandidate {public Instance instance;public float distanceSquared;}
+         struct Instance {public Vector3 position;public Quaternion rotation;public float size;public int prototype;public Vector2 grid;}
+         sealed class Tile {public TerrainChunk chunk;public bool dirty=true;public Instance[] instances;}
+ 
+@@ -59,28 +61,65 @@ void Update()
+                 if(tile.dirty && budget>0 && tile.chunk.WorldFeaturesReady && tile.chunk.GeneratedData!=null) {Build(tile);budget--;}
+                 if(tile.instances!=null) InstanceCount+=tile.instances.Length;
+             }
+-            if(Application.IsPlaying(gameObject) && player!=null && Time.time>=nextCollisionUpdate) UpdateColliders();
++            if(Application.IsPlaying(gameObject) && Time.time>=nextCollisionUpdate) UpdateColliders();
+         }
+         void UpdateColliders()
+         {
+             nextCollisionUpdate=Time.time+.5f;
+-            if(configuration.collisionDistance<=0) return;
++            if(player==null || configuration.collisionDistance<=0 || configuration.maximumColliders<=0)
++            {
++                DisableColliders();
++                return;
++            }
++            int capacity=Mathf.Clamp(configuration.maximumColliders,1,128);
++            if(colliders!=null && colliders.Length!=capacity)
++            {
++                DisableColliders();
++                Destroy(colliderRoot.gameObject);
++                colliderRoot=null;
++                colliders=null;
++            }
+             if(colliderRoot==null)
+             {
+                 colliderRoot=new GameObject("Colisoes de Cenario").transform;colliderRoot.SetParent(transform,false);
+-                colliderRoot.gameObject.hideFlags=HideFlags.DontSave;colliders=new MeshCollider[configuration.maximumColliders];
++                colliderRoot.gameObject.hideFlags=HideFlags.DontSave;colliders=new MeshCollider[capacity];
++                collisionCandidates=new CollisionCandidate[capacity];
+                 for(int i=0;i<colliders.Length;i++)
+                 {var go=new GameObject("Collider "+i);go.transform.SetParent(colliderRoot,false);colliders[i]=go.AddComponent<MeshCollider>();colliders[i].enabled=false;}
+             }
+             int count=0;float radius=configuration.collisionDistance*configuration.collisionDistance;
+-            foreach(var tile in tiles.Values) if(tile.instances!=null && tile.chunk.GameObject.activeInHierarchy) foreach(var item in tile.instances)
++            // Keep the nearest bounded set, independently of chunk/dictionary traversal order.
++            foreach(var tile in tiles.Values) if(tile.instances!=null && tile.chunk.GameObject!=null && tile.chunk.GameObject.activeInHierarchy) foreach(var item in tile.instances)
++            {
++                float distance=(item.position-player.position).sqrMagnitude;
++                if(distance>radius || (count==capacity && distance>=collisionCandidates[count-1].distanceSquared)) continue;
++                int insert=Mathf.Min(count,capacity-1);
++                while(insert>0 && distance<collisionCandidates[insert-1].distanceSquared)
++                {
++                    collisionCandidates[insert]=collisionCandidates[insert-1];
++                    insert--;
++                }
++                collisionCandidates[insert]=new CollisionCandidate {instance=item,distanceSquared=distance};
++                count=Mathf.Min(count+1,capacity);
++            }
++            for(int i=0;i<count;i++)
+             {
+-                if(count==colliders.Length || (item.position-player.position).sqrMagnitude>radius) continue;
+-                var collider=colliders[count++];collider.enabled=false;collider.sharedMesh=configuration.prototypes[item.prototype].mesh;
+-                collider.transform.SetPositionAndRotation(item.position,item.rotation);collider.transform.localScale=Vector3.one*item.size;collider.enabled=true;
++                var item=collisionCandidates[i].instance;
++                var collider=colliders[i];
++                Mesh mesh=configuration.prototypes[item.prototype].mesh;
++                Vector3 scale=Vector3.one*item.size;
++                if(collider.enabled && collider.sharedMesh==mesh && collider.transform.position==item.position &&
++                    collider.transform.rotation==item.rotation && collider.transform.localScale==scale) continue;
++                collider.enabled=false;
++                if(collider.sharedMesh!=mesh) collider.sharedMesh=mesh;
++                collider.transform.SetPositionAndRotation(item.position,item.rotation);
++                collider.transform.localScale=scale;
++                collider.enabled=true;
+             }
+             for(int i=count;i<colliders.Length;i++) colliders[i].enabled=false;
+         }
++        void DisableColliders()
++        {if(colliders!=null) foreach(var collider in colliders) if(collider!=null) collider.enabled=false;}
+         void Build(Tile tile)
+         {
+             var c=configuration;var chunk=tile.chunk;var map=chunk.GeneratedData;float extent=chunk.Settings.chunkSize;
+@@ -142,9 +181,9 @@ static bool Valid(HeightMap map,Vector2 grid,float extent,float slope,float marg
+         }
+         int Pick(SceneryRole role,uint hash)
+         {
+-            int count=0;foreach(var p in configuration.prototypes) if(p.role==role && p.mesh!=null) count++;
++            int count=0;foreach(var p in configuration.prototypes) if(p!=null && p.role==role && p.mesh!=null) count++;
+             if(count==0) return -1;int selected=(int)(hash%(uint)count);
+-            for(int i=0;i<configuration.prototypes.Length;i++) if(configuration.prototypes[i].role==role && configuration.prototypes[i].mesh!=null && selected--==0) return i;
++            for(int i=0;i<configuration.prototypes.Length;i++) if(configuration.prototypes[i]!=null && configuration.prototypes[i].role==role && configuration.prototypes[i].mesh!=null && selected--==0) return i;
+             return -1;
+         }
+         void Add(List<Instance> instances,TerrainChunk chunk,Vector2 grid,int prototype,uint hash,Quaternion rotation)
+@@ -204,9 +243,10 @@ void OnDisable()
+             RenderPipelineManager.beginCameraRendering-=Render;if(terrain!=null) terrain.ChunkCreated-=Attach;
+             foreach(var tile in tiles.Values) {tile.chunk.DataChanged-=Changed;tile.chunk.Disposing-=Detach;}
+             tiles.Clear();InstanceCount=VisibleCount=0;
++            DisableColliders();
+             if(colliderRoot!=null) {if(Application.IsPlaying(gameObject)) Destroy(colliderRoot.gameObject);else DestroyImmediate(colliderRoot.gameObject);colliderRoot=null;colliders=null;}
+             if(material!=null) {if(Application.isPlaying) Destroy(material);else DestroyImmediate(material);material=null;}
+-            batches=null;batchCounts=null;
++            batches=null;batchCounts=null;collisionCandidates=null;
+         }
+         void OnDestroy() => OnDisable();
+     }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Settings\\Rendering\\PC_Renderer.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Rendering\\PC_Renderer.asset"
+index 475b02e..ccbdd6c 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Settings\\Rendering\\PC_Renderer.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Rendering\\PC_Renderer.asset"
+@@ -18,21 +18,6 @@ MonoBehaviour:
+     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+     probeVolumeSamplingDebugComputeShader: {fileID: 7200000, guid: 53626a513ea68ce47b59dc1299fe3959,
+       type: 3}
+-  probeVolumeResources:
+-    probeVolumeDebugShader: {fileID: 4800000, guid: e5c6678ed2aaa91408dd3df699057aae,
+-      type: 3}
+-    probeVolumeFragmentationDebugShader: {fileID: 4800000, guid: 03cfc4915c15d504a9ed85ecc404e607,
+-      type: 3}
+-    probeVolumeOffsetDebugShader: {fileID: 4800000, guid: 53a11f4ebaebf4049b3638ef78dc9664,
+-      type: 3}
+-    probeVolumeSamplingDebugShader: {fileID: 4800000, guid: 8f96cd657dc40064aa21efcc7e50a2e7,
+-      type: 3}
+-    probeSamplingDebugMesh: {fileID: -3555484719484374845, guid: 57d7c4c16e2765b47a4d2069b311bffe,
+-      type: 3}
+-    probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e,
+-      type: 3}
+-    probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176,
+-      type: 3}
+   m_RendererFeatures:
+   - {fileID: 7833122117494664109}
+   m_RendererFeatureMap: ad6b866f10d7b46c
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Settings\\Volumes\\DefaultVolumeProfile.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Volumes\\DefaultVolumeProfile.asset"
+index 9e4bbfd..b4ab2c3 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\Assets\\Settings\\Volumes\\DefaultVolumeProfile.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Volumes\\DefaultVolumeProfile.asset"
+@@ -44,44 +44,6 @@ MonoBehaviour:
+   balance:
+     m_OverrideState: 1
+     m_Value: 0
+---- !u!114 &-8104416584915340131
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 0}
+-  m_Name: CopyPasteTestComponent2
+-  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Editor.Tests:UnityEditor.Rendering.Tests:VolumeComponentCopyPasteTests/CopyPasteTestComponent2
+-  active: 1
+-  p1:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  p2:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  p21:
+-    m_OverrideState: 1
+-    m_Value: 0
+---- !u!114 &-7750755424749557576
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 11500000, guid: 60f3b30c03e6ba64d9a27dc9dba8f28d, type: 3}
+-  m_Name: OutlineVolumeComponent
+-  m_EditorClassIdentifier: 
+-  active: 1
+-  Enabled:
+-    m_OverrideState: 1
+-    m_Value: 0
+ --- !u!114 &-7743500325797982168
+ MonoBehaviour:
+   m_ObjectHideFlags: 3
+@@ -107,45 +69,6 @@ MonoBehaviour:
+   clamp:
+     m_OverrideState: 1
+     m_Value: 0.05
+---- !u!114 &-7274224791359825572
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 11500000, guid: 0fd9ee276a1023e439cf7a9c393195fa, type: 3}
+-  m_Name: TestAnimationCurveVolumeComponent
+-  m_EditorClassIdentifier: 
+-  active: 1
+-  testParameter:
+-    m_OverrideState: 1
+-    m_Value:
+-      serializedVersion: 2
+-      m_Curve:
+-      - serializedVersion: 3
+-        time: 0.5
+-        value: 10
+-        inSlope: 0
+-        outSlope: 10
+-        tangentMode: 0
+-        weightedMode: 0
+-        inWeight: 0
+-        outWeight: 0
+-      - serializedVersion: 3
+-        time: 1
+-        value: 15
+-        inSlope: 10
+-        outSlope: 0
+-        tangentMode: 0
+-        weightedMode: 0
+-        inWeight: 0
+-        outWeight: 0
+-      m_PreInfinity: 2
+-      m_PostInfinity: 2
+-      m_RotationOrder: 4
+ --- !u!114 &-6335409530604852063
+ MonoBehaviour:
+   m_ObjectHideFlags: 3
+@@ -239,47 +162,6 @@ MonoBehaviour:
+   maxNits:
+     m_OverrideState: 1
+     m_Value: 1000
+---- !u!114 &-5360449096862653589
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 0}
+-  m_Name: VolumeComponentSupportedEverywhere
+-  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Editor.Tests:UnityEngine.Rendering.Tests:VolumeComponentEditorSupportedOnTests/VolumeComponentSupportedEverywhere
+-  active: 1
+---- !u!114 &-5139089513906902183
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 11500000, guid: 5a00a63fdd6bd2a45ab1f2d869305ffd, type: 3}
+-  m_Name: OasisFogVolumeComponent
+-  m_EditorClassIdentifier: 
+-  active: 1
+-  Density:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  StartDistance:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  HeightRange:
+-    m_OverrideState: 1
+-    m_Value: {x: 0, y: 50}
+-  Tint:
+-    m_OverrideState: 1
+-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+-  SunScatteringIntensity:
+-    m_OverrideState: 1
+-    m_Value: 2
+ --- !u!114 &-4463884970436517307
+ MonoBehaviour:
+   m_ObjectHideFlags: 3
+@@ -411,28 +293,6 @@ MonoBehaviour:
+   tint:
+     m_OverrideState: 1
+     m_Value: 0
+---- !u!114 &-581120513425526550
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 0}
+-  m_Name: CopyPasteTestComponent3
+-  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Editor.Tests:UnityEditor.Rendering.Tests:VolumeComponentCopyPasteTests/CopyPasteTestComponent3
+-  active: 1
+-  p1:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  p2:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  p31:
+-    m_OverrideState: 1
+-    m_Value: {r: 0, g: 0, b: 0, a: 1}
+ --- !u!114 &11400000
+ MonoBehaviour:
+   m_ObjectHideFlags: 0
+@@ -821,22 +681,6 @@ MonoBehaviour:
+   bladeRotation:
+     m_OverrideState: 1
+     m_Value: 0
+---- !u!114 &4251301726029935498
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 11500000, guid: 74955a4b0b4243bc87231e8b59ed9140, type: 3}
+-  m_Name: TestVolume
+-  m_EditorClassIdentifier: 
+-  active: 1
+-  param:
+-    m_OverrideState: 1
+-    m_Value: 123
+ --- !u!114 &4644742534064026673
+ MonoBehaviour:
+   m_ObjectHideFlags: 3
+@@ -853,19 +697,6 @@ MonoBehaviour:
+   intensity:
+     m_OverrideState: 1
+     m_Value: 0
+---- !u!114 &6940869943325143175
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 0}
+-  m_Name: VolumeComponentSupportedOnAnySRP
+-  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Editor.Tests:UnityEngine.Rendering.Tests:VolumeComponentEditorSupportedOnTests/VolumeComponentSupportedOnAnySRP
+-  active: 1
+ --- !u!114 &7173750748008157695
+ MonoBehaviour:
+   m_ObjectHideFlags: 3
+@@ -962,22 +793,3 @@ MonoBehaviour:
+   blueOutBlueIn:
+     m_OverrideState: 1
+     m_Value: 100
+---- !u!114 &9122958982931076880
+-MonoBehaviour:
+-  m_ObjectHideFlags: 3
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 0}
+-  m_Name: CopyPasteTestComponent1
+-  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Editor.Tests:UnityEditor.Rendering.Tests:VolumeComponentCopyPasteTests/CopyPasteTestComponent1
+-  active: 1
+-  p1:
+-    m_OverrideState: 1
+-    m_Value: 0
+-  p2:
+-    m_OverrideState: 1
+-    m_Value: 0
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\docs\\README.md" "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\README.md"
+index 7376ff1..98e297b 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\ProjectSweep\\Before\\docs\\README.md"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\README.md"
+@@ -24,6 +24,7 @@ Leviathan e um jogo de operacao individual de artilharia indireta. O jogador int
+ | [14 - Base giratoria](14-base-giratoria.md) | FBX, base unica por semente, fosso, dois canhoes, cena e validacao |
+ | [15 - Ambiente, vegetacao e erosao](15-ambiente-vegetacao-e-erosao.md) | Grama mais densa, arvores, sulcos e base sobre terreno natural |
+ | [16 - Assets e cenario procedural](16-assets-e-cenario-procedural.md) | Curadoria dos downloads, bosques, pedras, postes, barreiras e sincronizacao da base |
++| [17 - Varredura e limpeza](17-varredura-e-limpeza.md) | Dependencias, arquivo recuperavel, menos GC no terreno e colisao de props proximos |
+ | [Referencias visuais](referencias/README.md) | Imagens fornecidas pelo autor e como devem orientar o projeto |
+ 
+ ## Status das definicoes

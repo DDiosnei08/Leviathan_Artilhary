@@ -1,0 +1,22 @@
+PASS World starts without Unity errors
+PASS Exactly one base per seed
+PASS No gameplay HUD added
+PASS Populated trees and scenery: 34200 / 8046
+PASS Trees stay outside water/roads/base and follow terrain LOD
+PASS Scenery remains supported and outside forbidden areas
+PASS Shrubs and fallen timber are generated: 1890 / 257
+PASS Spline roads rendered: 12 meshes, 67529 vertices
+PASS Roads follow actual LOD triangles; max contact error=3,051758E-05
+PASS Supply route reaches the base perimeter without entering the pit: 48,8722m
+PASS Industrial reference points are generated: 5
+PASS Base has physical service lights
+PASS Leviathan/Spline Track supported
+PASS Leviathan/Industrial Mist supported
+PASS Leviathan/Cartoon Terrain supported
+PASS Tree distribution repeats after regeneration
+PASS Scenery distribution repeats after regeneration
+PASS Regeneration preserves the deterministic base site
+PASS Spline roads rendered: 12 meshes, 67529 vertices
+PASS Roads follow actual LOD triangles; max contact error=3,051758E-05
+PASS Supply route reaches the base perimeter without entering the pit: 48,8722m
+PASS Streaming, LOD, effects and regeneration complete without Unity errors

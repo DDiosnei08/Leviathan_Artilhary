@@ -1,0 +1,4122 @@
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Grass\\GrassConfiguration.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Grass\\GrassConfiguration.cs"
+index d6c7541..6f749bd 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Grass\\GrassConfiguration.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Grass\\GrassConfiguration.cs"
+@@ -41,6 +41,10 @@ namespace ProjectLeviathan.Grass
+         [Min(0f)] public float baseEdgeVariation = 1.5f;
+         [Min(0.001f)] public float baseEdgeNoiseScale = 0.18f;
+         [Header("Appearance")]
++        [Header("Meadow patches (world space)")]
++        [Min(1)] public float meadowPatchSize = 38;
++        [Range(0, 1)] public float meadowVariation = .75f;
++        [Range(0, 1)] public float meadowMinimumDensity = .18f;
+         public Color rootColor = new Color(0.13f, 0.26f, 0.09f);
+         public Color tipColor = new Color(0.45f, 0.66f, 0.23f);
+         [Range(0f, 1f)] public float biomeColorInfluence = 0.3f;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Grass\\GrassManager.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Grass\\GrassManager.cs"
+index 262ae7d..562e3ed 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Grass\\GrassManager.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Grass\\GrassManager.cs"
+@@ -277,6 +277,8 @@ namespace ProjectLeviathan.Grass
+             compute.SetInt("_GridResolution", gridResolution); compute.SetFloat("_PatchSize", residentPatchSize);
+             compute.SetVector("_PatchOrigin", patch.origin); compute.SetVector("_GlobalPatch", new Vector4(patch.global.x, patch.global.y, 0, 0));
+             compute.SetVector("_HeightRange", configuration.heightRange); compute.SetVector("_WidthRange", configuration.widthRange);
++            compute.SetVector("_Meadow", new Vector4(1 / Mathf.Max(1, configuration.meadowPatchSize),
++                configuration.meadowVariation, configuration.meadowMinimumDensity, 0));
+             compute.SetVector("_BendRange", configuration.bendRange);
+             compute.Dispatch(generateKernel, (candidateCount + 63) / 64, 1, 1);
+             patch.birth = Time.unscaledTime; patch.generated = true;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Shaders\\Grass\\ProceduralGrass.compute" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Grass\\ProceduralGrass.compute"
+index ed037c1..3173e56 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Shaders\\Grass\\ProceduralGrass.compute"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Grass\\ProceduralGrass.compute"
+@@ -38,6 +38,7 @@ float2 _TerrainLodBlend;
+ float _ShadowDistance;
+ float4 _BaseGrassSite; // world centre XZ, concrete radius, valid
+ float4 _BaseGrassEdge; // clearance, density fade, outward variation, world noise scale
++float4 _Meadow; // world frequency, strength, minimum density
+ 
+ float BaseEdgeNoise(float2 p)
+ {
+@@ -101,6 +102,9 @@ void Generate(uint id : SV_DispatchThreadID)
+     float3 root = float3(local.x, SurfaceHeight(local) - 0.015, local.y);
+     float3 world = mul(_TileToWorld, float4(root, 1)).xyz;
+     surface.w *= BaseGrassDensity(world.xz);
++    float meadow = BaseEdgeNoise(world.xz * _Meadow.x + float2(93.7, 241.3));
++    float meadowCover = smoothstep(.27, .64, meadow);
++    surface.w *= lerp(1, lerp(_Meadow.z, 1, meadowCover), _Meadow.y);
+     bool excluded = false;
+     for (uint i = 0; i < _ExclusionCount; i++)
+     {
+@@ -110,6 +114,7 @@ void Generate(uint id : SV_DispatchThreadID)
+     if (excluded || surface.w <= 0 || GrassRandom(seed + 3) > surface.w) { _Blades[id] = blade; return; }
+     float clump = GrassRandom(GrassHash(asuint((int)floor(world.x / 3))) ^ asuint((int)floor(world.z / 3)) ^ _Seed);
+     float h = lerp(_HeightRange.x, _HeightRange.y, GrassRandom(seed + 4)) * lerp(0.8, 1.1, clump);
++    h *= lerp(1, lerp(.48, 1.2, meadowCover), _Meadow.y);
+     float w = lerp(_WidthRange.x, _WidthRange.y, GrassRandom(seed + 5));
+     blade.position = root;
+     blade.shape = PackGrassHalf2(float2(h, w));
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\TreeConfiguration.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\TreeConfiguration.cs"
+index d11cd30..d73b1ae 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\TreeConfiguration.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\TreeConfiguration.cs"
+@@ -12,6 +12,7 @@ namespace ProjectLeviathan.Vegetation
+         [Range(0,1)] public float scatteredDensity=.12f;
+         [Min(40)] public float groveScale=240;
+         [Range(0,1)] public float groveThreshold=.42f;
++        [Range(.01f,.3f)] public float groveEdgeBlend=.12f;
+         [Range(32,2000)] public int maximumTreesPerChunk=650;
+         public Vector2 heights=new Vector2(7,13);
+         public Vector2 normalizedAltitude=new Vector2(.15f,.76f);
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs"
+index 68e32e9..be07168 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\ProceduralTreeManager.cs"
+@@ -71,7 +71,8 @@ namespace ProjectLeviathan.Vegetation
+                 float px=(x+.15f+Random(hash+1)*.7f)*spacing,pz=(z+.15f+Random(hash+2)*.7f)*spacing;
+                 Vector3 world=chunk.GameObject.transform.TransformPoint(new Vector3(px,0,pz));
+                 float grove=Mathf.PerlinNoise(world.x/c.groveScale+settings.noiseSettings.seed%10000,world.z/c.groveScale+911);
+-                if(grove<c.groveThreshold && Random(hash+8)>c.scatteredDensity) continue;
++                float forest = Mathf.SmoothStep(0,1,Mathf.InverseLerp(c.groveThreshold-c.groveEdgeBlend,c.groveThreshold+c.groveEdgeBlend,grove));
++                if(Random(hash+8)>Mathf.Lerp(c.scatteredDensity,1,forest)) continue;
+                 float gx=px/settings.chunkSize*(map.Width-1),gy=(1-pz/settings.chunkSize)*(map.Height-1);
+                 int mx=Mathf.Clamp(Mathf.RoundToInt(gx),0,map.Width-1),my=Mathf.Clamp(Mathf.RoundToInt(gy),0,map.Height-1);
+                 if(map.Values[mx,my]<c.normalizedAltitude.x || map.Values[mx,my]>c.normalizedAltitude.y ||
+@@ -85,7 +86,7 @@ namespace ProjectLeviathan.Vegetation
+                 }
+                 if(blocked) continue;
+                 world.y=SurfaceHeight(map,gx,gy,stride)+chunk.GameObject.transform.position.y;
+-                var tree=new Tree {position=world,height=Mathf.Lerp(c.heights.x,c.heights.y,Random(hash+3)),
++                var tree=new Tree {position=world,height=Mathf.Lerp(c.heights.x,c.heights.y,Random(hash+3))*Mathf.Lerp(.7f,1,forest),
+                     yaw=Random(hash+4)*360,width=Mathf.Lerp(.85f,1.15f,Random(hash+5)),species=Random(hash+6)>.6f ? 1 : 0};
+                 accepted++;
+                 // Reservoir sampling preserves coverage across the whole chunk when capped.
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs"
+index 991ad94..327bcf6 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs"
+@@ -2,7 +2,7 @@ using UnityEngine;
+ 
+ namespace ProjectLeviathan.Vegetation
+ {
+-    public enum SceneryRole { Rock, Lamp, Barrier, Crate }
++    public enum SceneryRole { Rock, Lamp, Barrier, Crate, Shrub, FallenLog }
+ 
+     [System.Serializable]
+     public sealed class SceneryPrototype
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
+index 49ef5c7..b6ec7fe 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
+@@ -152,6 +152,19 @@ namespace ProjectLeviathan.Vegetation
+                 int prototype=Pick(SceneryRole.Rock,hash);if(prototype<0) continue;
+                 Add(instances,chunk,grid,prototype,hash,Quaternion.Euler(Random(hash+5)*12,Random(hash+6)*360,Random(hash+7)*12));
+             }
++            // Understory follows broad world-space forest patches, with occasional fallen timber.
++            for(int z=0;z<cells;z++) for(int x=0;x<cells;x++)
++            {
++                uint hash=CellHash(chunk,x,z,cells)^0x3ea924u;
++                float px=(x+.1f+Random(hash+1)*.8f)*spacing,pz=(z+.1f+Random(hash+2)*.8f)*spacing;
++                Vector3 world=chunk.GameObject.transform.TransformPoint(new Vector3(px,0,pz));
++                float grove=Mathf.PerlinNoise(world.x/220+chunk.Settings.noiseSettings.seed%10000,world.z/220+911);
++                if(grove<.43f || Random(hash)>.5f) continue;
++                Vector2 grid=new Vector2(px/extent*(map.Width-1),(1-pz/extent)*(map.Height-1));
++                if(!Valid(map,grid,extent,7,8,true)) continue;
++                int prototype=Pick(Random(hash+4)<.12f ? SceneryRole.FallenLog : SceneryRole.Shrub,hash);
++                if(prototype>=0) Add(instances,chunk,grid,prototype,hash,Quaternion.Euler(0,Random(hash+6)*360,0));
++            }
+             if(c.roadsideFurniture)
+             {
+                 int step=Mathf.Max(3,Mathf.RoundToInt(c.roadsideSpacing/chunk.Settings.CellSize));
+@@ -218,7 +231,7 @@ namespace ProjectLeviathan.Vegetation
+         public void RenderForValidation(Camera camera) => Render(default,camera);
+         public int ValidateForValidation(out float maximumRootError,out int[] roles)
+         {
+-            int invalid=0;maximumRootError=0;roles=new int[4];
++            int invalid=0;maximumRootError=0;roles=new int[6];
+             foreach(var tile in tiles.Values) if(tile.instances!=null) foreach(var item in tile.instances)
+             {
+                 var role=configuration.prototypes[item.prototype].role;roles[(int)role]++;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainRoadMeshGenerator.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainRoadMeshGenerator.cs"
+index 11e3249..98df79d 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainRoadMeshGenerator.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainRoadMeshGenerator.cs"
+@@ -1,115 +1,92 @@
+ using System.Collections.Generic;
++using ProjectLeviathan.Splines;
+ using UnityEngine;
+ 
+ namespace ProjectLeviathan.ProceduralTerrain
+ {
+     public static class TerrainRoadMeshGenerator
+     {
+-        public static Mesh Generate(HeightMap map, TerrainSettings settings)
++        public static Mesh Generate(HeightMap map, TerrainSettings settings, int appliedLod = 0)
+         {
+-            if (map == null)
++            if (map == null) throw new System.ArgumentNullException(nameof(map));
++            if (settings == null) throw new System.ArgumentNullException(nameof(settings));
++            var builder = new SurfaceSplineBuilder();
++            int stride = 1;
++            foreach (var lod in settings.lods) if (lod.lod == appliedLod) stride = lod.GetSimplificationLevel();
++            foreach (var path in ExtractPaths(map, settings))
+             {
+-                throw new System.ArgumentNullException(nameof(map));
++                if (path.Count < 2) continue;
++                var knots = new List<SurfaceSplineKnot>(path.Count);
++                foreach (Vector3 p in path) knots.Add(new SurfaceSplineKnot(p, Vector3.up));
++                builder.Append(knots, false, Mathf.Min(settings.roadWidthMeters, settings.CellSize * .85f),
++                    Mathf.Max(1, settings.CellSize * .3f), 6, .45f, Mathf.Max(.04f, settings.roadSurfaceLift), 6,
++                    .5f, Project);
+             }
++            return builder.triangles.Count == 0 ? null : builder.CreateMesh(Matrix4x4.identity, "Projected Terrain Roads");
+ 
+-            if (settings == null)
++            bool Project(Vector3 seed, Vector3 hint, out Vector3 p, out Vector3 n) =>
++                SampleSurface(map, settings, stride, seed, out p, out n);
++        }
++
++        // Trace graph edges once; diagonals are allowed only without an orthogonal connection.
++        public static List<List<Vector3>> ExtractPaths(HeightMap map, TerrainSettings settings)
++        {
++            int w = map.Width, h = map.Height;
++            var neighbors = new List<int>[w*h];
++            bool Road(int x, int y) => x >= 0 && y >= 0 && x < w && y < h &&
++                map.Roads[x,y] > .5f && map.Water[x,y] <= .01f && map.Navigation[x,y] > 0;
++            for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) if (Road(x,y))
+             {
+-                throw new System.ArgumentNullException(nameof(settings));
++                var list = neighbors[y*w+x] = new List<int>(4);
++                for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++)
++                    if ((dx != 0 || dy != 0) && Road(x+dx,y+dy) &&
++                        !(dx != 0 && dy != 0 && (Road(x+dx,y) || Road(x,y+dy)))) list.Add((y+dy)*w+x+dx);
+             }
+-
+-            int width = map.Width;
+-            int height = map.Height;
+-            float cellSizeX = settings.chunkSize / Mathf.Max(1, width - 1);
+-            float cellSizeZ = settings.chunkSize / Mathf.Max(1, height - 1);
+-            float roadWidthX = settings.roadWidthMeters;
+-            float roadWidthZ = settings.roadWidthMeters;
+-            List<Vector3> vertices = new List<Vector3>();
+-            List<int> triangles = new List<int>();
+-            List<Vector2> uvs = new List<Vector2>();
+-
+-            for (int y = 0; y < height; y++)
++            var visited = new HashSet<long>(); var paths = new List<List<Vector3>>();
++            long Edge(int a, int b) => ((long)Mathf.Min(a,b) << 32) | (uint)Mathf.Max(a,b);
++            Vector3 Point(int i) => new Vector3((i%w)*settings.CellSize, 0, settings.chunkSize-(i/w)*settings.CellSize);
++            for (int pass = 0; pass < 2; pass++) for (int i = 0; i < neighbors.Length; i++)
+             {
+-                for (int x = 0; x < width; x++)
++                var links = neighbors[i];
++                if (links == null || (pass == 0 && links.Count == 2)) continue;
++                foreach (int link in links)
+                 {
+-                    if (map.Roads[x, y] <= 0.5f || map.Water[x, y] > 0.5f || map.Navigation[x, y] <= 0f)
++                    if (visited.Contains(Edge(i,link))) continue;
++                    var path = new List<Vector3> { Point(i) }; int previous = i, current = link;
++                    while (visited.Add(Edge(previous,current)))
+                     {
+-                        continue;
++                        path.Add(Point(current)); var next = neighbors[current];
++                        if (current == i || next.Count != 2) break;
++                        int following = next[0] == previous ? next[1] : next[0]; previous = current; current = following;
+                     }
+-
+-                    float centerX = x * cellSizeX;
+-                    float centerZ = settings.chunkSize - y * cellSizeZ;
+-                    float minX = Mathf.Max(0f, centerX - roadWidthX * 0.5f);
+-                    float maxX = Mathf.Min(settings.chunkSize, centerX + roadWidthX * 0.5f);
+-                    float minZ = Mathf.Max(0f, centerZ - roadWidthZ * 0.5f);
+-                    float maxZ = Mathf.Min(settings.chunkSize, centerZ + roadWidthZ * 0.5f);
+-                    if (maxX - minX < 0.01f || maxZ - minZ < 0.01f)
+-                    {
+-                        continue;
+-                    }
+-
+-                    int firstVertex = vertices.Count;
+-                    vertices.Add(new Vector3(minX, GetHeight(map, settings, minX, maxZ), maxZ));
+-                    vertices.Add(new Vector3(maxX, GetHeight(map, settings, maxX, maxZ), maxZ));
+-                    vertices.Add(new Vector3(minX, GetHeight(map, settings, minX, minZ), minZ));
+-                    vertices.Add(new Vector3(maxX, GetHeight(map, settings, maxX, minZ), minZ));
+-
+-                    float vMin = minZ / settings.chunkSize;
+-                    float vMax = maxZ / settings.chunkSize;
+-                    uvs.Add(new Vector2(minX / settings.chunkSize, vMax));
+-                    uvs.Add(new Vector2(maxX / settings.chunkSize, vMax));
+-                    uvs.Add(new Vector2(minX / settings.chunkSize, vMin));
+-                    uvs.Add(new Vector2(maxX / settings.chunkSize, vMin));
+-
+-                    triangles.Add(firstVertex);
+-                    triangles.Add(firstVertex + 2);
+-                    triangles.Add(firstVertex + 1);
+-                    triangles.Add(firstVertex + 1);
+-                    triangles.Add(firstVertex + 2);
+-                    triangles.Add(firstVertex + 3);
++                    paths.Add(path);
+                 }
+             }
+-
+-            if (vertices.Count == 0)
+-            {
+-                return null;
+-            }
+-
+-            Mesh mesh = new Mesh { name = "Generated Terrain Roads" };
+-            mesh.SetVertices(vertices);
+-            mesh.SetTriangles(triangles, 0);
+-            mesh.SetUVs(0, uvs);
+-            mesh.RecalculateNormals();
+-            mesh.RecalculateBounds();
+-            return mesh;
+-        }
+-
+-        static float GetHeight(HeightMap map, TerrainSettings settings, float worldX, float worldZ)
+-        {
+-            float cellSizeX = settings.chunkSize / Mathf.Max(1, map.Width - 1);
+-            float cellSizeZ = settings.chunkSize / Mathf.Max(1, map.Height - 1);
+-            float sampleX = Mathf.Clamp(worldX / cellSizeX, 0f, map.Width - 1);
+-            float sampleY = Mathf.Clamp((settings.chunkSize - worldZ) / cellSizeZ, 0f, map.Height - 1);
+-            int x0 = Mathf.FloorToInt(sampleX);
+-            int y0 = Mathf.FloorToInt(sampleY);
+-            int x1 = Mathf.Min(x0 + 1, map.Width - 1);
+-            int y1 = Mathf.Min(y0 + 1, map.Height - 1);
+-            float tx = sampleX - x0;
+-            float ty = sampleY - y0;
+-
+-            float topLeft = GetSampleHeight(map, settings, x0, y0);
+-            float topRight = GetSampleHeight(map, settings, x1, y0);
+-            float bottomLeft = GetSampleHeight(map, settings, x0, y1);
+-            float bottomRight = GetSampleHeight(map, settings, x1, y1);
+-            float top = Mathf.Lerp(topLeft, topRight, tx);
+-            float bottom = Mathf.Lerp(bottomLeft, bottomRight, tx);
+-            return Mathf.Lerp(top, bottom, ty) + Mathf.Max(0.35f, settings.roadSurfaceLift);
++            return paths;
+         }
+ 
+-        static float GetSampleHeight(HeightMap map, TerrainSettings settings, int x, int y)
++        public static bool SampleSurface(HeightMap map, TerrainSettings settings, int stride,
++            Vector3 seed, out Vector3 point, out Vector3 normal)
+         {
+-            return map.WorldHeights != null
+-                ? map.WorldHeights[x, y]
+-                : settings.heightCurve.Evaluate(Mathf.Clamp01(map.Values[x, y])) * settings.heightMultiplier;
++            point = seed; normal = Vector3.up;
++            const float edgeTolerance = .001f;
++            if (seed.x < -edgeTolerance || seed.z < -edgeTolerance || seed.x > settings.chunkSize+edgeTolerance || seed.z > settings.chunkSize+edgeTolerance) return false;
++            seed.x = Mathf.Clamp(seed.x,0,settings.chunkSize); seed.z = Mathf.Clamp(seed.z,0,settings.chunkSize); point = seed;
++            float gx = seed.x / settings.CellSize, gy = (settings.chunkSize-seed.z) / settings.CellSize;
++            int mx = Mathf.Clamp(Mathf.RoundToInt(gx),0,map.Width-1), my = Mathf.Clamp(Mathf.RoundToInt(gy),0,map.Height-1);
++            var site = map.BaseSite;
++            Vector2 world = map.WorldOrigin + new Vector2(seed.x,seed.z);
++            if (map.Water[mx,my] > .01f || (site.valid && (world-site.center).sqrMagnitude < site.carveRadius*site.carveRadius)) return false;
++            int x = Mathf.Min((int)(gx/stride)*stride,map.Width-2), y = Mathf.Min((int)(gy/stride)*stride,map.Height-2);
++            int xx = Mathf.Min(x+stride,map.Width-1), yy = Mathf.Min(y+stride,map.Height-1);
++            float u = (gx-x)/(xx-x), v = (gy-y)/(yy-y);
++            float H(int a,int b) => map.WorldHeights != null ? map.WorldHeights[a,b] : settings.heightCurve.Evaluate(map.Values[a,b])*settings.heightMultiplier;
++            float a = H(x,y), b = H(xx,y), c = H(x,yy), d = H(xx,yy);
++            bool upper = u+v <= 1;
++            point.y = upper ? a*(1-u-v)+b*u+c*v : d*(u+v-1)+b*(1-v)+c*(1-u);
++            normal = new Vector3(-(upper ? b-a : d-c)/((xx-x)*settings.CellSize),1,
++                (upper ? c-a : d-b)/((yy-y)*settings.CellSize)).normalized;
++            return true;
+         }
+     }
+ }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainChunk.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainChunk.cs"
+index 2ea9423..038663f 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainChunk.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainChunk.cs"
+@@ -473,7 +473,7 @@ namespace ProjectLeviathan.ProceduralTerrain
+                 roadsRoot = null;
+             }
+ 
+-            roadsMesh = TerrainRoadMeshGenerator.Generate(GeneratedData, Settings);
++            roadsMesh = TerrainRoadMeshGenerator.Generate(GeneratedData, Settings, AppliedLod);
+             if (roadsMesh == null)
+             {
+                 return;
+@@ -493,14 +493,15 @@ namespace ProjectLeviathan.ProceduralTerrain
+                 ? Settings.roadMaterial
+                 : defaultRoadMaterial;
+             roadRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+-            roadRenderer.receiveShadows = false;
++            roadRenderer.receiveShadows = true;
+             MaterialPropertyBlock roadProperties = new MaterialPropertyBlock();
+             Color gravelColor = new Color(0.42f, 0.35f, 0.25f);
+             roadProperties.SetColor("_BaseColor", gravelColor);
+             roadProperties.SetColor("_Color", gravelColor);
+             roadProperties.SetTexture("_BaseMap", Texture2D.whiteTexture);
+             roadProperties.SetTexture("_MainTex", Texture2D.whiteTexture);
+-            roadRenderer.SetPropertyBlock(roadProperties);
++            if (Settings.roadMaterial == null) roadRenderer.SetPropertyBlock(roadProperties);
++            RoadsideInfrastructure.Build(this, roadsRoot);
+         }
+ 
+         void ClearWorldFeatureVisuals()
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldFeatures.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldFeatures.cs"
+index f836120..6d1a89b 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldFeatures.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainWorldFeatures.cs"
+@@ -285,8 +285,22 @@ namespace ProjectLeviathan.ProceduralTerrain
+             bool[] connectedAnchors = new bool[4];
+             if (settings.connectPOIsWithRoads && settings.roadCount > 0)
+             {
++                var roadNavigation = (float[,])map.Navigation.Clone();
++                for (int y = 0; y < map.Height; y++) for (int x = 0; x < map.Width; x++)
++                    if (map.PoiMask[x,y] > .01f) roadNavigation[x,y] = 0;
++                Vector2Int Access(Vector2Int target)
++                {
++                    Vector2Int best = new Vector2Int(-1,-1); float score = float.PositiveInfinity;
++                    for (int y = 1; y < map.Height-1; y++) for (int x = 1; x < map.Width-1; x++)
++                    {
++                        if (roadNavigation[x,y] <= 0 || map.Water[x,y] > .01f) continue;
++                        float distance = (new Vector2(x,y)-target).sqrMagnitude;
++                        if (distance < score) { score = distance; best = new Vector2Int(x,y); }
++                    }
++                    return best;
++                }
+                 Vector2Int hub = pois.Count > 0
+-                    ? WorldPositionToMap(settings, coordinate, pois[0].TerrainPosition, cellSize)
++                    ? Access(WorldPositionToMap(settings, coordinate, pois[0].TerrainPosition, cellSize))
+                     : FindNearestWalkableToCenter(map);
+                 Vector2Int[] anchors =
+                 {
+@@ -300,7 +314,7 @@ namespace ProjectLeviathan.ProceduralTerrain
+                 {
+                     Vector2Int anchor = anchors[i];
+                     if (anchor.x < 0 || hub.x < 0 ||
+-                        !TryFindPath(hub.x, hub.y, anchor.x, anchor.y, map.Navigation, map.Water,
++                        !TryFindPath(hub.x, hub.y, anchor.x, anchor.y, roadNavigation, map.Water,
+                             out List<int> path))
+                     {
+                         unconnectedRoutes++;
+@@ -310,6 +324,31 @@ namespace ProjectLeviathan.ProceduralTerrain
+                     AddRoadPath(map, settings, path);
+                     connectedAnchors[i] = true;
+                 }
++
++                for (int i = 1; i < pois.Count; i++)
++                {
++                    Vector2Int destination = Access(WorldPositionToMap(settings, coordinate, pois[i].TerrainPosition, cellSize));
++                    if (hub.x >= 0 && destination.x >= 0 && TryFindPath(hub.x, hub.y, destination.x, destination.y, roadNavigation, map.Water, out List<int> link))
++                        AddRoadPath(map, settings, link);
++                }
++                // Access starts outside the foundation's exclusion radius. It uses the same
++                // navigability search as the rest of the network and never levels the terrain.
++                var site = map.BaseSite;
++                Vector2 localSite = site.center - map.WorldOrigin;
++                if (site.valid && localSite.x >= 0 && localSite.y >= 0 && localSite.x < settings.chunkSize && localSite.y < settings.chunkSize && hub.x >= 0)
++                {
++                    int bestX = -1, bestY = -1; float best = float.PositiveInfinity;
++                    for (int i = 0; i < 32; i++)
++                    {
++                        float angle = i * Mathf.PI * 2 / 32;
++                        Vector2 p = localSite + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (site.exclusionRadius + cellSize * 1.5f);
++                        int x = Mathf.RoundToInt(p.x / cellSize), y = Mathf.RoundToInt((settings.chunkSize-p.y) / cellSize);
++                        if (x < 0 || y < 0 || x >= map.Width || y >= map.Height || roadNavigation[x,y] <= 0 || map.Water[x,y] > .01f) continue;
++                        float score = (new Vector2(x,y)-hub).sqrMagnitude;
++                        if(score < best) { best = score; bestX = x; bestY = y; }
++                    }
++                    if (bestX >= 0 && TryFindPath(bestX,bestY,hub.x,hub.y,roadNavigation,map.Water,out List<int> access)) AddRoadPath(map,settings,access);
++                }
+             }
+ 
+             SetStreamingBoundaryRoads(map, settings, connectedAnchors);
+@@ -427,7 +466,12 @@ namespace ProjectLeviathan.ProceduralTerrain
+                     continue;
+                 }
+ 
+-                map.PoiMask[candidate.MapX, candidate.MapY] = 1f;
++                int footprint = Mathf.CeilToInt(candidate.Definition.minimumFlatAreaRadiusMeters * .7f / cellSize);
++                for (int dy = -footprint; dy <= footprint; dy++) for (int dx = -footprint; dx <= footprint; dx++)
++                {
++                    int x = candidate.MapX + dx, y = candidate.MapY + dy;
++                    if (x >= 0 && y >= 0 && x < map.Width && y < map.Height && dx*dx+dy*dy <= footprint*footprint) map.PoiMask[x,y] = 1;
++                }
+                 placed.Add(new TerrainWorldPOI(
+                     candidate.Definition.id,
+                     candidate.Definition.displayName,
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs"
+index 24b9f88..4c44f3b 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainSettings.cs"
+@@ -150,6 +150,9 @@ namespace ProjectLeviathan.ProceduralTerrain
+         [Range(0f, 0.2f)] public float biomeBlendWidth = 0.035f;
+ 
+         [Header("Surface and Props")]
++        public Mesh roadsidePoleMesh;
++        public Material roadsidePoleMaterial;
++        public Material roadsideCableMaterial;
+         [Range(0, 4)] public int heightSmoothingIterations = 1;
+         [Range(0f, 1f)] public float heightSmoothingStrength = 0.65f;
+         public bool generateProceduralProps = true;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\ProceduralTerrainBootstrap.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\ProceduralTerrainBootstrap.cs"
+index 8ce1946..1753af5 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scripts\\World\\ProceduralTerrain\\ProceduralTerrainBootstrap.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\ProceduralTerrainBootstrap.cs"
+@@ -7,6 +7,7 @@ namespace ProjectLeviathan.ProceduralTerrain
+         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+         static void Initialize()
+         {
++            if (UnityEngine.Object.FindAnyObjectByType<TerrainBootstrapOptOut>() != null) return;
+             if (UnityEngine.Object.FindAnyObjectByType<TerrainWorldController>(FindObjectsInactive.Include) != null)
+             {
+                 return;
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainBootstrapOptOut.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainBootstrapOptOut.cs"
+new file mode 100644
+index 0000000..bfd2fe9
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\TerrainBootstrapOptOut.cs"
+@@ -0,0 +1,7 @@
++using UnityEngine;
++
++namespace ProjectLeviathan.ProceduralTerrain
++{
++    // Self-contained graphics demonstrations must not spawn the game's fallback terrain in Play.
++    public sealed class TerrainBootstrapOptOut : MonoBehaviour { }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\RoadsideInfrastructure.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\RoadsideInfrastructure.cs"
+new file mode 100644
+index 0000000..88c6384
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\RoadsideInfrastructure.cs"
+@@ -0,0 +1,76 @@
++using System.Collections.Generic;
++using UnityEngine;
++using UnityEngine.Rendering;
++
++namespace ProjectLeviathan.ProceduralTerrain
++{
++    public static class RoadsideInfrastructure
++    {
++        public static void Build(TerrainChunk chunk, Transform root)
++        {
++            var settings=chunk.Settings;var map=chunk.GeneratedData;
++            if(settings.roadsidePoleMesh==null || settings.roadsidePoleMaterial==null) return;
++            var poles=new List<CombineInstance>();var wires=new List<Vector3>();var indices=new List<int>();
++            var occupied=new List<Vector3>();int stride=1;
++            foreach(var lod in settings.lods)if(lod.lod==chunk.AppliedLod)stride=lod.GetSimplificationLevel();
++            foreach(var path in TerrainRoadMeshGenerator.ExtractPaths(map,settings))
++            {
++                float travelled=0;Vector3? previous=null;
++                for(int i=1;i<path.Count;i++)
++                {
++                    travelled+=Vector3.Distance(path[i],path[i-1]);if(travelled<65)continue;travelled=0;
++                    if(poles.Count>=40)break;
++                    Vector3 tangent=(path[i]-path[i-1]).normalized;
++                    Vector3 seed=path[i]+Vector3.Cross(Vector3.up,tangent)*10;
++                    if(!TerrainRoadMeshGenerator.SampleSurface(map,settings,stride,seed,out Vector3 p,out Vector3 normal) || normal.y<.99f ||
++                        map.BaseSite.IsExcluded(map.WorldOrigin.x+p.x,map.WorldOrigin.y+p.z,12)) {previous=null;continue;}
++                    int mx=Mathf.Clamp(Mathf.RoundToInt(p.x/settings.CellSize),0,map.Width-1),my=Mathf.Clamp(Mathf.RoundToInt((settings.chunkSize-p.z)/settings.CellSize),0,map.Height-1);
++                    if(map.PoiMask[mx,my]>.01f || map.Roads[mx,my]>.01f){previous=null;continue;}
++                    bool crowded=false;foreach(var used in occupied)if((used-p).sqrMagnitude<45*45){crowded=true;break;}
++                    if(crowded){previous=null;continue;}
++                    occupied.Add(p);
++                    Quaternion rotation=Quaternion.LookRotation(tangent);
++                    poles.Add(new CombineInstance{mesh=settings.roadsidePoleMesh,transform=Matrix4x4.TRS(p,rotation,Vector3.one*9)});
++                    Vector3 top=p+Vector3.up*8.5f;
++                    bool clear=true;
++                    if(previous.HasValue)for(int j=1;j<10;j++)
++                    {
++                        Vector3 probe=Vector3.Lerp(previous.Value,top,j/10f);
++                        int x=Mathf.Clamp(Mathf.RoundToInt(probe.x/settings.CellSize),0,map.Width-1),y=Mathf.Clamp(Mathf.RoundToInt((settings.chunkSize-probe.z)/settings.CellSize),0,map.Height-1);
++                        if(map.PoiMask[x,y]>.01f)clear=false;
++                    }
++                    if(clear && previous.HasValue && Vector3.Distance(previous.Value,top)<110)
++                    {
++                        Vector3 last=previous.Value;
++                        for(int j=1;j<=10;j++)
++                        {float t=j/10f;Vector3 next=Vector3.Lerp(previous.Value,top,t)-Vector3.up*(4*t*(1-t)*2);Cable(last,next,wires,indices);last=next;}
++                    }
++                    previous=top;
++                }
++            }
++            if(poles.Count>0)
++            {
++                var mesh=new Mesh{name="Roadside poles",indexFormat=IndexFormat.UInt32};mesh.CombineMeshes(poles.ToArray());
++                Add(root,mesh,settings.roadsidePoleMaterial);
++            }
++            if(wires.Count>0 && settings.roadsideCableMaterial!=null)
++            {
++                var mesh=new Mesh{name="Suspended utility cables",indexFormat=IndexFormat.UInt32};mesh.SetVertices(wires);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
++                Add(root,mesh,settings.roadsideCableMaterial);
++            }
++        }
++        static void Cable(Vector3 a,Vector3 b,List<Vector3> vertices,List<int> triangles)
++        {
++            Vector3 direction=(b-a).normalized,right=Vector3.Cross(direction,Vector3.up).normalized*.055f;
++            Vector3 up=Vector3.Cross(right.normalized,direction)*.055f;int start=vertices.Count;
++            for(int j=0;j<2;j++)for(int i=0;i<4;i++){float angle=i*Mathf.PI*.5f;vertices.Add((j==0?a:b)+right*Mathf.Cos(angle)+up*Mathf.Sin(angle));}
++            for(int i=0;i<4;i++){int k=(i+1)%4;triangles.AddRange(new[]{start+i,start+4+i,start+k,start+k,start+4+i,start+4+k});}
++        }
++        static void Add(Transform root,Mesh mesh,Material material)
++        {
++            var go=new GameObject(mesh.name);go.transform.SetParent(root,false);
++            go.AddComponent<MeshFilter>().sharedMesh=mesh;var r=go.AddComponent<MeshRenderer>();r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.Off;
++            go.AddComponent<GeneratedSurfaceMeshOwner>().mesh=mesh;
++        }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\GeneratedSurfaceMeshOwner.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\GeneratedSurfaceMeshOwner.cs"
+new file mode 100644
+index 0000000..c38cf3d
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\ProceduralTerrain\\GeneratedSurfaceMeshOwner.cs"
+@@ -0,0 +1,13 @@
++using UnityEngine;
++
++namespace ProjectLeviathan.ProceduralTerrain
++{
++    // Generated child meshes share their chunk's lifetime; imported meshes are never assigned here.
++    [ExecuteAlways]
++    public sealed class GeneratedSurfaceMeshOwner : MonoBehaviour
++    {
++        [System.NonSerialized] public Mesh mesh;
++        void OnDestroy()
++        { if(mesh!=null){if(Application.isPlaying)Destroy(mesh);else DestroyImmediate(mesh);mesh=null;} }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\LocalAtmosphere.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\LocalAtmosphere.cs"
+new file mode 100644
+index 0000000..4183fa7
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\LocalAtmosphere.cs"
+@@ -0,0 +1,28 @@
++using UnityEngine;
++
++namespace ProjectLeviathan.World
++{
++    /// <summary>Low-frequency distance gating for bounded smoke, mist and service lighting.</summary>
++    public sealed class LocalAtmosphere : MonoBehaviour
++    {
++        public ParticleSystem[] particles;
++        public Light[] lights;
++        [Min(20)] public float effectsDistance=650;
++        [Min(10)] public float lightDistance=120;
++        float nextCheck;
++        void Update()
++        {
++            if(Time.unscaledTime<nextCheck)return;nextCheck=Time.unscaledTime+.5f;
++            Camera camera=Camera.main;if(camera==null)return;
++            float distance=(camera.transform.position-transform.position).sqrMagnitude;
++            bool dark=Shader.GetGlobalVector("_LeviathanSkyState").x<.4f;
++            if(lights!=null)foreach(var light in lights)if(light!=null)light.enabled=dark && distance<lightDistance*lightDistance;
++            if(particles!=null)foreach(var particle in particles)if(particle!=null)
++            {
++                bool near=distance<effectsDistance*effectsDistance;
++                if(near && !particle.isPlaying)particle.Play();
++                else if(!near && !particle.isStopped)particle.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
++            }
++        }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Splines\\SurfaceSplineBuilder.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Splines\\SurfaceSplineBuilder.cs"
+new file mode 100644
+index 0000000..a765339
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Splines\\SurfaceSplineBuilder.cs"
+@@ -0,0 +1,150 @@
++using System;
++using System.Collections.Generic;
++using UnityEngine;
++using UnityEngine.Rendering;
++
++namespace ProjectLeviathan.Splines
++{
++    [Serializable]
++    public struct SurfaceSplineKnot
++    {
++        public Vector3 position;
++        public Vector3 normal;
++        [Min(.01f)] public float width;
++        public SurfaceSplineKnot(Vector3 position, Vector3 normal, float width = 1)
++        { this.position = position; this.normal = normal; this.width = width; }
++    }
++
++    public delegate bool SurfaceProjection(Vector3 seed, Vector3 hintNormal, out Vector3 position, out Vector3 normal);
++
++    /// <summary>Builds a surface ribbon in world coordinates. Projection never modifies the target.</summary>
++    public sealed class SurfaceSplineBuilder
++    {
++        public readonly List<Vector3> vertices = new List<Vector3>();
++        public readonly List<Vector3> normals = new List<Vector3>();
++        public readonly List<Vector2> uv = new List<Vector2>();
++        public readonly List<int> triangles = new List<int>();
++        public int MissedSamples { get; private set; }
++        public int RejectedTriangles { get; private set; }
++        public const int VertexLimit = 250000;
++
++        struct Row { public Vector3 position, normal; public float width; public bool valid; }
++
++        public void Append(IReadOnlyList<SurfaceSplineKnot> knots, bool closed, float width,
++            float spacing, int crossSegments, float smoothing, float lift, float uvMetres,
++            float maximumDeviation, SurfaceProjection project)
++        {
++            if (knots == null || knots.Count < (closed ? 3 : 2)) return;
++            spacing = Mathf.Max(.05f, spacing); crossSegments = Mathf.Clamp(crossSegments, 1, 64);
++            smoothing = Mathf.Clamp01(smoothing); width = Mathf.Max(.01f, width);
++            int spans = closed ? knots.Count : knots.Count - 1;
++            var rows = new List<Row>();
++            for (int span = 0; span < spans; span++)
++            {
++                float length = 0;
++                Vector3 previous = Evaluate(knots, closed, span, 0, smoothing);
++                for (int k = 1; k <= 12; k++)
++                {
++                    Vector3 p = Evaluate(knots, closed, span, k / 12f, smoothing);
++                    length += Vector3.Distance(previous, p); previous = p;
++                }
++                int steps = Mathf.Max(1, Mathf.CeilToInt(length / spacing));
++                if ((long)(rows.Count + steps + 1) * (crossSegments + 1) + vertices.Count > VertexLimit)
++                    throw new InvalidOperationException("Spline exceeds 250000 vertices. Increase spacing or split the path.");
++                for (int k = 0; k < steps; k++) AddRow(span, k / (float)steps);
++            }
++            AddRow(spans - 1, 1);
++            int start = vertices.Count, stride = crossSegments + 1;
++            var valid = new bool[rows.Count * stride];
++            float distance = 0;
++            for (int r = 0; r < rows.Count; r++)
++            {
++                Row row = rows[r];
++                int before = r == 0 ? (closed ? rows.Count - 2 : 0) : r - 1;
++                int after = r == rows.Count - 1 ? (closed ? 1 : r) : r + 1;
++                Vector3 tangent = Vector3.ProjectOnPlane(rows[after].position - rows[before].position, row.normal);
++                if (tangent.sqrMagnitude < 1e-8f) tangent = Vector3.Cross(row.normal, Vector3.right);
++                if (tangent.sqrMagnitude < 1e-8f) tangent = Vector3.Cross(row.normal, Vector3.forward);
++                Vector3 right = Vector3.Cross(row.normal, tangent.normalized).normalized;
++                if (r > 0) distance += Vector3.Distance(rows[r - 1].position, row.position);
++                for (int c = 0; c <= crossSegments; c++)
++                {
++                    float u = c / (float)crossSegments;
++                    Vector3 seed = row.position + right * ((u - .5f) * width * row.width);
++                    bool hit = project(seed, row.normal, out Vector3 point, out Vector3 normal) && row.valid;
++                    valid[r * stride + c] = hit;
++                    if (!hit) { MissedSamples++; point = row.position; normal = row.normal; }
++                    vertices.Add(point + normal * lift); normals.Add(normal);
++                    uv.Add(new Vector2(u, distance / Mathf.Max(.01f, uvMetres)));
++                }
++            }
++            for (int r = 0; r < rows.Count - 1; r++)
++                for (int c = 0; c < crossSegments; c++)
++                {
++                    int a = r * stride + c, b = a + 1, d = a + stride, e = d + 1;
++                    Triangle(a, d, b); Triangle(b, d, e);
++                }
++
++            void AddRow(int span, float t)
++            {
++                var a = knots[span]; var b = knots[(span + 1) % knots.Count];
++                Vector3 hint = Vector3.Slerp(a.normal.normalized, b.normal.normalized, t).normalized;
++                if (hint.sqrMagnitude < .5f) hint = Vector3.up;
++                Vector3 seed = Evaluate(knots, closed, span, t, smoothing);
++                bool hit = project(seed, hint, out Vector3 p, out Vector3 n);
++                rows.Add(new Row { position = hit ? p : seed, normal = hit ? n : hint,
++                    width = Mathf.Max(.01f, Mathf.Lerp(a.width, b.width, t)), valid = hit });
++            }
++            void Triangle(int a, int b, int c)
++            {
++                if (!valid[a] || !valid[b] || !valid[c]) { RejectedTriangles++; return; }
++                a += start; b += start; c += start;
++                Vector3 ab = vertices[b] - vertices[a], ac = vertices[c] - vertices[a];
++                Vector3 face = Vector3.Cross(ab, ac), normal = (normals[a] + normals[b] + normals[c]).normalized;
++                if (face.sqrMagnitude < 1e-12f) return;
++                // Reject triangles spanning holes, folds or disconnected surfaces. Finer sampling
++                // is necessary at sharp corners; filling an unsupported gap would create a bridge.
++                Vector3 center = (vertices[a] + vertices[b] + vertices[c]) / 3 - normal * lift;
++                if (Vector3.Dot(normals[a], normals[b]) < 0 || Vector3.Dot(normals[a], normals[c]) < 0 ||
++                    !project(center, normal, out Vector3 projected, out Vector3 _) ||
++                    Vector3.Distance(center, projected) > Mathf.Max(.005f, maximumDeviation))
++                { RejectedTriangles++; return; }
++                triangles.Add(a);
++                if (Vector3.Dot(face, normal) >= 0) { triangles.Add(b); triangles.Add(c); }
++                else { triangles.Add(c); triangles.Add(b); }
++            }
++        }
++
++        // Hermite form of an interpolating Catmull-Rom spline, with adjustable tangent strength.
++        public static Vector3 Evaluate(IReadOnlyList<SurfaceSplineKnot> knots, bool closed, int span, float t, float smoothing)
++        {
++            int n = knots.Count;
++            Vector3 P(int i) => knots[closed ? (i % n + n) % n : Mathf.Clamp(i, 0, n - 1)].position;
++            Vector3 a = P(span), b = P(span + 1);
++            Vector3 m0 = (P(span + 1) - P(span - 1)) * (.5f * smoothing);
++            Vector3 m1 = (P(span + 2) - P(span)) * (.5f * smoothing);
++            float t2 = t * t, t3 = t2 * t;
++            return (2*t3 - 3*t2 + 1)*a + (t3 - 2*t2 + t)*m0 + (-2*t3 + 3*t2)*b + (t3 - t2)*m1;
++        }
++
++        public Mesh CreateMesh(Matrix4x4 worldToLocal, string name)
++        {
++            var localVertices = new List<Vector3>(vertices.Count);
++            var localNormals = new List<Vector3>(normals.Count);
++            Matrix4x4 normalMatrix = worldToLocal.inverse.transpose;
++            foreach (Vector3 v in vertices) localVertices.Add(worldToLocal.MultiplyPoint3x4(v));
++            foreach (Vector3 n in normals) localNormals.Add(normalMatrix.MultiplyVector(n).normalized);
++            var mesh = new Mesh { name = name, indexFormat = vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
++            mesh.SetVertices(localVertices); mesh.SetNormals(localNormals); mesh.SetUVs(0, uv);
++            if (worldToLocal.determinant < 0)
++            {
++                var reversed = new List<int>(triangles);
++                for (int i = 0; i < reversed.Count; i += 3) (reversed[i + 1], reversed[i + 2]) = (reversed[i + 2], reversed[i + 1]);
++                mesh.SetTriangles(reversed, 0);
++            }
++            else mesh.SetTriangles(triangles, 0);
++            mesh.RecalculateTangents(); mesh.RecalculateBounds();
++            return mesh;
++        }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Splines\\SurfaceSplineMesh.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Splines\\SurfaceSplineMesh.cs"
+new file mode 100644
+index 0000000..3a6e323
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Splines\\SurfaceSplineMesh.cs"
+@@ -0,0 +1,163 @@
++using System;
++using System.Collections.Generic;
++using UnityEngine;
++
++namespace ProjectLeviathan.Splines
++{
++    public enum SurfaceProjectionMode { Directional, Radial, KnotNormals }
++
++    [ExecuteAlways, DisallowMultipleComponent, RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
++    public sealed class SurfaceSplineMesh : MonoBehaviour
++    {
++        [Header("Path (local coordinates)")]
++        public List<SurfaceSplineKnot> knots = new List<SurfaceSplineKnot> {
++            new SurfaceSplineKnot(new Vector3(-5, 1, 0), Vector3.up),
++            new SurfaceSplineKnot(new Vector3(0, 1, 3), Vector3.up),
++            new SurfaceSplineKnot(new Vector3(5, 1, 0), Vector3.up) };
++        public bool closed;
++        [Range(0, 1)] public float smoothing = 1;
++        [Min(.01f)] public float width = 2;
++        [Min(.05f)] public float sampleSpacing = .25f;
++        [Range(1, 64)] public int widthSegments = 8;
++        [Min(0)] public float surfaceOffset = .025f;
++        [Min(.005f)] public float maximumSurfaceError = .08f;
++        [Min(.01f)] public float textureMetres = 4;
++        [Header("Projection")]
++        public SurfaceProjectionMode projection;
++        public Vector3 direction = Vector3.down;
++        public Transform radialCenter;
++        [Min(.1f)] public float probeAbove = 50;
++        [Min(.1f)] public float probeBelow = 50;
++        public LayerMask surfaceLayers = ~0;
++        [Tooltip("An explicit list avoids hitting unrelated objects. Empty uses the layer mask.")]
++        public Collider[] surfaces = Array.Empty<Collider>();
++        [Header("Output")]
++        public Material material;
++        public bool generateCollider;
++        public bool autoRebuild = true;
++        public Mesh GeneratedMesh => ownedMesh;
++        public int MissedSamples { get; private set; }
++        public int RejectedTriangles { get; private set; }
++        public string LastError { get; private set; }
++        Mesh ownedMesh;
++        MeshCollider ownedCollider;
++        MeshFilter filter;
++        MeshRenderer meshRenderer;
++        RaycastHit[] hits = new RaycastHit[32];
++        bool dirty = true;
++        Matrix4x4 lastMatrix;
++        int lastSurfaceState;
++
++        void OnEnable() { dirty = true; }
++        void OnValidate() { dirty = true; }
++        public void RequestRebuild() { dirty = true; }
++        void Update()
++        {
++            if (autoRebuild && (dirty || transform.localToWorldMatrix != lastMatrix || SurfaceState() != lastSurfaceState)) Rebuild();
++        }
++        int SurfaceState()
++        {
++            unchecked
++            {
++                int hash = radialCenter != null ? radialCenter.position.GetHashCode() : 0;
++                if (surfaces != null) foreach (var surface in surfaces) if (surface != null)
++                    hash = hash * 397 ^ surface.bounds.GetHashCode() ^ surface.transform.localToWorldMatrix.GetHashCode() ^ (surface.enabled ? 1 : 0);
++                return hash;
++            }
++        }
++
++        [ContextMenu("Rebuild surface spline")]
++        public void Rebuild()
++        {
++            if (!isActiveAndEnabled) return;
++            dirty = false; LastError = null; lastMatrix = transform.localToWorldMatrix;
++            filter = GetComponent<MeshFilter>(); meshRenderer = GetComponent<MeshRenderer>();
++            if (knots == null || knots.Count < (closed ? 3 : 2)) { Fail("At least two knots (three when closed) are required."); return; }
++            if (Mathf.Abs(lastMatrix.determinant) < 1e-8f) { Fail("Transform scale cannot be zero."); return; }
++            if (projection == SurfaceProjectionMode.Directional && direction.sqrMagnitude < 1e-8f)
++            { Fail("Projection direction cannot be zero."); return; }
++            // Rebuild runs on the main thread, never in OnValidate's import callback.
++            Physics.SyncTransforms();
++            lastSurfaceState = SurfaceState();
++            var world = new List<SurfaceSplineKnot>(knots.Count);
++            Matrix4x4 normals = transform.worldToLocalMatrix.transpose;
++            foreach (var knot in knots) world.Add(new SurfaceSplineKnot(transform.TransformPoint(knot.position),
++                normals.MultiplyVector(knot.normal).normalized, knot.width));
++            var builder = new SurfaceSplineBuilder();
++            try
++            {
++                builder.Append(world, closed, width, sampleSpacing, widthSegments, smoothing,
++                    surfaceOffset, textureMetres, maximumSurfaceError, Project);
++                Mesh next = builder.CreateMesh(transform.worldToLocalMatrix, "Projected Spline (generated)");
++                next.hideFlags = HideFlags.DontSave;
++                ReleaseMesh(); ownedMesh = next; filter.sharedMesh = next;
++                if (material != null) meshRenderer.sharedMaterial = material;
++                if (generateCollider)
++                {
++                    if (ownedCollider == null)
++                    {
++                        ownedCollider = gameObject.AddComponent<MeshCollider>();
++                        ownedCollider.hideFlags = HideFlags.HideInInspector | HideFlags.DontSave;
++                    }
++                    ownedCollider.sharedMesh = next.vertexCount > 0 && next.GetIndexCount(0) > 0 ? next : null;
++                }
++                else ReleaseCollider();
++                MissedSamples = builder.MissedSamples; RejectedTriangles = builder.RejectedTriangles;
++            }
++            catch (Exception e) { Fail(e.Message); }
++        }
++
++        public bool Project(Vector3 seed, Vector3 hint, out Vector3 position, out Vector3 normal)
++        {
++            Vector3 rayDirection = projection == SurfaceProjectionMode.Radial
++                ? (radialCenter != null ? radialCenter.position : transform.position) - seed
++                : projection == SurfaceProjectionMode.KnotNormals ? -hint : direction;
++            position = seed; normal = hint;
++            if (rayDirection.sqrMagnitude < 1e-8f) return false;
++            rayDirection.Normalize();
++            var ray = new Ray(seed - rayDirection * Mathf.Max(.1f, probeAbove), rayDirection);
++            float maxDistance = Mathf.Max(.1f, probeAbove) + Mathf.Max(.1f, probeBelow);
++            float best = float.PositiveInfinity; RaycastHit nearest = default;
++            if (surfaces != null && surfaces.Length > 0)
++            {
++                foreach (var surface in surfaces)
++                    if (Eligible(surface) && surface.Raycast(ray, out RaycastHit hit, maxDistance) && hit.distance < best)
++                    { best = hit.distance; nearest = hit; }
++            }
++            else
++            {
++                int count;
++                while ((count = Physics.RaycastNonAlloc(ray, hits, maxDistance, surfaceLayers, QueryTriggerInteraction.Ignore)) == hits.Length)
++                {
++                    if (hits.Length >= 4096) return false;
++                    Array.Resize(ref hits, hits.Length * 2);
++                }
++                for (int i = 0; i < count; i++) if (Eligible(hits[i].collider) && hits[i].distance < best)
++                { best = hits[i].distance; nearest = hits[i]; }
++            }
++            if (float.IsPositiveInfinity(best)) return false;
++            position = nearest.point; normal = nearest.normal.normalized;
++            return normal.sqrMagnitude > .5f;
++        }
++        bool Eligible(Collider c) => c != null && c.enabled && c.gameObject.activeInHierarchy && !c.isTrigger &&
++            c != ownedCollider && c.transform != transform && !c.transform.IsChildOf(transform) &&
++            (surfaceLayers.value & (1 << c.gameObject.layer)) != 0;
++        void Fail(string message) { LastError = message; ReleaseMesh(); }
++        void ReleaseMesh()
++        {
++            if (ownedCollider != null) ownedCollider.sharedMesh = null;
++            if (ownedMesh == null) return;
++            if (filter != null && filter.sharedMesh == ownedMesh) filter.sharedMesh = null;
++            if (Application.isPlaying) Destroy(ownedMesh); else DestroyImmediate(ownedMesh);
++            ownedMesh = null;
++        }
++        void ReleaseCollider()
++        {
++            if (ownedCollider == null) return;
++            if (Application.isPlaying) Destroy(ownedCollider); else DestroyImmediate(ownedCollider);
++            ownedCollider = null;
++        }
++        void OnDisable() { ReleaseMesh(); ReleaseCollider(); }
++        void OnDestroy() { ReleaseMesh(); ReleaseCollider(); }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\SurfaceSplineMeshEditor.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\SurfaceSplineMeshEditor.cs"
+new file mode 100644
+index 0000000..220a44f
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\SurfaceSplineMeshEditor.cs"
+@@ -0,0 +1,79 @@
++using ProjectLeviathan.Splines;
++using UnityEditor;
++using UnityEngine;
++
++[CustomEditor(typeof(SurfaceSplineMesh))]
++public sealed class SurfaceSplineMeshEditor : Editor
++{
++    public override void OnInspectorGUI()
++    {
++        DrawDefaultInspector();
++        var spline = (SurfaceSplineMesh)target;
++        EditorGUILayout.HelpBox("Scene: move os pontos pelas alcas. Shift + clique adiciona um ponto na superficie. Undo disponivel.", MessageType.Info);
++        if (GUILayout.Button("Reconstruir malha")) spline.Rebuild();
++        if (GUILayout.Button("Adicionar ponto"))
++        {
++            Undo.RecordObject(spline, "Add spline knot");
++            var last = spline.knots.Count > 0 ? spline.knots[spline.knots.Count - 1] : new SurfaceSplineKnot(Vector3.zero, Vector3.up);
++            last.position += Vector3.forward * 3; spline.knots.Add(last); Changed(spline);
++        }
++        if (spline.LastError != null) EditorGUILayout.HelpBox(spline.LastError, MessageType.Error);
++        EditorGUILayout.LabelField("Amostras sem superficie", spline.MissedSamples.ToString());
++        EditorGUILayout.LabelField("Triangulos rejeitados", spline.RejectedTriangles.ToString());
++        using (new EditorGUI.DisabledScope(spline.GeneratedMesh == null))
++            if (GUILayout.Button("Exportar copia da malha (.asset)"))
++            {
++                string path = EditorUtility.SaveFilePanelInProject("Export projected spline", "SurfaceSpline", "asset", "Mesh asset");
++                if (!string.IsNullOrEmpty(path))
++                {
++                    var mesh = Instantiate(spline.GeneratedMesh); mesh.hideFlags = HideFlags.None;
++                    AssetDatabase.CreateAsset(mesh, AssetDatabase.GenerateUniqueAssetPath(path)); AssetDatabase.SaveAssets();
++                }
++            }
++    }
++    void OnSceneGUI()
++    {
++        var spline = (SurfaceSplineMesh)target;
++        Handles.color = new Color(.2f, .9f, .75f);
++        for (int i = 0; i < spline.knots.Count; i++)
++        {
++            var knot = spline.knots[i]; Vector3 world = spline.transform.TransformPoint(knot.position);
++            Handles.Label(world, "P" + i);
++            EditorGUI.BeginChangeCheck();
++            Vector3 moved = Handles.PositionHandle(world, Quaternion.identity);
++            if (EditorGUI.EndChangeCheck())
++            {
++                Undo.RecordObject(spline, "Move spline knot"); knot.position = spline.transform.InverseTransformPoint(moved);
++                spline.knots[i] = knot; Changed(spline);
++            }
++            if (i > 0) Handles.DrawDottedLine(spline.transform.TransformPoint(spline.knots[i-1].position), world, 4);
++        }
++        Event e = Event.current;
++        if (e.shift && !e.alt)
++        {
++            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
++            if (e.type == EventType.MouseDown && e.button == 0)
++            {
++                Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
++                if (Physics.Raycast(ray, out var hit, 100000, spline.surfaceLayers, QueryTriggerInteraction.Ignore))
++                {
++                    Undo.RecordObject(spline, "Paint spline knot");
++                    spline.knots.Add(new SurfaceSplineKnot(spline.transform.InverseTransformPoint(hit.point),
++                        spline.transform.localToWorldMatrix.transpose.MultiplyVector(hit.normal).normalized));
++                    Changed(spline); e.Use();
++                }
++            }
++        }
++    }
++    static void Changed(SurfaceSplineMesh spline)
++    { spline.RequestRebuild(); EditorUtility.SetDirty(spline); PrefabUtility.RecordPrefabInstancePropertyModifications(spline); }
++    [MenuItem("GameObject/Leviathan/Spline projetada", false, 10)]
++    static void Create(MenuCommand command)
++    {
++        var go = new GameObject("Spline Projetada"); Undo.RegisterCreatedObjectUndo(go, "Create projected spline");
++        GameObjectUtility.SetParentAndAlign(go, command.context as GameObject);
++        var spline = go.AddComponent<SurfaceSplineMesh>();
++        spline.material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Environment/SplineTrack.mat");
++        Selection.activeGameObject = go;
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\SurfaceSplineValidation.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\SurfaceSplineValidation.cs"
+new file mode 100644
+index 0000000..9493442
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\SurfaceSplineValidation.cs"
+@@ -0,0 +1,184 @@
++using System;
++using System.Collections.Generic;
++using System.IO;
++using System.Text;
++using ProjectLeviathan.Splines;
++using UnityEditor;
++using UnityEditor.SceneManagement;
++using UnityEngine;
++using UnityEngine.Rendering;
++using Object = UnityEngine.Object;
++
++public static class SurfaceSplineValidation
++{
++    public const string ScenePath = "Assets/Scenes/Tests/SurfaceSplineDemo.unity";
++    const string Output = "Artifacts/MapComposition/";
++    static readonly StringBuilder report = new StringBuilder();
++    [MenuItem("Leviathan/Environment/Criar demonstracao de spline")]
++    static void Menu()
++    { if (!EditorApplication.isPlaying && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) CreateDemo(); }
++
++    public static void ValidateBatch()
++    {
++        try
++        {
++            ShaderUtil.allowAsyncCompilation=false;
++            report.Clear(); CreateDemo();
++            foreach (var spline in Object.FindObjectsByType<SurfaceSplineMesh>()) Validate(spline);
++            var test = GameObject.Find("Spline Esfera").GetComponent<SurfaceSplineMesh>();
++            var previous = test.GeneratedMesh; test.Rebuild();
++            Check(previous == null && test.GeneratedMesh != null, "Rebuild releases the previous owned mesh");
++            test.enabled = false; Check(test.GeneratedMesh == null, "Disable releases generated mesh");
++            test.enabled = true; test.Rebuild();
++            var surface = test.surfaces[0]; surface.enabled = false; test.Rebuild();
++            Check(test.GeneratedMesh.GetIndexCount(0) == 0 && test.MissedSamples > 0, "Missing surface produces no floating ribbon");
++            surface.enabled = true; test.Rebuild();
++            var direction = GameObject.Find("Spline Paisagem").GetComponent<SurfaceSplineMesh>();
++            direction.direction = Vector3.zero; direction.Rebuild();
++            Check(direction.LastError != null && direction.GeneratedMesh == null,"Invalid direction reported without stale output");
++            direction.direction = Vector3.down; direction.Rebuild();
++            direction.generateCollider = true; direction.Rebuild(); direction.Rebuild(); Validate(direction);
++            Check(direction.GetComponent<MeshCollider>().sharedMesh == direction.GeneratedMesh,"Generated collider is updated and excluded from projection");
++            direction.generateCollider = false; direction.Rebuild();
++            var mask=direction.surfaceLayers;direction.surfaceLayers=0;direction.Rebuild();
++            Check(direction.GeneratedMesh.GetIndexCount(0)==0,"Layer mask is honored even for explicit targets");
++            direction.surfaceLayers=mask;
++            var worldKnots=new List<SurfaceSplineKnot>(direction.knots);
++            direction.transform.SetPositionAndRotation(new Vector3(4,2,7),Quaternion.Euler(0,20,0));direction.transform.localScale=new Vector3(1.4f,.7f,-.9f);
++            direction.knots.Clear();foreach(var knot in worldKnots)direction.knots.Add(new SurfaceSplineKnot(direction.transform.InverseTransformPoint(knot.position),direction.transform.localToWorldMatrix.transpose.MultiplyVector(knot.normal).normalized,knot.width));
++            direction.Rebuild();Validate(direction);
++            var hole=new SurfaceSplineBuilder();
++            hole.Append(new[]{new SurfaceSplineKnot(new Vector3(-5,0,0),Vector3.up),new SurfaceSplineKnot(new Vector3(5,0,0),Vector3.up)},false,1,.25f,4,0,.02f,1,.08f,HoleProjection);
++            Check(hole.MissedSamples>0 && hole.triangles.Count>0,"Gap cuts unsupported triangles while retaining supported segments");
++            for(int i=0;i<hole.triangles.Count;i+=3)
++            {
++                float a=hole.vertices[hole.triangles[i]].x,b=hole.vertices[hole.triangles[i+1]].x,c=hole.vertices[hole.triangles[i+2]].x;
++                if(Mathf.Min(a,Mathf.Min(b,c))< -1 && Mathf.Max(a,Mathf.Max(b,c))>1)throw new InvalidOperationException("Triangle bridges the missing surface");
++            }
++            Check(true,"No triangle bridges the missing surface");
++            var shader = Shader.Find("Leviathan/Spline Track");
++            foreach (var error in ShaderUtil.GetShaderMessages(shader)) Check(error.severity.ToString() != "Error",error.message);
++            EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
++            captureFrames=0;EditorApplication.update+=CaptureWhenReady;
++        }
++        catch(Exception e)
++        { Directory.CreateDirectory(Output); File.WriteAllText(Output+"SplineValidation.txt",report+"\nFAIL "+e); Debug.LogException(e); EditorApplication.Exit(1); }
++    }
++    static bool HoleProjection(Vector3 seed,Vector3 hint,out Vector3 p,out Vector3 n)
++    {p=new Vector3(seed.x,0,seed.z);n=Vector3.up;return Mathf.Abs(seed.x)>1;}
++    static int captureFrames;
++    static void CaptureWhenReady()
++    {
++        if(++captureFrames<12)return;
++        EditorApplication.update-=CaptureWhenReady;
++        try
++        {
++            string path=Output+"Captures/Spline_Demo.png";
++            DownloadedAssetSurvey.Capture(Camera.main,path,1600,900);
++            var image=new Texture2D(2,2);image.LoadImage(File.ReadAllBytes(path));int yellow=0;
++            foreach(var p in image.GetPixels32())if(p.r>80 && p.g>50 && p.b<p.g*.75f && p.g<p.r)yellow++;
++            Object.DestroyImmediate(image);
++            foreach(var message in ShaderUtil.GetShaderMessages(Shader.Find("Leviathan/Spline Track")))Check(message.severity.ToString()!="Error",message.message);
++            Check(yellow>1000,"GPU capture contains the intended yellow ribbon, pixels="+yellow);
++            playStarted=EditorApplication.timeSinceStartup;EditorApplication.update+=VerifyPlay;
++            EditorApplication.EnterPlaymode();EditorApplication.isPaused=false;
++        }
++        catch(Exception e){File.WriteAllText(Output+"SplineValidation.txt",report+"\nFAIL "+e);Debug.LogException(e);EditorApplication.Exit(1);}
++    }
++    static double playStarted;
++    static void VerifyPlay()
++    {
++        if(!EditorApplication.isPlaying || EditorApplication.timeSinceStartup-playStarted<3)return;
++        EditorApplication.update-=VerifyPlay;
++        try
++        {
++            Check(Object.FindAnyObjectByType<ProjectLeviathan.ProceduralTerrain.TerrainWorldController>()==null,"Demo Play does not spawn the fallback game terrain");
++            var splines=Object.FindObjectsByType<SurfaceSplineMesh>();Check(splines.Length==3,"Three independent spline surfaces remain in Play");
++            foreach(var spline in splines)Check(spline.GeneratedMesh!=null && spline.GeneratedMesh.GetIndexCount(0)>0,spline.name+": survives entering Play");
++            File.WriteAllText(Output+"SplineValidation.txt",report.ToString());Debug.Log("SURFACE_SPLINE_VALIDATION_OK\n"+report);EditorApplication.Exit(0);
++        }
++        catch(Exception e){File.WriteAllText(Output+"SplineValidation.txt",report+"\nFAIL "+e);Debug.LogException(e);EditorApplication.Exit(1);}
++    }
++    static void Check(bool pass,string message)
++    { if(!pass) throw new InvalidOperationException(message); report.AppendLine("PASS "+message); }
++    static void Validate(SurfaceSplineMesh spline)
++    {
++        spline.Rebuild(); Check(spline.LastError == null && spline.GeneratedMesh.vertexCount > 100, spline.name+": generated mesh");
++        Check(spline.MissedSamples == 0,spline.name+": every vertex has supporting surface");
++        Check(spline.RejectedTriangles == 0,spline.name+": continuous ribbon without rejected triangles (actual "+spline.RejectedTriangles+")");
++        var mesh = spline.GeneratedMesh; var vertices = mesh.vertices; var normals = mesh.normals;
++        float maximumError = 0;
++        for(int i=0;i<vertices.Length;i++)
++        {
++            Vector3 n=spline.transform.worldToLocalMatrix.transpose.MultiplyVector(normals[i]).normalized;
++            Vector3 p=spline.transform.TransformPoint(vertices[i])-n*spline.surfaceOffset;
++            CheckFinite(p);
++            if(!spline.Project(p,n,out Vector3 hit,out _)) throw new InvalidOperationException("Contact probe failed");
++            maximumError=Mathf.Max(maximumError,Vector3.Distance(p,hit));
++        }
++        Check(maximumError < .002f,spline.name+": surface contact error below 2mm; max="+maximumError);
++        if(spline.closed)
++        {
++            int stride=spline.widthSegments+1;
++            for(int i=0;i<stride;i++) Check(Vector3.Distance(vertices[i],vertices[vertices.Length-stride+i])<.0001f,"Closed seam vertex "+i);
++        }
++    }
++    static void CheckFinite(Vector3 p)
++    { if(float.IsNaN(p.x)||float.IsNaN(p.y)||float.IsNaN(p.z)||float.IsInfinity(p.sqrMagnitude)) throw new InvalidOperationException("Non-finite vertex"); }
++    public static void CreateDemo()
++    {
++        Directory.CreateDirectory("Assets/Models/Environment/SplineDemo");
++        Directory.CreateDirectory("Assets/Materials/Environment"); AssetDatabase.Refresh();
++        var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
++        var track=MaterialAsset("SplineTrack",Shader.Find("Leviathan/Spline Track"),new Color(.52f,.55f,.46f));
++        var highlight=MaterialAsset("SplineDemoRibbon",Shader.Find("Leviathan/Spline Track"),new Color(.92f,.61f,.13f));
++        highlight.SetFloat("_EdgeWear",0);highlight.SetFloat("_TrackStrength",.25f);EditorUtility.SetDirty(highlight);
++        var ground=MaterialAsset("SplineDemoSurface",Shader.Find("Universal Render Pipeline/Lit"),new Color(.26f,.42f,.43f));
++        var terrain=MeshObject("Paisagem",Landscape(),new Vector3(-15,0,0),ground);
++        var sphere=GameObject.CreatePrimitive(PrimitiveType.Sphere); sphere.name="Esfera";
++        sphere.transform.position=new Vector3(0,4,0);sphere.transform.localScale=Vector3.one*8;sphere.GetComponent<Renderer>().sharedMaterial=ground;
++        var cone=MeshObject("Cone",Cone(),new Vector3(14,0,0),ground);
++        var path=NewSpline("Spline Paisagem",terrain,highlight);path.width=1.6f;
++        path.knots=new List<SurfaceSplineKnot>();
++        foreach(var p in new[]{new Vector3(-21,4,-4),new Vector3(-19,4,1),new Vector3(-14,4,2),new Vector3(-9,4,-3)})path.knots.Add(new SurfaceSplineKnot(p,Vector3.up));
++        var ring=NewSpline("Spline Esfera",sphere,highlight);ring.projection=SurfaceProjectionMode.Radial;ring.radialCenter=sphere.transform;ring.closed=true;ring.width=1.2f;
++        ring.knots=new List<SurfaceSplineKnot>();
++        for(int i=0;i<12;i++){float a=i*Mathf.PI*2/12;var n=new Vector3(Mathf.Cos(a),.25f,Mathf.Sin(a)).normalized;ring.knots.Add(new SurfaceSplineKnot(sphere.transform.position+n*4,n));}
++        var helix=NewSpline("Spline Cone",cone,highlight);helix.projection=SurfaceProjectionMode.KnotNormals;helix.width=.8f;helix.knots=new List<SurfaceSplineKnot>();
++        for(int i=0;i<16;i++)
++        {float a=i/15f*Mathf.PI*2.8f,y=.8f+i/15f*5.8f,r=4*(1-y/8);var n=new Vector3(Mathf.Cos(a),.5f,Mathf.Sin(a)).normalized;helix.knots.Add(new SurfaceSplineKnot(new Vector3(14+r*Mathf.Cos(a),y,r*Mathf.Sin(a)),n));}
++        foreach(var spline in new[]{path,ring,helix}){spline.sampleSpacing=.12f;spline.widthSegments=12;spline.surfaceOffset=.035f;spline.maximumSurfaceError=.08f;spline.probeAbove=12;spline.probeBelow=20;spline.Rebuild();}
++        var sun=new GameObject("Sol").AddComponent<Light>();sun.type=LightType.Directional;sun.intensity=1.4f;sun.transform.rotation=Quaternion.Euler(45,-30,0);sun.shadows=LightShadows.Soft;
++        RenderSettings.skybox=null;RenderSettings.ambientMode=AmbientMode.Flat;RenderSettings.ambientLight=new Color(.4f,.45f,.5f);RenderSettings.fog=false;
++        var camera=new GameObject("Camera").AddComponent<Camera>();camera.tag="MainCamera";camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.075f,.09f,.1f);
++        camera.transform.position=new Vector3(8,22,-36);camera.transform.LookAt(new Vector3(-2,3,0));camera.orthographic=true;camera.orthographicSize=12;
++        camera.gameObject.AddComponent<ProjectLeviathan.ProceduralTerrain.TerrainBootstrapOptOut>();
++        AssetDatabase.SaveAssets();EditorSceneManager.SaveScene(scene,ScenePath);
++    }
++    static SurfaceSplineMesh NewSpline(string name,GameObject surface,Material material)
++    {var spline=new GameObject(name).AddComponent<SurfaceSplineMesh>();spline.surfaces=new[]{surface.GetComponent<Collider>()};spline.material=material;return spline;}
++    public static Material MaterialAsset(string name,Shader shader,Color color)
++    {
++        string path="Assets/Materials/Environment/"+name+".mat";var material=AssetDatabase.LoadAssetAtPath<Material>(path);
++        if(material==null){material=new Material(shader);AssetDatabase.CreateAsset(material,path);}material.SetColor("_BaseColor",color);EditorUtility.SetDirty(material);return material;
++    }
++    static GameObject MeshObject(string name,Mesh mesh,Vector3 position,Material material)
++    {
++        string path="Assets/Models/Environment/SplineDemo/"+name+".asset";var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
++        if(existing==null)AssetDatabase.CreateAsset(mesh,path);else{EditorUtility.CopySerialized(mesh,existing);Object.DestroyImmediate(mesh);mesh=existing;}
++        var go=new GameObject(name);go.transform.position=position;go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=material;go.AddComponent<MeshCollider>().sharedMesh=mesh;return go;
++    }
++    static Mesh Landscape()
++    {
++        var v=new List<Vector3>();var t=new List<int>();const int n=40;
++        for(int z=0;z<=n;z++)for(int x=0;x<=n;x++){float px=x*.4f-8,pz=z*.4f-8;v.Add(new Vector3(px,1+Mathf.Sin(px*.45f)*Mathf.Cos(pz*.32f)*1.4f,pz));}
++        for(int z=0;z<n;z++)for(int x=0;x<n;x++){int a=z*(n+1)+x;t.AddRange(new[]{a,a+n+1,a+1,a+1,a+n+1,a+n+2});}
++        var m=new Mesh{name="Spline Demo Landscape"};m.SetVertices(v);m.SetTriangles(t,0);m.RecalculateNormals();m.RecalculateBounds();return m;
++    }
++    static Mesh Cone()
++    {
++        var v=new List<Vector3>();var t=new List<int>();const int n=128;
++        for(int i=0;i<n;i++){float a=i*Mathf.PI*2/n,b=(i+1)*Mathf.PI*2/n;int k=v.Count;v.Add(new Vector3(4*Mathf.Cos(a),0,4*Mathf.Sin(a)));v.Add(Vector3.up*8);v.Add(new Vector3(4*Mathf.Cos(b),0,4*Mathf.Sin(b)));t.AddRange(new[]{k,k+1,k+2});}
++        var m=new Mesh{name="Spline Demo Cone"};m.SetVertices(v);m.SetTriangles(t,0);m.RecalculateNormals();m.RecalculateBounds();return m;
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\MapCompositionSetup.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\MapCompositionSetup.cs"
+new file mode 100644
+index 0000000..3928495
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\MapCompositionSetup.cs"
+@@ -0,0 +1,143 @@
++using System.Collections.Generic;
++using System.IO;
++using ProjectLeviathan.Base;
++using ProjectLeviathan.Grass;
++using ProjectLeviathan.ProceduralTerrain;
++using ProjectLeviathan.Vegetation;
++using ProjectLeviathan.World;
++using UnityEditor;
++using UnityEditor.SceneManagement;
++using UnityEngine;
++using Object=UnityEngine.Object;
++
++public static class MapCompositionSetup
++{
++    [MenuItem("Leviathan/Environment/Aplicar composicao do mapa")]
++    static void Menu()
++    {if(!EditorApplication.isPlaying && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())ApplyBatch();}
++    public static void ApplyBatch()
++    {
++        Directory.CreateDirectory("Assets/Prefabs/Environment");Directory.CreateDirectory("Assets/Models/Environment/Understory");AssetDatabase.Refresh();
++        var scene=EditorSceneManager.OpenScene(BaseIntegrationBuilder.ScenePath);
++        var rig=Object.FindAnyObjectByType<BaseGameRig>();var settings=rig.terrain.terrainSettings;
++        var scenery=Object.FindAnyObjectByType<WorldSceneryManager>();var trees=Object.FindAnyObjectByType<ProceduralTreeManager>();
++        scenery.enabled=false;trees.enabled=false;rig.grass.enabled=false;
++        var grass=rig.grass.configuration;grass.meadowPatchSize=38;grass.meadowVariation=.85f;grass.meadowMinimumDensity=.14f;
++        grass.heightRange=new Vector2(.45f,1.05f);EditorUtility.SetDirty(grass);
++        trees.configuration.groveThreshold=.48f;trees.configuration.groveEdgeBlend=.1f;
++        trees.configuration.scatteredDensity=.065f;trees.configuration.heights=new Vector2(6,16);EditorUtility.SetDirty(trees.configuration);
++        settings.erosion.channelDepth=13;settings.erosion.channelWidth=.1f;settings.erosion.channelScale=105;
++        settings.surfacePalette.climateBlendStrength=.46f;settings.surfacePalette.rockySlopeThreshold=24;
++        var terrainMaterial=settings.terrainMaterial;terrainMaterial.SetFloat("_PatchStrength",.29f);terrainMaterial.SetFloat("_SlopeStrength",.43f);
++        terrainMaterial.SetFloat("_DetailStrength",.055f);terrainMaterial.SetFloat("_PatchScale",.018f);EditorUtility.SetDirty(terrainMaterial);
++        settings.roadMaterial=SurfaceSplineValidation.MaterialAsset("SplineTrack",Shader.Find("Leviathan/Spline Track"),new Color(.38f,.4f,.34f));
++        settings.roadSurfaceLift=.1f;
++        var paint=SurfaceSplineValidation.MaterialAsset("IndustrialPaint",Shader.Find("Leviathan/Dieselpunk Surface"),new Color(.24f,.34f,.34f));
++        var steel=SurfaceSplineValidation.MaterialAsset("IndustrialSteel",Shader.Find("Leviathan/Dieselpunk Surface"),new Color(.18f,.21f,.22f));steel.SetFloat("_Metallic",.65f);
++        var concrete=SurfaceSplineValidation.MaterialAsset("IndustrialConcrete",Shader.Find("Leviathan/Dieselpunk Surface"),new Color(.48f,.47f,.42f));concrete.SetFloat("_WearAmount",0);
++        var signal=SurfaceSplineValidation.MaterialAsset("IndustrialLamp",Shader.Find("Leviathan/Dieselpunk Surface"),new Color(.86f,.54f,.22f));signal.SetColor("_EmissionColor",new Color(2,1.1f,.35f));
++        var smoke=SurfaceSplineValidation.MaterialAsset("IndustrialMist",Shader.Find("Leviathan/Industrial Mist"),Color.white);
++        for(int i=0;i<3;i++)
++        {
++            string id=i==0?"field-outpost":i==1?"supply-depot":"industrial-works";
++            var definition=settings.poiDefinitions.Find(p=>p.id==id);
++            if(definition==null){definition=new TerrainPOIDefinition{id=id,displayName="Usina de bombeamento"};settings.poiDefinitions.Add(definition);}
++            definition.visualPrefab=IndustrialPrefab(i,paint,steel,concrete,signal,smoke);
++            definition.minimumFlatAreaRadiusMeters=30;definition.maximumSlopeDegrees=2;
++            definition.infiniteSpawnChancePerChunk=i==2?.28f:.38f;definition.minimumSpacingMeters=420;
++            definition.visualSurfaceOffsetMeters=0;definition.useFallbackVisual=false;
++        }
++        foreach(var p in scenery.configuration.prototypes)if(p.role==SceneryRole.Lamp){settings.roadsidePoleMesh=p.mesh;settings.roadsidePoleMaterial=p.material;break;}
++        settings.roadsideCableMaterial=steel;scenery.configuration.roadsideFurniture=false;
++        var prototypes=new List<SceneryPrototype>(scenery.configuration.prototypes);
++        prototypes.RemoveAll(p=>p.role==SceneryRole.Shrub || p.role==SceneryRole.FallenLog);
++        Mesh shrub=SaveMesh(TreeMeshFactory.Create(false,true),"Shrub");
++        var leaf=SurfaceSplineValidation.MaterialAsset("UnderstoryLeaves",Shader.Find("Leviathan/Cartoon Trees"),new Color(.7f,.85f,.6f));leaf.enableInstancing=true;
++        prototypes.Add(new SceneryPrototype{label="Understory shrub",role=SceneryRole.Shrub,mesh=shrub,material=leaf,sizeRange=new Vector2(.9f,2.1f)});
++        var cylinder=GameObject.CreatePrimitive(PrimitiveType.Cylinder);var log=new Mesh{name="Fallen timber"};
++        log.CombineMeshes(new[]{new CombineInstance{mesh=cylinder.GetComponent<MeshFilter>().sharedMesh,transform=Matrix4x4.TRS(new Vector3(0,.13f,0),Quaternion.Euler(90,0,0),new Vector3(.24f,.5f,.24f))}});
++        Object.DestroyImmediate(cylinder);log=SaveMesh(log,"FallenLog");
++        var wood=SurfaceSplineValidation.MaterialAsset("FallenWood",Shader.Find("Leviathan/Dieselpunk Surface"),new Color(.24f,.22f,.17f));wood.enableInstancing=true;wood.SetFloat("_WearAmount",0);
++        prototypes.Add(new SceneryPrototype{label="Fallen timber",role=SceneryRole.FallenLog,mesh=log,material=wood,sizeRange=new Vector2(3,6)});
++        scenery.configuration.prototypes=prototypes.ToArray();scenery.configuration.maximumInstancesPerChunk=950;scenery.configuration.rockDensity=.42f;
++        var sky=Object.FindAnyObjectByType<LayeredSkyController>();
++        if(sky!=null){sky.nightAmbientSky=new Color(.18f,.24f,.31f);sky.nightAmbientHorizon=new Color(.12f,.16f,.2f);sky.moonIntensity=.36f;EditorUtility.SetDirty(sky);}
++        var prefabPath=AssetDatabase.GetAssetPath(rig.spawner.basePrefab);
++        var baseRoot=PrefabUtility.LoadPrefabContents(prefabPath);
++        var previous=baseRoot.transform.Find("Luzes de Servico");if(previous!=null)Object.DestroyImmediate(previous.gameObject);
++        var lamps=new GameObject("Luzes de Servico");lamps.transform.SetParent(baseRoot.transform,false);
++        var baseAssembly=baseRoot.GetComponent<BaseAssembly>();var lights=new List<Light>();
++        foreach(var station in new[]{baseAssembly.leftStation,baseAssembly.rightStation,baseAssembly.mapStation})if(station!=null)
++            lights.Add(ServiceLamp(lamps.transform,baseRoot.transform.InverseTransformPoint(station.position)+Vector3.up*2.3f,steel,signal));
++        lamps.AddComponent<LocalAtmosphere>().lights=lights.ToArray();
++        PrefabUtility.SaveAsPrefabAsset(baseRoot,prefabPath);PrefabUtility.UnloadPrefabContents(baseRoot);
++        settings.Validate();EditorUtility.SetDirty(settings);EditorUtility.SetDirty(scenery.configuration);
++        foreach(var m in new[]{paint,steel,concrete,signal,leaf,wood})EditorUtility.SetDirty(m);
++        trees.enabled=true;scenery.enabled=true;rig.grass.enabled=true;
++        if(!rig.spawner.RebuildEditorPreview())throw new System.InvalidOperationException("No naturally supported base site after composition setup.");
++        EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
++        Debug.Log("MAP_COMPOSITION_SETUP_OK");
++    }
++    static Mesh SaveMesh(Mesh mesh,string name)
++    {
++        string path="Assets/Models/Environment/Understory/"+name+".asset";var old=AssetDatabase.LoadAssetAtPath<Mesh>(path);
++        if(old==null){AssetDatabase.CreateAsset(mesh,path);return mesh;}
++        EditorUtility.CopySerialized(mesh,old);Object.DestroyImmediate(mesh);return old;
++    }
++    static GameObject IndustrialPrefab(int kind,Material paint,Material steel,Material concrete,Material signal,Material smoke)
++    {
++        string name=kind==0?"RelayOutpost":kind==1?"SupplyDepot":"PumpingWorks";
++        var root=new GameObject(name);var parts=new List<Renderer>();
++        void Part(string label,PrimitiveType type,Vector3 p,Vector3 scale,Material mat)
++        {var go=GameObject.CreatePrimitive(type);go.name=label;go.transform.SetParent(root.transform,false);go.transform.localPosition=p;go.transform.localScale=scale;go.GetComponent<Renderer>().sharedMaterial=mat;parts.Add(go.GetComponent<Renderer>());}
++        Part("Buried footing",PrimitiveType.Cube,new Vector3(0,-.5f,0),new Vector3(26,3,20),concrete);
++        Part("Service hall",PrimitiveType.Cube,new Vector3(-3,4,0),new Vector3(16,6,12),paint);
++        Part("Roof",PrimitiveType.Cube,new Vector3(-3,7.2f,0),new Vector3(17,.6f,13),steel);
++        for(int i=0;i<5;i++)Part("Roof ribs",PrimitiveType.Cube,new Vector3(-9+i*3,7.7f,0),new Vector3(.25f,.65f,13),steel);
++        Part("Door",PrimitiveType.Cube,new Vector3(-3,3.2f,-6.08f),new Vector3(3.2f,4.4f,.2f),steel);
++        for(int i=0;i<3;i++)Part("Window",PrimitiveType.Cube,new Vector3(-8+i*5,5.7f,-6.15f),new Vector3(2.2f,1.2f,.15f),signal);
++        var particles=new List<ParticleSystem>();
++        if(kind==0)
++        {
++            for(int i=0;i<4;i++)Part("Tower leg",PrimitiveType.Cube,new Vector3(8+(i%2)*3,9,-3+(i/2)*3),new Vector3(.55f,16,.55f),steel);
++            Part("Watch cabin",PrimitiveType.Cube,new Vector3(9.5f,17,-1.5f),new Vector3(5,3,5),paint);
++            Part("Antenna",PrimitiveType.Cylinder,new Vector3(9.5f,24,-1.5f),new Vector3(.25f,6,.25f),steel);
++            Part("Antenna cross",PrimitiveType.Cube,new Vector3(9.5f,28,-1.5f),new Vector3(6,.2f,.2f),steel);
++        }
++        else
++        {
++            for(int i=0;i<2;i++){Part("Reservoir",PrimitiveType.Cylinder,new Vector3(8,5,-4+i*8),new Vector3(5,4,5),paint);Part("Tank ring",PrimitiveType.Cylinder,new Vector3(8,8.4f,-4+i*8),new Vector3(5.2f,.18f,5.2f),steel);}
++            if(kind==2)
++            {
++                Part("Chimney",PrimitiveType.Cylinder,new Vector3(-8,17,4),new Vector3(2.2f,12,2.2f),concrete);
++                Part("Chimney cap",PrimitiveType.Cylinder,new Vector3(-8,29,4),new Vector3(2.6f,.6f,2.6f),steel);
++                particles.Add(Particle(root.transform,"Fumaca",new Vector3(-8,30,4),smoke,false));
++                particles.Add(Particle(root.transform,"Bruma rasa",new Vector3(0,1,28),smoke,true));
++            }
++            else for(int i=0;i<5;i++)Part("Stored supplies",PrimitiveType.Cube,new Vector3(-10+i*3,2.2f,-8.2f),new Vector3(2,2.4f,2),steel);
++        }
++        Light light=ServiceLamp(root.transform,new Vector3(-3,7,-7),steel,signal);
++        var fx=root.AddComponent<LocalAtmosphere>();fx.lights=new[]{light};fx.particles=particles.ToArray();
++        var lod=root.AddComponent<LODGroup>();lod.SetLODs(new[]{new LOD(.015f,parts.ToArray())});lod.RecalculateBounds();
++        string path="Assets/Prefabs/Environment/"+name+".prefab";var prefab=PrefabUtility.SaveAsPrefabAsset(root,path);Object.DestroyImmediate(root);return prefab;
++    }
++    static Light ServiceLamp(Transform parent,Vector3 position,Material steel,Material emissive)
++    {
++        var housing=GameObject.CreatePrimitive(PrimitiveType.Cube);housing.name="Service lamp";housing.transform.SetParent(parent,false);housing.transform.localPosition=position;housing.transform.localScale=new Vector3(.5f,.3f,.4f);housing.GetComponent<Renderer>().sharedMaterial=steel;
++        var lens=GameObject.CreatePrimitive(PrimitiveType.Cube);lens.name="Warm lens";lens.transform.SetParent(parent,false);lens.transform.localPosition=position+Vector3.down*.17f;lens.transform.localScale=new Vector3(.4f,.06f,.3f);lens.GetComponent<Renderer>().sharedMaterial=emissive;
++        var go=new GameObject("Service light");go.transform.SetParent(parent,false);go.transform.localPosition=position+Vector3.down*.4f;
++        var light=go.AddComponent<Light>();light.type=LightType.Point;light.color=new Color(1,.67f,.35f);light.intensity=3;light.range=14;light.shadows=LightShadows.None;return light;
++    }
++    public static ParticleSystem Particle(Transform parent,string name,Vector3 p,Material material,bool mist)
++    {
++        var go=new GameObject(name);go.transform.SetParent(parent,false);go.transform.localPosition=p;go.transform.localRotation=Quaternion.Euler(-90,0,0);
++        var ps=go.AddComponent<ParticleSystem>();ps.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
++        var main=ps.main;main.maxParticles=mist?12:40;main.startLifetime=mist?25:18;main.startSpeed=mist?.1f:1.5f;main.startSize=mist?25:4;
++        main.startColor=mist?new Color(.58f,.66f,.66f,.08f):new Color(.22f,.24f,.25f,.3f);main.simulationSpace=ParticleSystemSimulationSpace.World;
++        var emission=ps.emission;emission.rateOverTime=mist?.3f:1.5f;
++        var shape=ps.shape;shape.shapeType=mist?ParticleSystemShapeType.Box:ParticleSystemShapeType.Cone;shape.radius=.8f;shape.angle=8;shape.scale=mist?new Vector3(80,80,1):Vector3.one;
++        var size=ps.sizeOverLifetime;size.enabled=true;size.size=new ParticleSystem.MinMaxCurve(1,AnimationCurve.Linear(0,.4f,1,1.5f));
++        var alpha=ps.colorOverLifetime;alpha.enabled=true;var gradient=new Gradient();gradient.SetKeys(new[]{new GradientColorKey(Color.white,0),new GradientColorKey(Color.white,1)},new[]{new GradientAlphaKey(0,0),new GradientAlphaKey(1,.2f),new GradientAlphaKey(0,1)});alpha.color=gradient;
++        ps.GetComponent<ParticleSystemRenderer>().sharedMaterial=material;ps.Play();return ps;
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\MapCompositionValidation.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\MapCompositionValidation.cs"
+new file mode 100644
+index 0000000..efa0052
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Editor\\Environment\\MapCompositionValidation.cs"
+@@ -0,0 +1,152 @@
++using System;
++using System.IO;
++using System.Text;
++using ProjectLeviathan.Base;
++using ProjectLeviathan.ProceduralTerrain;
++using ProjectLeviathan.Vegetation;
++using ProjectLeviathan.World;
++using UnityEditor;
++using UnityEditor.SceneManagement;
++using UnityEngine;
++using Object=UnityEngine.Object;
++
++public static class MapCompositionValidation
++{
++    const string Key="Leviathan.MapComposition.Validation";
++    const string Output="Artifacts/MapComposition/";
++    static StringBuilder report;
++    static double started,changed;
++    static int step,warmFrames;
++    static bool errors;
++    static BaseGameRig rig;
++    static LayeredSkyController sky;
++    static ProceduralTreeManager trees;
++    static WorldSceneryManager scenery;
++    static ulong treesHash,sceneryHash;
++    static Vector2 baseCenter;
++    static Vector3 savedCamera;
++
++    public static void ApplyAndValidateBatch()
++    {
++        ShaderUtil.allowAsyncCompilation=false;
++        MapCompositionSetup.ApplyBatch();
++        SessionState.SetBool(Key,true);Resume();EditorApplication.EnterPlaymode();EditorApplication.isPaused=false;
++    }
++    [InitializeOnLoadMethod] static void Resume()
++    {
++        if(!SessionState.GetBool(Key,false))return;
++        report=new StringBuilder();step=warmFrames=0;errors=false;started=changed=EditorApplication.timeSinceStartup;
++        EditorApplication.update-=Tick;EditorApplication.update+=Tick;Application.logMessageReceived-=Log;Application.logMessageReceived+=Log;
++    }
++    static void Log(string message,string trace,LogType type)
++    {
++        if(trace.Contains("UnityEditor.Search."))return;
++        if(type==LogType.Error || type==LogType.Exception || type==LogType.Assert){errors=true;report.AppendLine("ERROR "+message);}
++    }
++    static void Check(bool pass,string message)
++    {if(!pass)throw new InvalidOperationException(message);report.AppendLine("PASS "+message);}
++    static bool Ready()
++    {
++        if(rig==null || rig.spawner.Instance==null || rig.terrain.TerrainChunks.Count<9)return false;
++        foreach(var chunk in rig.terrain.TerrainChunks.Values)if(!chunk.HasGeneratedMesh || !chunk.WorldFeaturesReady)return false;
++        return true;
++    }
++    static void Tick()
++    {
++        try
++        {
++            double now=EditorApplication.timeSinceStartup;
++            if(now-started>420)throw new InvalidOperationException("Map validation timeout at "+step);
++            if(!EditorApplication.isPlaying)return;
++            Application.runInBackground=true;
++            if(step==0)
++            {
++                rig=Object.FindAnyObjectByType<BaseGameRig>();sky=Object.FindAnyObjectByType<LayeredSkyController>();
++                trees=Object.FindAnyObjectByType<ProceduralTreeManager>();scenery=Object.FindAnyObjectByType<WorldSceneryManager>();
++                if(rig==null || rig.spawner.Instance==null)return;
++                sky.cycleTime=false;sky.updateEnvironment=false;sky.SetTimeOfDay(10);
++                rig.SetView(BaseGameRig.View.Overview);step=1;changed=now;return;
++            }
++            if(!Ready()){warmFrames=0;return;}
++            if(++warmFrames<140 || now-changed<8)return;
++            if(step==1)
++            {
++                Check(!errors,"World starts without Unity errors");Check(Object.FindObjectsByType<BaseAssembly>().Length==1,"Exactly one base per seed");
++                Check(Object.FindObjectsByType<Canvas>().Length==0,"No gameplay HUD added");
++                baseCenter=rig.spawner.Site.center;treesHash=trees.DistributionHash;sceneryHash=scenery.DistributionHash;
++                Check(trees.TreeCount>100 && scenery.InstanceCount>50,"Populated trees and scenery: "+trees.TreeCount+" / "+scenery.InstanceCount);
++                Check(trees.ValidatePlacementForValidation(out float treeError)==0 && treeError<.01f,"Trees stay outside water/roads/base and follow terrain LOD");
++                Check(scenery.ValidateForValidation(out float propError,out var roles)==0 && propError<.01f,"Scenery remains supported and outside forbidden areas");
++                Check(roles[4]>0 && roles[5]>0,"Shrubs and fallen timber are generated: "+roles[4]+" / "+roles[5]);
++                ValidateRoads();
++                int poi=0;foreach(var chunk in rig.terrain.TerrainChunks.Values)poi+=chunk.GeneratedPOIVisualCount;
++                Check(poi>0,"Industrial reference points are generated: "+poi);
++                Check(rig.spawner.Instance.GetComponentsInChildren<Light>(true).Length>=3,"Base has physical service lights");
++                var shaders=new[]{"Leviathan/Spline Track","Leviathan/Industrial Mist","Leviathan/Cartoon Terrain"};
++                foreach(string name in shaders){var shader=Shader.Find(name);Check(shader!=null && shader.isSupported,name+" supported");foreach(var m in ShaderUtil.GetShaderMessages(shader))if(m.severity.ToString()=="Error")throw new InvalidOperationException(m.message);}
++                Capture("01_Base_Estradas");savedCamera=rig.overviewCamera.transform.position;
++                rig.overviewCamera.transform.position=rig.spawner.Instance.transform.position+new Vector3(-110,70,-140);rig.overviewCamera.transform.LookAt(rig.spawner.Instance.transform.position+Vector3.up*4);
++                Capture("02_Entorno");sky.SetTimeOfDay(18.5f);step=2;changed=now;warmFrames=0;return;
++            }
++            if(step==2)
++            {
++                Capture("03_Entardecer");sky.SetTimeOfDay(10);
++                foreach(var chunk in rig.terrain.TerrainChunks.Values)
++                {
++                    var root=chunk.GameObject.transform.Find("Generated Points of Interest");
++                    if(root!=null && root.childCount>0)
++                    {
++                        Vector3 p=root.GetChild(0).position;rig.overviewCamera.transform.position=p+new Vector3(-43,26,-48);rig.overviewCamera.transform.LookAt(p+Vector3.up*8);break;
++                    }
++                }
++                step=3;changed=now;warmFrames=0;return;
++            }
++            if(step==3)
++            {
++                Capture("04_Referencia_Industrial");
++                rig.overviewCamera.transform.position=savedCamera;rig.overviewCamera.transform.LookAt(rig.spawner.Instance.transform.position+Vector3.up*4);
++                rig.terrain.RegenerateTerrain();step=4;changed=now;warmFrames=0;return;
++            }
++            if(step==4)
++            {
++                Check(trees.DistributionHash==treesHash,"Tree distribution repeats after regeneration");
++                Check(scenery.DistributionHash==sceneryHash,"Scenery distribution repeats after regeneration");
++                Check(rig.spawner.Site.center==baseCenter,"Regeneration preserves the deterministic base site");
++                ValidateRoads();Check(!errors,"Streaming, LOD, effects and regeneration complete without Unity errors");
++                Finish(0);
++            }
++        }
++        catch(Exception e){report.AppendLine("FAIL "+e);Debug.LogException(e);Finish(1);}
++    }
++    static void ValidateRoads()
++    {
++        int meshes=0,vertices=0;float maxError=0,nearest=float.PositiveInfinity;
++        foreach(var chunk in rig.terrain.TerrainChunks.Values)
++        {
++            if(!chunk.HasGeneratedRoadMesh)continue;meshes++;var mesh=chunk.GeneratedRoadMesh;int stride=1;
++            for(int y=0;y<chunk.GeneratedData.Height;y++)for(int x=0;x<chunk.GeneratedData.Width;x++)
++                if(chunk.GeneratedData.Roads[x,y]>.5f && chunk.GeneratedData.PoiMask[x,y]>.01f)throw new InvalidOperationException("Road crosses an industrial footprint");
++            foreach(var lod in chunk.Settings.lods)if(lod.lod==chunk.AppliedLod)stride=lod.GetSimplificationLevel();
++            var v=mesh.vertices;var n=mesh.normals;vertices+=v.Length;
++            // Only indexed vertices are rendered; omitted boundary samples are intentionally unused.
++            var used=new bool[v.Length];foreach(int i in mesh.triangles)used[i]=true;
++            for(int i=0;i<v.Length;i++)if(used[i])
++            {
++                Vector3 p=v[i]-n[i]*Mathf.Max(.04f,chunk.Settings.roadSurfaceLift);
++                if(!TerrainRoadMeshGenerator.SampleSurface(chunk.GeneratedData,chunk.Settings,stride,p,out Vector3 hit,out _))throw new InvalidOperationException("Road outside valid terrain at "+chunk.Coordinate+" local="+p.ToString("F6")+" vertex="+i);
++                maxError=Mathf.Max(maxError,Vector3.Distance(p,hit));
++                Vector3 world=chunk.GameObject.transform.TransformPoint(p);nearest=Mathf.Min(nearest,Vector2.Distance(new Vector2(world.x,world.z),rig.spawner.Site.center));
++            }
++        }
++        Check(meshes>0 && vertices>100,"Spline roads rendered: "+meshes+" meshes, "+vertices+" vertices");
++        Check(maxError<.02f,"Roads follow actual LOD triangles; max contact error="+maxError);
++        Check(nearest<80 && nearest>rig.spawner.Site.carveRadius,"Supply route reaches the base perimeter without entering the pit: "+nearest+"m");
++    }
++    static void Capture(string name)
++    {rig.grass.RenderForValidation();trees.RenderForValidation(rig.overviewCamera);scenery.RenderForValidation(rig.overviewCamera);DownloadedAssetSurvey.Capture(rig.overviewCamera,Output+"Captures/"+name+".png");}
++    static void Finish(int code)
++    {
++        SessionState.SetBool(Key,false);EditorApplication.update-=Tick;Application.logMessageReceived-=Log;
++        Directory.CreateDirectory(Output);File.WriteAllText(Output+"MapValidation.txt",report.ToString());Debug.Log("MAP_COMPOSITION_VALIDATION_EXIT="+code+"\n"+report);EditorApplication.Exit(code);
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\SplineTrack.shader" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\SplineTrack.shader"
+new file mode 100644
+index 0000000..86998c8
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\SplineTrack.shader"
+@@ -0,0 +1,97 @@
++Shader "Leviathan/Spline Track"
++{
++    Properties
++    {
++        _BaseColor("Gravel", Color) = (.38,.4,.34,1)
++        _TrackColor("Wheel Tracks", Color) = (.18,.21,.19,1)
++        _TrackStrength("Track Strength", Range(0,1)) = .65
++        _DetailScale("Gravel Scale", Float) = 3
++        _EdgeWear("Irregular Edge", Range(0,.2)) = .06
++    }
++    SubShader
++    {
++        Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="TransparentCutout" "Queue"="AlphaTest" }
++        HLSLINCLUDE
++        #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
++        #include "CartoonCommon.hlsl"
++        CBUFFER_START(UnityPerMaterial)
++        half4 _BaseColor;
++        half4 _TrackColor;
++        float _TrackStrength;
++        float _DetailScale;
++        float _EdgeWear;
++        CBUFFER_END
++        #ifdef UNITY_DOTS_INSTANCING_ENABLED
++        UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
++            UNITY_DOTS_INSTANCED_PROP(float4, _BaseColor)
++        UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
++        #define _BaseColor UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _BaseColor)
++        #endif
++        struct A { float4 p:POSITION; float3 n:NORMAL; float2 uv:TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
++        struct V { float4 p:SV_POSITION; float3 world:TEXCOORD0; float3 n:TEXCOORD1; float2 uv:TEXCOORD2; float fog:TEXCOORD3; UNITY_VERTEX_INPUT_INSTANCE_ID };
++        V Vert(A v)
++        {
++            V o; UNITY_SETUP_INSTANCE_ID(v); UNITY_TRANSFER_INSTANCE_ID(v,o);
++            o.world=TransformObjectToWorld(v.p.xyz); o.p=TransformWorldToHClip(o.world);
++            o.n=TransformObjectToWorldNormal(v.n); o.uv=v.uv; o.fog=ComputeFogFactor(o.p.z); return o;
++        }
++        void Edge(V i) { clip(min(i.uv.x,1-i.uv.x)-_EdgeWear*SurfaceNoise(i.world.xz*.8)); }
++        half4 Frag(V i):SV_Target
++        {
++            UNITY_SETUP_INSTANCE_ID(i); Edge(i);
++            float track=1-smoothstep(.055,.115,min(abs(i.uv.x-.24),abs(i.uv.x-.76)));
++            float gravel=SurfaceNoise(i.world.xz*_DetailScale);
++            half3 color=lerp(_BaseColor.rgb,_TrackColor.rgb,track*_TrackStrength)*lerp(.85,1.12,gravel);
++            return half4(MixFog(CartoonLighting(i.world,normalize(i.n),color,half3(.62,.7,.73),.65,3,.14),i.fog),1);
++        }
++        half4 Depth(V i):SV_Target { Edge(i); return 0; }
++        half4 Normals(V i):SV_Target { Edge(i); return CartoonDepthNormal(i.n); }
++        V Shadow(A v) { V o=Vert(v); o.p=CartoonShadowPosition(o.world,o.n); return o; }
++        ENDHLSL
++        Pass
++        {
++            Name "Forward" Tags { "LightMode"="UniversalForwardOnly" }
++            HLSLPROGRAM
++            #pragma vertex Vert
++            #pragma fragment Frag
++            #pragma target 3.5
++            #pragma multi_compile_instancing
++            #pragma multi_compile_fog
++            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
++            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
++            ENDHLSL
++        }
++        Pass
++        {
++            Name "DepthOnly" Tags { "LightMode"="DepthOnly" } ColorMask 0
++            HLSLPROGRAM
++            #pragma vertex Vert
++            #pragma fragment Depth
++            #pragma target 3.5
++            #pragma multi_compile_instancing
++            ENDHLSL
++        }
++        Pass
++        {
++            Name "DepthNormals" Tags { "LightMode"="DepthNormals" }
++            HLSLPROGRAM
++            #pragma vertex Vert
++            #pragma fragment Normals
++            #pragma target 3.5
++            #pragma multi_compile_instancing
++            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
++            ENDHLSL
++        }
++        Pass
++        {
++            Name "ShadowCaster" Tags { "LightMode"="ShadowCaster" } ColorMask 0
++            HLSLPROGRAM
++            #pragma vertex Shadow
++            #pragma fragment Depth
++            #pragma target 3.5
++            #pragma multi_compile_instancing
++            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
++            ENDHLSL
++        }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\IndustrialMist.shader" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\IndustrialMist.shader"
+new file mode 100644
+index 0000000..1eae020
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\IndustrialMist.shader"
+@@ -0,0 +1,26 @@
++Shader "Leviathan/Industrial Mist"
++{
++    SubShader
++    {
++        Tags { "RenderPipeline"="UniversalPipeline" "Queue"="Transparent" "RenderType"="Transparent" }
++        Blend SrcAlpha OneMinusSrcAlpha
++        ZWrite Off Cull Off
++        Pass
++        {
++            HLSLPROGRAM
++            #pragma vertex Vert
++            #pragma fragment Frag
++            #pragma multi_compile_fog
++            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
++            struct A { float4 p:POSITION; float2 uv:TEXCOORD0; half4 color:COLOR; };
++            struct V { float4 p:SV_POSITION; float2 uv:TEXCOORD0; half4 color:COLOR; float fog:TEXCOORD1; };
++            V Vert(A i){V o;o.p=TransformObjectToHClip(i.p.xyz);o.uv=i.uv;o.color=i.color;o.fog=ComputeFogFactor(o.p.z);return o;}
++            half4 Frag(V i):SV_Target
++            {
++                float2 p=i.uv*2-1;float mask=saturate(1-dot(p,p));mask=mask*mask*mask;
++                return half4(MixFog(i.color.rgb,i.fog),i.color.a*mask);
++            }
++            ENDHLSL
++        }
++    }
++}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
+index 82e6d5e..7dad4ce 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
+@@ -20,7 +20,7 @@ MonoBehaviour:
+   generationsPerFrame: 3
+   uploadsPerFrame: 1
+   seed: 9173
+-  heightRange: {x: 0.55, y: 0.95}
++  heightRange: {x: 0.45, y: 1.05}
+   widthRange: {x: 0.045, y: 0.075}
+   bendRange: {x: 0.12, y: 0.32}
+   nearDistance: 28
+@@ -40,6 +40,9 @@ MonoBehaviour:
+   baseEdgeFade: 2
+   baseEdgeVariation: 1.5
+   baseEdgeNoiseScale: 0.18
++  meadowPatchSize: 38
++  meadowVariation: 0.85
++  meadowMinimumDensity: 0.14
+   rootColor: {r: 0.14, g: 0.25, b: 0.2, a: 1}
+   tipColor: {r: 0.48, g: 0.55, b: 0.36, a: 1}
+   biomeColorInfluence: 0.18
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
+index 9f6f23d..41e228f 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
+@@ -81,9 +81,9 @@ MonoBehaviour:
+     maximumLevel: 0.3
+   erosion:
+     enabled: 1
+-    channelScale: 140
+-    channelDepth: 7
+-    channelWidth: 0.12
++    channelScale: 105
++    channelDepth: 13
++    channelWidth: 0.1
+     thermalIterations: 1
+     thermalStrength: 0.18
+     talusDegrees: 35
+@@ -94,6 +94,9 @@ MonoBehaviour:
+   biomeNoiseWeight: 0.08
+   biomeHeightInfluence: 0.9
+   biomeBlendWidth: 0.035
++  roadsidePoleMesh: {fileID: 4300000, guid: c947310408ea5384a9938982ef1f7141, type: 2}
++  roadsidePoleMaterial: {fileID: 2100000, guid: 27206d6993340fb4aa41bb5d0d3185b5, type: 2}
++  roadsideCableMaterial: {fileID: 2100000, guid: 20fae0425b5d7cb419039102dfa328c2, type: 2}
+   heightSmoothingIterations: 1
+   heightSmoothingStrength: 0.22
+   generateProceduralProps: 1
+@@ -110,41 +113,61 @@ MonoBehaviour:
+     targetCount: 2
+     minimumElevation: 0.2
+     maximumElevation: 0.68
+-    maximumSlopeDegrees: 6
++    maximumSlopeDegrees: 2
+     minimumMoisture: 0
+     maximumMoisture: 1
+     preferredBiome: 0.35
+     biomePreferenceWeight: 0.25
+     minimumSuitability: 0.25
+     minimumFlatAreaRadiusMeters: 30
+-    minimumSpacingMeters: 500
+-    infiniteSpawnChancePerChunk: 0.12
+-    visualPrefab: {fileID: 0}
++    minimumSpacingMeters: 420
++    infiniteSpawnChancePerChunk: 0.38
++    visualPrefab: {fileID: 9001834726779206010, guid: baf9ca5ecf32e8b4cbcf2dec7df1114b, type: 3}
+     visualScale: 1
+-    visualSurfaceOffsetMeters: 0.15
++    visualSurfaceOffsetMeters: 0
+     markerColor: {r: 0.56, g: 0.4, b: 0.24, a: 1}
+     fallbackVisualStyle: 0
+-    useFallbackVisual: 1
++    useFallbackVisual: 0
+   - id: supply-depot
+     displayName: Supply Depot
+     targetCount: 1
+     minimumElevation: 0.2
+     maximumElevation: 0.72
+-    maximumSlopeDegrees: 5
++    maximumSlopeDegrees: 2
+     minimumMoisture: 0
+     maximumMoisture: 1
+     preferredBiome: 0.55
+     biomePreferenceWeight: 0.3
+     minimumSuitability: 0.3
+-    minimumFlatAreaRadiusMeters: 40
+-    minimumSpacingMeters: 700
+-    infiniteSpawnChancePerChunk: 0.06
+-    visualPrefab: {fileID: 0}
++    minimumFlatAreaRadiusMeters: 30
++    minimumSpacingMeters: 420
++    infiniteSpawnChancePerChunk: 0.38
++    visualPrefab: {fileID: 681222276634858857, guid: 8f3b73965bee5e04b8c165eb6434630c, type: 3}
+     visualScale: 1
+-    visualSurfaceOffsetMeters: 0.15
++    visualSurfaceOffsetMeters: 0
+     markerColor: {r: 0.7, g: 0.52, b: 0.29, a: 1}
+     fallbackVisualStyle: 1
+-    useFallbackVisual: 1
++    useFallbackVisual: 0
++  - id: industrial-works
++    displayName: Usina de bombeamento
++    targetCount: 2
++    minimumElevation: 0.24
++    maximumElevation: 0.68
++    maximumSlopeDegrees: 2
++    minimumMoisture: 0
++    maximumMoisture: 1
++    preferredBiome: 0.5
++    biomePreferenceWeight: 0.25
++    minimumSuitability: 0.25
++    minimumFlatAreaRadiusMeters: 30
++    minimumSpacingMeters: 420
++    infiniteSpawnChancePerChunk: 0.28
++    visualPrefab: {fileID: 416908649785755659, guid: b8d24a5e44521534f802ed0a9611435d, type: 3}
++    visualScale: 1
++    visualSurfaceOffsetMeters: 0
++    markerColor: {r: 0.72, g: 0.48, b: 0.2, a: 1}
++    fallbackVisualStyle: 0
++    useFallbackVisual: 0
+   falloffA: 3
+   falloffB: 2.2
+   lakeThreshold: 0.13
+@@ -164,13 +187,13 @@ MonoBehaviour:
+     dryMoistureThreshold: 0.3
+     wetMoistureThreshold: 0.68
+     coldTemperatureThreshold: 0.3
+-    rockySlopeThreshold: 28
+-    climateBlendStrength: 0.35
++    rockySlopeThreshold: 24
++    climateBlendStrength: 0.46
+     rainDarkening: 0.22
+     rainWetColorBlend: 0.35
+-  roadMaterial: {fileID: 2100000, guid: ff11e1ee9b7d2964c986bb31ebdbbc5d, type: 2}
++  roadMaterial: {fileID: 2100000, guid: 83162dfca9daa224094ed2d3b1cc88f9, type: 2}
+   roadWidthMeters: 10
+-  roadSurfaceLift: 0.35
++  roadSurfaceLift: 0.1
+   terrainTypes:
+   - name: Lake
+     minHeight: 0
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
+index 91c4e4c..8239925 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
+@@ -19,11 +19,12 @@ MonoBehaviour:
+   pineFar: {fileID: 4300000, guid: 22d8f449c86ecf24aabe7be8d5c92b23, type: 2}
+   spacing: 14
+   density: 0.68
+-  scatteredDensity: 0.12
++  scatteredDensity: 0.065
+   groveScale: 220
+-  groveThreshold: 0.49
++  groveThreshold: 0.48
++  groveEdgeBlend: 0.1
+   maximumTreesPerChunk: 1400
+-  heights: {x: 7, y: 13}
++  heights: {x: 6, y: 16}
+   normalizedAltitude: {x: 0.15, y: 0.76}
+   maximumSlope: 26
+   nearDistance: 125
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Vegetation\\WorldScenery.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
+index b828b79..e2bd823 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
+@@ -49,15 +49,25 @@ MonoBehaviour:
+     mesh: {fileID: 4300000, guid: 93421585883c25342b72af65e76b0372, type: 2}
+     material: {fileID: 2100000, guid: 0cd794fed99912b47995c17f19c3ddd3, type: 2}
+     sizeRange: {x: 1.1, y: 1.7}
++  - label: Understory shrub
++    role: 4
++    mesh: {fileID: 4300000, guid: 081dc0726562cb64e86630f0f2c58c54, type: 2}
++    material: {fileID: 2100000, guid: c79340888f8779249a9f6f0508d79b50, type: 2}
++    sizeRange: {x: 0.9, y: 2.1}
++  - label: Fallen timber
++    role: 5
++    mesh: {fileID: 4300000, guid: 8207b3b28c5df1a46a93abd381a79c17, type: 2}
++    material: {fileID: 2100000, guid: c32f113d70f2a154bafc1e42956443e2, type: 2}
++    sizeRange: {x: 3, y: 6}
+   rockSpacing: 32
+-  rockDensity: 0.32
++  rockDensity: 0.42
+   clusterScale: 130
+   maximumRockSlope: 38
+-  maximumInstancesPerChunk: 700
++  maximumInstancesPerChunk: 950
+   buildsPerFrame: 1
+   drawDistance: 900
+   shadowDistance: 75
+   roadsideSpacing: 65
+-  roadsideFurniture: 1
++  roadsideFurniture: 0
+   collisionDistance: 45
+   maximumColliders: 64
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Materials\\Terrain\\TerrainCartoon.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Terrain\\TerrainCartoon.mat"
+index 4e3d123..7c4ee2d 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Materials\\Terrain\\TerrainCartoon.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Terrain\\TerrainCartoon.mat"
+@@ -33,11 +33,11 @@ Material:
+     - _Bands: 3
+     - _ColorIntensity: 1.02
+     - _DetailScale: 0.13
+-    - _DetailStrength: 0.085
+-    - _PatchScale: 0.011
+-    - _PatchStrength: 0.22
++    - _DetailStrength: 0.055
++    - _PatchScale: 0.018
++    - _PatchStrength: 0.29
+     - _ShadowContrast: 0.62
+-    - _SlopeStrength: 0.27
++    - _SlopeStrength: 0.43
+     m_Colors:
+     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+     - _MineralTint: {r: 0.47, g: 0.42, b: 0.34, a: 1}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\BaseGiratoria.prefab" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Prefabs\\BaseGiratoria.prefab"
+index 351e364..fdb4f19 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\BaseGiratoria.prefab"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Prefabs\\BaseGiratoria.prefab"
+@@ -17995,6 +17995,118 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
++--- !u!1 &1821348762269039646
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 2250744071754475039}
++  - component: {fileID: 4724203919290215948}
++  - component: {fileID: 4139278048232914779}
++  - component: {fileID: 557886280011997480}
++  m_Layer: 0
++  m_Name: Warm lens
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &2250744071754475039
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1821348762269039646}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 2.1800022, z: -12.4}
++  m_LocalScale: {x: 0.4, y: 0.06, z: 0.3}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &4724203919290215948
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1821348762269039646}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!65 &4139278048232914779
++BoxCollider:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1821348762269039646}
++  m_Material: {fileID: 0}
++  m_IncludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_ExcludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_LayerOverridePriority: 0
++  m_IsTrigger: 0
++  m_ProvidesContacts: 0
++  m_Enabled: 1
++  serializedVersion: 3
++  m_Size: {x: 1, y: 1, z: 1}
++  m_Center: {x: 0, y: 0, z: 0}
++--- !u!23 &557886280011997480
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1821348762269039646}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: f9a9fc0c1878b1b4fba2b59375b4a0a9, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
+ --- !u!1 &1828854119271490121
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -22281,6 +22393,103 @@ MonoBehaviour:
+   busyFlag: {fileID: 1649597360621349243}
+   ammoPlate: {fileID: 7239500269404655910}
+   chargesPlate: {fileID: 1012078562202092789}
++--- !u!1 &2140288937090430456
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 2604329562767032061}
++  - component: {fileID: 7015956840325386420}
++  m_Layer: 0
++  m_Name: Service light
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &2604329562767032061
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2140288937090430456}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 1.9500023, z: -12.4}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!108 &7015956840325386420
++Light:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2140288937090430456}
++  m_Enabled: 1
++  serializedVersion: 13
++  m_Type: 2
++  m_Color: {r: 1, g: 0.67, b: 0.35, a: 1}
++  m_Intensity: 3
++  m_Range: 14
++  m_SpotAngle: 30
++  m_InnerSpotAngle: 21.80208
++  m_CookieSize2D: {x: 0.5, y: 0.5}
++  m_Shadows:
++    m_Type: 0
++    m_Resolution: -1
++    m_CustomResolution: -1
++    m_Strength: 1
++    m_Bias: 0.05
++    m_NormalBias: 0.4
++    m_NearPlane: 0.2
++    m_CullingMatrixOverride:
++      e00: 1
++      e01: 0
++      e02: 0
++      e03: 0
++      e10: 0
++      e11: 1
++      e12: 0
++      e13: 0
++      e20: 0
++      e21: 0
++      e22: 1
++      e23: 0
++      e30: 0
++      e31: 0
++      e32: 0
++      e33: 1
++    m_UseCullingMatrixOverride: 0
++  m_Cookie: {fileID: 0}
++  m_DrawHalo: 0
++  m_Flare: {fileID: 0}
++  m_RenderMode: 0
++  m_CullingMask:
++    serializedVersion: 2
++    m_Bits: 4294967295
++  m_RenderingLayerMask: 1
++  m_Lightmapping: 4
++  m_LightShadowCasterMode: 0
++  m_AreaSize: {x: 1, y: 1}
++  m_BounceIntensity: 1
++  m_ColorTemperature: 6570
++  m_UseColorTemperature: 0
++  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
++  m_UseBoundingSphereOverride: 0
++  m_UseViewFrustumForShadowCasterCull: 1
++  m_ForceVisible: 0
++  m_ShapeRadius: 0.025
++  m_ShadowAngle: 0
++  m_LightUnit: 1
++  m_LuxAtDistance: 1
++  m_EnableSpotReflector: 1
+ --- !u!1 &2155158591755215537
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -22678,6 +22887,66 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
++--- !u!1 &2260116918077339434
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 7997801769226246316}
++  - component: {fileID: 5581328054042317352}
++  m_Layer: 0
++  m_Name: Luzes de Servico
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &7997801769226246316
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2260116918077339434}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 0, z: 0}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children:
++  - {fileID: 6100481299146590148}
++  - {fileID: 8911876735734905787}
++  - {fileID: 2791766038728216788}
++  - {fileID: 507422868657980296}
++  - {fileID: 7771707720116814861}
++  - {fileID: 7190345173533736836}
++  - {fileID: 3647902962472137437}
++  - {fileID: 2250744071754475039}
++  - {fileID: 2604329562767032061}
++  m_Father: {fileID: 3711735918878294777}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!114 &5581328054042317352
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2260116918077339434}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 6e9a2b62b1552c34684ac8796f371ca0, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.World.LocalAtmosphere
++  particles: []
++  lights:
++  - {fileID: 3837220581959091501}
++  - {fileID: 4890374551664568219}
++  - {fileID: 7015956840325386420}
++  effectsDistance: 650
++  lightDistance: 120
+ --- !u!1 &2261304602656737303
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -25691,6 +25960,118 @@ MeshCollider:
+   m_Convex: 0
+   m_CookingOptions: 30
+   m_Mesh: {fileID: -649899388538942122, guid: 1c4111b3b99342349a9b609a4a503ea1, type: 3}
++--- !u!1 &2617759379291988391
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 507422868657980296}
++  - component: {fileID: 1740579713477425917}
++  - component: {fileID: 6312236625564418108}
++  - component: {fileID: 5385137837436716204}
++  m_Layer: 0
++  m_Name: Service lamp
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &507422868657980296
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2617759379291988391}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 8.7, y: 4, z: -0.7}
++  m_LocalScale: {x: 0.5, y: 0.3, z: 0.4}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &1740579713477425917
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2617759379291988391}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!65 &6312236625564418108
++BoxCollider:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2617759379291988391}
++  m_Material: {fileID: 0}
++  m_IncludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_ExcludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_LayerOverridePriority: 0
++  m_IsTrigger: 0
++  m_ProvidesContacts: 0
++  m_Enabled: 1
++  serializedVersion: 3
++  m_Size: {x: 1, y: 1, z: 1}
++  m_Center: {x: 0, y: 0, z: 0}
++--- !u!23 &5385137837436716204
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2617759379291988391}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: 20fae0425b5d7cb419039102dfa328c2, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
+ --- !u!1 &2618441366635649652
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -28472,7 +28853,7 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &2908368212159379889
++--- !u!1 &2907282872199729943
+ GameObject:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+@@ -28480,46 +28861,68 @@ GameObject:
+   m_PrefabAsset: {fileID: 0}
+   serializedVersion: 6
+   m_Component:
+-  - component: {fileID: 6082335060283267450}
+-  - component: {fileID: 5570186841127972546}
+-  - component: {fileID: 8023732477970518005}
++  - component: {fileID: 8911876735734905787}
++  - component: {fileID: 7407311818116561791}
++  - component: {fileID: 5339756812542991452}
++  - component: {fileID: 1739703973265802227}
+   m_Layer: 0
+-  m_Name: Marca
++  m_Name: Warm lens
+   m_TagString: Untagged
+   m_Icon: {fileID: 0}
+   m_NavMeshLayer: 0
+   m_StaticEditorFlags: 0
+   m_IsActive: 1
+---- !u!4 &6082335060283267450
++--- !u!4 &8911876735734905787
+ Transform:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 2908368212159379889}
++  m_GameObject: {fileID: 2907282872199729943}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0.3420202, z: 0, w: -0.9396926}
+-  m_LocalPosition: {x: -0.17162432, y: 0.042, z: 0.20453385}
+-  m_LocalScale: {x: 0.008, y: 0.006, z: 0.03}
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: -8.7, y: 3.83, z: -0.7}
++  m_LocalScale: {x: 0.4, y: 0.06, z: 0.3}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+-  m_Father: {fileID: 1723927767535954393}
++  m_Father: {fileID: 7997801769226246316}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &5570186841127972546
++--- !u!33 &7407311818116561791
+ MeshFilter:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 2908368212159379889}
++  m_GameObject: {fileID: 2907282872199729943}
+   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &8023732477970518005
++--- !u!65 &5339756812542991452
++BoxCollider:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2907282872199729943}
++  m_Material: {fileID: 0}
++  m_IncludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_ExcludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_LayerOverridePriority: 0
++  m_IsTrigger: 0
++  m_ProvidesContacts: 0
++  m_Enabled: 1
++  serializedVersion: 3
++  m_Size: {x: 1, y: 1, z: 1}
++  m_Center: {x: 0, y: 0, z: 0}
++--- !u!23 &1739703973265802227
+ MeshRenderer:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 2908368212159379889}
++  m_GameObject: {fileID: 2907282872199729943}
+   m_Enabled: 1
+   m_CastShadows: 1
+   m_ReceiveShadows: 1
+@@ -28538,7 +28941,97 @@ MeshRenderer:
+   m_RenderingLayerMask: 1
+   m_RendererPriority: 0
+   m_Materials:
+-  - {fileID: 2100000, guid: 9879889f98c608a479818648aa2aeeaa, type: 2}
++  - {fileID: 2100000, guid: f9a9fc0c1878b1b4fba2b59375b4a0a9, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
++--- !u!1 &2908368212159379889
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 6082335060283267450}
++  - component: {fileID: 5570186841127972546}
++  - component: {fileID: 8023732477970518005}
++  m_Layer: 0
++  m_Name: Marca
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &6082335060283267450
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2908368212159379889}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0.3420202, z: 0, w: -0.9396926}
++  m_LocalPosition: {x: -0.17162432, y: 0.042, z: 0.20453385}
++  m_LocalScale: {x: 0.008, y: 0.006, z: 0.03}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 1723927767535954393}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &5570186841127972546
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2908368212159379889}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!23 &8023732477970518005
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 2908368212159379889}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: 9879889f98c608a479818648aa2aeeaa, type: 2}
+   m_StaticBatchInfo:
+     firstSubMesh: 0
+     subMeshCount: 0
+@@ -38782,6 +39275,118 @@ MeshCollider:
+   m_Convex: 0
+   m_CookingOptions: 30
+   m_Mesh: {fileID: -4229206944293059223, guid: 1c4111b3b99342349a9b609a4a503ea1, type: 3}
++--- !u!1 &4041442538404388362
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 3647902962472137437}
++  - component: {fileID: 3824973797784751745}
++  - component: {fileID: 95314237525585126}
++  - component: {fileID: 6376124036987994511}
++  m_Layer: 0
++  m_Name: Service lamp
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &3647902962472137437
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4041442538404388362}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 2.3500023, z: -12.4}
++  m_LocalScale: {x: 0.5, y: 0.3, z: 0.4}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &3824973797784751745
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4041442538404388362}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!65 &95314237525585126
++BoxCollider:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4041442538404388362}
++  m_Material: {fileID: 0}
++  m_IncludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_ExcludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_LayerOverridePriority: 0
++  m_IsTrigger: 0
++  m_ProvidesContacts: 0
++  m_Enabled: 1
++  serializedVersion: 3
++  m_Size: {x: 1, y: 1, z: 1}
++  m_Center: {x: 0, y: 0, z: 0}
++--- !u!23 &6376124036987994511
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4041442538404388362}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: 20fae0425b5d7cb419039102dfa328c2, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
+ --- !u!1 &4047092088913962247
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -44569,6 +45174,118 @@ MeshCollider:
+   m_Convex: 0
+   m_CookingOptions: 30
+   m_Mesh: {fileID: 1560377005094975355, guid: 1c4111b3b99342349a9b609a4a503ea1, type: 3}
++--- !u!1 &4711602509794748980
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 7771707720116814861}
++  - component: {fileID: 1531552796262090161}
++  - component: {fileID: 7613041496852684018}
++  - component: {fileID: 8985327496737542442}
++  m_Layer: 0
++  m_Name: Warm lens
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &7771707720116814861
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4711602509794748980}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 8.7, y: 3.83, z: -0.7}
++  m_LocalScale: {x: 0.4, y: 0.06, z: 0.3}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &1531552796262090161
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4711602509794748980}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!65 &7613041496852684018
++BoxCollider:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4711602509794748980}
++  m_Material: {fileID: 0}
++  m_IncludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_ExcludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_LayerOverridePriority: 0
++  m_IsTrigger: 0
++  m_ProvidesContacts: 0
++  m_Enabled: 1
++  serializedVersion: 3
++  m_Size: {x: 1, y: 1, z: 1}
++  m_Center: {x: 0, y: 0, z: 0}
++--- !u!23 &8985327496737542442
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4711602509794748980}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: f9a9fc0c1878b1b4fba2b59375b4a0a9, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
+ --- !u!1 &4714100980672109806
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -46383,6 +47100,103 @@ MeshCollider:
+   m_Convex: 0
+   m_CookingOptions: 30
+   m_Mesh: {fileID: -3945916568693674327, guid: 1c4111b3b99342349a9b609a4a503ea1, type: 3}
++--- !u!1 &4853084307867816060
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 2791766038728216788}
++  - component: {fileID: 3837220581959091501}
++  m_Layer: 0
++  m_Name: Service light
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &2791766038728216788
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4853084307867816060}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: -8.7, y: 3.6, z: -0.7}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!108 &3837220581959091501
++Light:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 4853084307867816060}
++  m_Enabled: 1
++  serializedVersion: 13
++  m_Type: 2
++  m_Color: {r: 1, g: 0.67, b: 0.35, a: 1}
++  m_Intensity: 3
++  m_Range: 14
++  m_SpotAngle: 30
++  m_InnerSpotAngle: 21.80208
++  m_CookieSize2D: {x: 0.5, y: 0.5}
++  m_Shadows:
++    m_Type: 0
++    m_Resolution: -1
++    m_CustomResolution: -1
++    m_Strength: 1
++    m_Bias: 0.05
++    m_NormalBias: 0.4
++    m_NearPlane: 0.2
++    m_CullingMatrixOverride:
++      e00: 1
++      e01: 0
++      e02: 0
++      e03: 0
++      e10: 0
++      e11: 1
++      e12: 0
++      e13: 0
++      e20: 0
++      e21: 0
++      e22: 1
++      e23: 0
++      e30: 0
++      e31: 0
++      e32: 0
++      e33: 1
++    m_UseCullingMatrixOverride: 0
++  m_Cookie: {fileID: 0}
++  m_DrawHalo: 0
++  m_Flare: {fileID: 0}
++  m_RenderMode: 0
++  m_CullingMask:
++    serializedVersion: 2
++    m_Bits: 4294967295
++  m_RenderingLayerMask: 1
++  m_Lightmapping: 4
++  m_LightShadowCasterMode: 0
++  m_AreaSize: {x: 1, y: 1}
++  m_BounceIntensity: 1
++  m_ColorTemperature: 6570
++  m_UseColorTemperature: 0
++  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
++  m_UseBoundingSphereOverride: 0
++  m_UseViewFrustumForShadowCasterCull: 1
++  m_ForceVisible: 0
++  m_ShapeRadius: 0.025
++  m_ShadowAngle: 0
++  m_LightUnit: 1
++  m_LuxAtDistance: 1
++  m_EnableSpotReflector: 1
+ --- !u!1 &4862267334247088354
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -47873,7 +48687,187 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &5005958991371694102
++--- !u!1 &5005958991371694102
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 5111251186130248}
++  - component: {fileID: 7448915586247160063}
++  - component: {fileID: 7631270732220128485}
++  m_Layer: 0
++  m_Name: Tampa
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &5111251186130248
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 5005958991371694102}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 0.04, z: 0}
++  m_LocalScale: {x: 0.13, y: 0.022, z: 0.13}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 1413433486412597257}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &7448915586247160063
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 5005958991371694102}
++  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!23 &7631270732220128485
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 5005958991371694102}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: e2181fd155106ee408c023c9d2292f72, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
++--- !u!1 &5006354471233858579
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 4881601447143650436}
++  - component: {fileID: 1499457426938034091}
++  - component: {fileID: 7820907386760551253}
++  m_Layer: 0
++  m_Name: Aro
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &4881601447143650436
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 5006354471233858579}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: -0.15643437, w: -0.98768836}
++  m_LocalPosition: {x: 0.055623095, y: -0.17119017, z: 0}
++  m_LocalScale: {x: 0.065, y: 0.025, z: 0.025}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 805800478380192055}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!33 &1499457426938034091
++MeshFilter:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 5006354471233858579}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!23 &7820907386760551253
++MeshRenderer:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 5006354471233858579}
++  m_Enabled: 1
++  m_CastShadows: 1
++  m_ReceiveShadows: 1
++  m_DynamicOccludee: 1
++  m_StaticShadowCaster: 0
++  m_MotionVectors: 1
++  m_LightProbeUsage: 1
++  m_ReflectionProbeUsage: 1
++  m_RayTracingMode: 2
++  m_RayTraceProcedural: 0
++  m_RayTracingAccelStructBuildFlagsOverride: 0
++  m_RayTracingAccelStructBuildFlags: 1
++  m_SmallMeshCulling: 1
++  m_ForceMeshLod: -1
++  m_MeshLodSelectionBias: 0
++  m_RenderingLayerMask: 1
++  m_RendererPriority: 0
++  m_Materials:
++  - {fileID: 2100000, guid: 07a65ecd7c105cd47a6aae8fd13ed556, type: 2}
++  m_StaticBatchInfo:
++    firstSubMesh: 0
++    subMeshCount: 0
++  m_StaticBatchRoot: {fileID: 0}
++  m_ProbeAnchor: {fileID: 0}
++  m_LightProbeVolumeOverride: {fileID: 0}
++  m_ScaleInLightmap: 1
++  m_ReceiveGI: 1
++  m_PreserveUVs: 1
++  m_IgnoreNormalsForChartDetection: 0
++  m_ImportantGI: 0
++  m_StitchLightmapSeams: 1
++  m_SelectedEditorRenderState: 3
++  m_MinimumChartSize: 4
++  m_AutoUVMaxDistance: 0.5
++  m_AutoUVMaxAngle: 89
++  m_LightmapParameters: {fileID: 0}
++  m_GlobalIlluminationMeshLod: 0
++  m_SortingLayerID: 0
++  m_SortingLayer: 0
++  m_SortingOrder: 0
++  m_MaskInteraction: 0
++  m_AdditionalVertexStreams: {fileID: 0}
++--- !u!1 &5009298840746909613
+ GameObject:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+@@ -47881,46 +48875,46 @@ GameObject:
+   m_PrefabAsset: {fileID: 0}
+   serializedVersion: 6
+   m_Component:
+-  - component: {fileID: 5111251186130248}
+-  - component: {fileID: 7448915586247160063}
+-  - component: {fileID: 7631270732220128485}
++  - component: {fileID: 7726572973343258634}
++  - component: {fileID: 9111322667937218661}
++  - component: {fileID: 7617456678261904169}
+   m_Layer: 0
+-  m_Name: Tampa
++  m_Name: Tick_25
+   m_TagString: Untagged
+   m_Icon: {fileID: 0}
+   m_NavMeshLayer: 0
+   m_StaticEditorFlags: 0
+   m_IsActive: 1
+---- !u!4 &5111251186130248
++--- !u!4 &7726572973343258634
+ Transform:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5005958991371694102}
++  m_GameObject: {fileID: 5009298840746909613}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+-  m_LocalPosition: {x: 0, y: 0.04, z: 0}
+-  m_LocalScale: {x: 0.13, y: 0.022, z: 0.13}
++  m_LocalRotation: {x: 0, y: 0.819152, z: 0, w: -0.57357645}
++  m_LocalPosition: {x: -0.29600316, y: 0.04, z: -0.10773631}
++  m_LocalScale: {x: 0.012, y: 0.006, z: 0.035}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+-  m_Father: {fileID: 1413433486412597257}
++  m_Father: {fileID: 6433202813260209405}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &7448915586247160063
++--- !u!33 &9111322667937218661
+ MeshFilter:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5005958991371694102}
+-  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &7631270732220128485
++  m_GameObject: {fileID: 5009298840746909613}
++  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
++--- !u!23 &7617456678261904169
+ MeshRenderer:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5005958991371694102}
++  m_GameObject: {fileID: 5009298840746909613}
+   m_Enabled: 1
+   m_CastShadows: 1
+   m_ReceiveShadows: 1
+@@ -47939,7 +48933,7 @@ MeshRenderer:
+   m_RenderingLayerMask: 1
+   m_RendererPriority: 0
+   m_Materials:
+-  - {fileID: 2100000, guid: e2181fd155106ee408c023c9d2292f72, type: 2}
++  - {fileID: 2100000, guid: 70facf8f549ece74991a739f027aec8b, type: 2}
+   m_StaticBatchInfo:
+     firstSubMesh: 0
+     subMeshCount: 0
+@@ -47963,7 +48957,7 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &5006354471233858579
++--- !u!1 &5011740226143385658
+ GameObject:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+@@ -47971,46 +48965,46 @@ GameObject:
+   m_PrefabAsset: {fileID: 0}
+   serializedVersion: 6
+   m_Component:
+-  - component: {fileID: 4881601447143650436}
+-  - component: {fileID: 1499457426938034091}
+-  - component: {fileID: 7820907386760551253}
++  - component: {fileID: 8108848187468418475}
++  - component: {fileID: 7510762031950572883}
++  - component: {fileID: 652929191016477308}
+   m_Layer: 0
+-  m_Name: Aro
++  m_Name: Marca
+   m_TagString: Untagged
+   m_Icon: {fileID: 0}
+   m_NavMeshLayer: 0
+   m_StaticEditorFlags: 0
+   m_IsActive: 1
+---- !u!4 &4881601447143650436
++--- !u!4 &8108848187468418475
+ Transform:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5006354471233858579}
++  m_GameObject: {fileID: 5011740226143385658}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0, z: -0.15643437, w: -0.98768836}
+-  m_LocalPosition: {x: 0.055623095, y: -0.17119017, z: 0}
+-  m_LocalScale: {x: 0.065, y: 0.025, z: 0.025}
++  m_LocalRotation: {x: 0, y: 0.90630776, z: 0, w: -0.42261833}
++  m_LocalPosition: {x: -0.20453389, y: 0.042, z: -0.17162424}
++  m_LocalScale: {x: 0.008, y: 0.006, z: 0.03}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+-  m_Father: {fileID: 805800478380192055}
++  m_Father: {fileID: 4543038601253466338}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &1499457426938034091
++--- !u!33 &7510762031950572883
+ MeshFilter:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5006354471233858579}
++  m_GameObject: {fileID: 5011740226143385658}
+   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &7820907386760551253
++--- !u!23 &652929191016477308
+ MeshRenderer:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5006354471233858579}
++  m_GameObject: {fileID: 5011740226143385658}
+   m_Enabled: 1
+   m_CastShadows: 1
+   m_ReceiveShadows: 1
+@@ -48029,7 +49023,7 @@ MeshRenderer:
+   m_RenderingLayerMask: 1
+   m_RendererPriority: 0
+   m_Materials:
+-  - {fileID: 2100000, guid: 07a65ecd7c105cd47a6aae8fd13ed556, type: 2}
++  - {fileID: 2100000, guid: 9879889f98c608a479818648aa2aeeaa, type: 2}
+   m_StaticBatchInfo:
+     firstSubMesh: 0
+     subMeshCount: 0
+@@ -48053,7 +49047,7 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &5009298840746909613
++--- !u!1 &5021106546810493298
+ GameObject:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+@@ -48061,46 +49055,46 @@ GameObject:
+   m_PrefabAsset: {fileID: 0}
+   serializedVersion: 6
+   m_Component:
+-  - component: {fileID: 7726572973343258634}
+-  - component: {fileID: 9111322667937218661}
+-  - component: {fileID: 7617456678261904169}
++  - component: {fileID: 6295334090924714661}
++  - component: {fileID: 6235307844361133144}
++  - component: {fileID: 8292523114962879827}
+   m_Layer: 0
+-  m_Name: Tick_25
++  m_Name: Tick_33
+   m_TagString: Untagged
+   m_Icon: {fileID: 0}
+   m_NavMeshLayer: 0
+   m_StaticEditorFlags: 0
+   m_IsActive: 1
+---- !u!4 &7726572973343258634
++--- !u!4 &6295334090924714661
+ Transform:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5009298840746909613}
++  m_GameObject: {fileID: 5021106546810493298}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0.819152, z: 0, w: -0.57357645}
+-  m_LocalPosition: {x: -0.29600316, y: 0.04, z: -0.10773631}
+-  m_LocalScale: {x: 0.012, y: 0.006, z: 0.035}
++  m_LocalRotation: {x: 0, y: 0.25881913, z: 0, w: -0.9659258}
++  m_LocalPosition: {x: -0.15750006, y: 0.04, z: 0.27279797}
++  m_LocalScale: {x: 0.012, y: 0.006, z: 0.065}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+   m_Father: {fileID: 6433202813260209405}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &9111322667937218661
++--- !u!33 &6235307844361133144
+ MeshFilter:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5009298840746909613}
++  m_GameObject: {fileID: 5021106546810493298}
+   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &7617456678261904169
++--- !u!23 &8292523114962879827
+ MeshRenderer:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5009298840746909613}
++  m_GameObject: {fileID: 5021106546810493298}
+   m_Enabled: 1
+   m_CastShadows: 1
+   m_ReceiveShadows: 1
+@@ -48143,7 +49137,7 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &5011740226143385658
++--- !u!1 &5026099374392596083
+ GameObject:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+@@ -48151,46 +49145,46 @@ GameObject:
+   m_PrefabAsset: {fileID: 0}
+   serializedVersion: 6
+   m_Component:
+-  - component: {fileID: 8108848187468418475}
+-  - component: {fileID: 7510762031950572883}
+-  - component: {fileID: 652929191016477308}
++  - component: {fileID: 779872931213863764}
++  - component: {fileID: 5593513072617498889}
++  - component: {fileID: 7224333405971742819}
+   m_Layer: 0
+-  m_Name: Marca
++  m_Name: Suporte
+   m_TagString: Untagged
+   m_Icon: {fileID: 0}
+   m_NavMeshLayer: 0
+   m_StaticEditorFlags: 0
+   m_IsActive: 1
+---- !u!4 &8108848187468418475
++--- !u!4 &779872931213863764
+ Transform:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5011740226143385658}
++  m_GameObject: {fileID: 5026099374392596083}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0.90630776, z: 0, w: -0.42261833}
+-  m_LocalPosition: {x: -0.20453389, y: 0.042, z: -0.17162424}
+-  m_LocalScale: {x: 0.008, y: 0.006, z: 0.03}
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 0, z: 0}
++  m_LocalScale: {x: 0.2, y: 0.025, z: 0.2}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+-  m_Father: {fileID: 4543038601253466338}
++  m_Father: {fileID: 8745955377654501761}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &7510762031950572883
++--- !u!33 &5593513072617498889
+ MeshFilter:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5011740226143385658}
++  m_GameObject: {fileID: 5026099374392596083}
+   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &652929191016477308
++--- !u!23 &7224333405971742819
+ MeshRenderer:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5011740226143385658}
++  m_GameObject: {fileID: 5026099374392596083}
+   m_Enabled: 1
+   m_CastShadows: 1
+   m_ReceiveShadows: 1
+@@ -48209,7 +49203,7 @@ MeshRenderer:
+   m_RenderingLayerMask: 1
+   m_RendererPriority: 0
+   m_Materials:
+-  - {fileID: 2100000, guid: 9879889f98c608a479818648aa2aeeaa, type: 2}
++  - {fileID: 2100000, guid: 4310fb70fb79b6a4aa82ae095fdf1f74, type: 2}
+   m_StaticBatchInfo:
+     firstSubMesh: 0
+     subMeshCount: 0
+@@ -48233,7 +49227,7 @@ MeshRenderer:
+   m_SortingOrder: 0
+   m_MaskInteraction: 0
+   m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &5021106546810493298
++--- !u!1 &5031606758734583390
+ GameObject:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+@@ -48241,136 +49235,68 @@ GameObject:
+   m_PrefabAsset: {fileID: 0}
+   serializedVersion: 6
+   m_Component:
+-  - component: {fileID: 6295334090924714661}
+-  - component: {fileID: 6235307844361133144}
+-  - component: {fileID: 8292523114962879827}
++  - component: {fileID: 6100481299146590148}
++  - component: {fileID: 2404532416571328941}
++  - component: {fileID: 2488774572067299643}
++  - component: {fileID: 6050702560716044824}
+   m_Layer: 0
+-  m_Name: Tick_33
++  m_Name: Service lamp
+   m_TagString: Untagged
+   m_Icon: {fileID: 0}
+   m_NavMeshLayer: 0
+   m_StaticEditorFlags: 0
+   m_IsActive: 1
+---- !u!4 &6295334090924714661
++--- !u!4 &6100481299146590148
+ Transform:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5021106546810493298}
++  m_GameObject: {fileID: 5031606758734583390}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0.25881913, z: 0, w: -0.9659258}
+-  m_LocalPosition: {x: -0.15750006, y: 0.04, z: 0.27279797}
+-  m_LocalScale: {x: 0.012, y: 0.006, z: 0.065}
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: -8.7, y: 4, z: -0.7}
++  m_LocalScale: {x: 0.5, y: 0.3, z: 0.4}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+-  m_Father: {fileID: 6433202813260209405}
++  m_Father: {fileID: 7997801769226246316}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &6235307844361133144
++--- !u!33 &2404532416571328941
+ MeshFilter:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5021106546810493298}
++  m_GameObject: {fileID: 5031606758734583390}
+   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &8292523114962879827
+-MeshRenderer:
++--- !u!65 &2488774572067299643
++BoxCollider:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5021106546810493298}
++  m_GameObject: {fileID: 5031606758734583390}
++  m_Material: {fileID: 0}
++  m_IncludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_ExcludeLayers:
++    serializedVersion: 2
++    m_Bits: 0
++  m_LayerOverridePriority: 0
++  m_IsTrigger: 0
++  m_ProvidesContacts: 0
+   m_Enabled: 1
+-  m_CastShadows: 1
+-  m_ReceiveShadows: 1
+-  m_DynamicOccludee: 1
+-  m_StaticShadowCaster: 0
+-  m_MotionVectors: 1
+-  m_LightProbeUsage: 1
+-  m_ReflectionProbeUsage: 1
+-  m_RayTracingMode: 2
+-  m_RayTraceProcedural: 0
+-  m_RayTracingAccelStructBuildFlagsOverride: 0
+-  m_RayTracingAccelStructBuildFlags: 1
+-  m_SmallMeshCulling: 1
+-  m_ForceMeshLod: -1
+-  m_MeshLodSelectionBias: 0
+-  m_RenderingLayerMask: 1
+-  m_RendererPriority: 0
+-  m_Materials:
+-  - {fileID: 2100000, guid: 70facf8f549ece74991a739f027aec8b, type: 2}
+-  m_StaticBatchInfo:
+-    firstSubMesh: 0
+-    subMeshCount: 0
+-  m_StaticBatchRoot: {fileID: 0}
+-  m_ProbeAnchor: {fileID: 0}
+-  m_LightProbeVolumeOverride: {fileID: 0}
+-  m_ScaleInLightmap: 1
+-  m_ReceiveGI: 1
+-  m_PreserveUVs: 1
+-  m_IgnoreNormalsForChartDetection: 0
+-  m_ImportantGI: 0
+-  m_StitchLightmapSeams: 1
+-  m_SelectedEditorRenderState: 3
+-  m_MinimumChartSize: 4
+-  m_AutoUVMaxDistance: 0.5
+-  m_AutoUVMaxAngle: 89
+-  m_LightmapParameters: {fileID: 0}
+-  m_GlobalIlluminationMeshLod: 0
+-  m_SortingLayerID: 0
+-  m_SortingLayer: 0
+-  m_SortingOrder: 0
+-  m_MaskInteraction: 0
+-  m_AdditionalVertexStreams: {fileID: 0}
+---- !u!1 &5026099374392596083
+-GameObject:
+-  m_ObjectHideFlags: 0
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  serializedVersion: 6
+-  m_Component:
+-  - component: {fileID: 779872931213863764}
+-  - component: {fileID: 5593513072617498889}
+-  - component: {fileID: 7224333405971742819}
+-  m_Layer: 0
+-  m_Name: Suporte
+-  m_TagString: Untagged
+-  m_Icon: {fileID: 0}
+-  m_NavMeshLayer: 0
+-  m_StaticEditorFlags: 0
+-  m_IsActive: 1
+---- !u!4 &779872931213863764
+-Transform:
+-  m_ObjectHideFlags: 0
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5026099374392596083}
+-  serializedVersion: 2
+-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+-  m_LocalPosition: {x: 0, y: 0, z: 0}
+-  m_LocalScale: {x: 0.2, y: 0.025, z: 0.2}
+-  m_ConstrainProportionsScale: 0
+-  m_Children: []
+-  m_Father: {fileID: 8745955377654501761}
+-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+---- !u!33 &5593513072617498889
+-MeshFilter:
+-  m_ObjectHideFlags: 0
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5026099374392596083}
+-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+---- !u!23 &7224333405971742819
++  serializedVersion: 3
++  m_Size: {x: 1, y: 1, z: 1}
++  m_Center: {x: 0, y: 0, z: 0}
++--- !u!23 &6050702560716044824
+ MeshRenderer:
+   m_ObjectHideFlags: 0
+   m_CorrespondingSourceObject: {fileID: 0}
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 5026099374392596083}
++  m_GameObject: {fileID: 5031606758734583390}
+   m_Enabled: 1
+   m_CastShadows: 1
+   m_ReceiveShadows: 1
+@@ -48389,7 +49315,7 @@ MeshRenderer:
+   m_RenderingLayerMask: 1
+   m_RendererPriority: 0
+   m_Materials:
+-  - {fileID: 2100000, guid: 4310fb70fb79b6a4aa82ae095fdf1f74, type: 2}
++  - {fileID: 2100000, guid: 20fae0425b5d7cb419039102dfa328c2, type: 2}
+   m_StaticBatchInfo:
+     firstSubMesh: 0
+     subMeshCount: 0
+@@ -55909,6 +56835,7 @@ Transform:
+   m_Children:
+   - {fileID: 8843743986950879532}
+   - {fileID: 626239206407551621}
++  - {fileID: 7997801769226246316}
+   m_Father: {fileID: 0}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+ --- !u!114 &4476769155980489572
+@@ -67226,6 +68153,103 @@ MeshCollider:
+   m_Convex: 0
+   m_CookingOptions: 30
+   m_Mesh: {fileID: -6871361597443347070, guid: 1c4111b3b99342349a9b609a4a503ea1, type: 3}
++--- !u!1 &6865891782828989156
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 7190345173533736836}
++  - component: {fileID: 4890374551664568219}
++  m_Layer: 0
++  m_Name: Service light
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!4 &7190345173533736836
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 6865891782828989156}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 8.7, y: 3.6, z: -0.7}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 7997801769226246316}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!108 &4890374551664568219
++Light:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 6865891782828989156}
++  m_Enabled: 1
++  serializedVersion: 13
++  m_Type: 2
++  m_Color: {r: 1, g: 0.67, b: 0.35, a: 1}
++  m_Intensity: 3
++  m_Range: 14
++  m_SpotAngle: 30
++  m_InnerSpotAngle: 21.80208
++  m_CookieSize2D: {x: 0.5, y: 0.5}
++  m_Shadows:
++    m_Type: 0
++    m_Resolution: -1
++    m_CustomResolution: -1
++    m_Strength: 1
++    m_Bias: 0.05
++    m_NormalBias: 0.4
++    m_NearPlane: 0.2
++    m_CullingMatrixOverride:
++      e00: 1
++      e01: 0
++      e02: 0
++      e03: 0
++      e10: 0
++      e11: 1
++      e12: 0
++      e13: 0
++      e20: 0
++      e21: 0
++      e22: 1
++      e23: 0
++      e30: 0
++      e31: 0
++      e32: 0
++      e33: 1
++    m_UseCullingMatrixOverride: 0
++  m_Cookie: {fileID: 0}
++  m_DrawHalo: 0
++  m_Flare: {fileID: 0}
++  m_RenderMode: 0
++  m_CullingMask:
++    serializedVersion: 2
++    m_Bits: 4294967295
++  m_RenderingLayerMask: 1
++  m_Lightmapping: 4
++  m_LightShadowCasterMode: 0
++  m_AreaSize: {x: 1, y: 1}
++  m_BounceIntensity: 1
++  m_ColorTemperature: 6570
++  m_UseColorTemperature: 0
++  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
++  m_UseBoundingSphereOverride: 0
++  m_UseViewFrustumForShadowCasterCull: 1
++  m_ForceVisible: 0
++  m_ShapeRadius: 0.025
++  m_ShadowAngle: 0
++  m_LightUnit: 1
++  m_LuxAtDistance: 1
++  m_EnableSpotReflector: 1
+ --- !u!1 &6874169978742634448
+ GameObject:
+   m_ObjectHideFlags: 0
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
+index 09f2854..0886de9 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
+@@ -15,14 +15,14 @@ RenderSettings:
+   m_ObjectHideFlags: 0
+   serializedVersion: 10
+   m_Fog: 1
+-  m_FogColor: {r: 0.65, g: 0.71, b: 0.71, a: 1}
++  m_FogColor: {r: 0.48375, g: 0.37749997, b: 0.43624997, a: 1}
+   m_FogMode: 1
+   m_FogDensity: 0.00008
+   m_LinearFogStart: 650
+   m_LinearFogEnd: 2800
+-  m_AmbientSkyColor: {r: 0.51, g: 0.61, b: 0.66, a: 1}
+-  m_AmbientEquatorColor: {r: 0.43, g: 0.47, b: 0.45, a: 1}
+-  m_AmbientGroundColor: {r: 0.25, g: 0.27, b: 0.26, a: 1}
++  m_AmbientSkyColor: {r: 0.34499997, g: 0.42499998, b: 0.48499998, a: 1}
++  m_AmbientEquatorColor: {r: 0.27499998, g: 0.31499997, b: 0.325, a: 1}
++  m_AmbientGroundColor: {r: 0.13749999, g: 0.15249999, b: 0.15499999, a: 1}
+   m_AmbientIntensity: 1
+   m_AmbientMode: 1
+   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+@@ -35,9 +35,9 @@ RenderSettings:
+   m_DefaultReflectionMode: 0
+   m_DefaultReflectionResolution: 128
+   m_ReflectionBounces: 1
+-  m_ReflectionIntensity: 1
++  m_ReflectionIntensity: 0.59999996
+   m_CustomReflection: {fileID: 0}
+-  m_Sun: {fileID: 668874904}
++  m_Sun: {fileID: 185412610}
+   m_UseRadianceAmbientProbe: 0
+ --- !u!157 &3
+ LightmapSettings:
+@@ -190,13 +190,124 @@ PrefabInstance:
+     m_RemovedComponents: []
+     m_RemovedGameObjects: []
+     m_AddedGameObjects: []
+-    m_AddedComponents: []
++    m_AddedComponents:
++    - targetCorrespondingSourceObject: {fileID: 4853084307867816060, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
++      insertIndex: -1
++      addedObject: {fileID: 9178573}
++    - targetCorrespondingSourceObject: {fileID: 6865891782828989156, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
++      insertIndex: -1
++      addedObject: {fileID: 9178572}
++    - targetCorrespondingSourceObject: {fileID: 2140288937090430456, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
++      insertIndex: -1
++      addedObject: {fileID: 9178571}
+   m_SourcePrefab: {fileID: 100100000, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+ --- !u!1 &9178567 stripped
+ GameObject:
+   m_CorrespondingSourceObject: {fileID: 5727514241576554500, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
+   m_PrefabInstance: {fileID: 9178566}
+   m_PrefabAsset: {fileID: 0}
++--- !u!1 &9178568 stripped
++GameObject:
++  m_CorrespondingSourceObject: {fileID: 2140288937090430456, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
++  m_PrefabInstance: {fileID: 9178566}
++  m_PrefabAsset: {fileID: 0}
++--- !u!1 &9178569 stripped
++GameObject:
++  m_CorrespondingSourceObject: {fileID: 6865891782828989156, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
++  m_PrefabInstance: {fileID: 9178566}
++  m_PrefabAsset: {fileID: 0}
++--- !u!1 &9178570 stripped
++GameObject:
++  m_CorrespondingSourceObject: {fileID: 4853084307867816060, guid: 8778b590dadeab3439f4892a04b4b6a8, type: 3}
++  m_PrefabInstance: {fileID: 9178566}
++  m_PrefabAsset: {fileID: 0}
++--- !u!114 &9178571
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 9178568}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
++  m_UsePipelineSettings: 1
++  m_AdditionalLightsShadowResolutionTier: 2
++  m_CustomShadowLayers: 0
++  m_LightCookieSize: {x: 1, y: 1}
++  m_LightCookieOffset: {x: 0, y: 0}
++  m_SoftShadowQuality: 0
++  m_RenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_ShadowRenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_Version: 4
++  m_LightLayerMask: 1
++  m_ShadowLayerMask: 1
++  m_RenderingLayers: 1
++  m_ShadowRenderingLayers: 1
++--- !u!114 &9178572
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 9178569}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
++  m_UsePipelineSettings: 1
++  m_AdditionalLightsShadowResolutionTier: 2
++  m_CustomShadowLayers: 0
++  m_LightCookieSize: {x: 1, y: 1}
++  m_LightCookieOffset: {x: 0, y: 0}
++  m_SoftShadowQuality: 0
++  m_RenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_ShadowRenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_Version: 4
++  m_LightLayerMask: 1
++  m_ShadowLayerMask: 1
++  m_RenderingLayers: 1
++  m_ShadowRenderingLayers: 1
++--- !u!114 &9178573
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 9178570}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
++  m_UsePipelineSettings: 1
++  m_AdditionalLightsShadowResolutionTier: 2
++  m_CustomShadowLayers: 0
++  m_LightCookieSize: {x: 1, y: 1}
++  m_LightCookieOffset: {x: 0, y: 0}
++  m_SoftShadowQuality: 0
++  m_RenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_ShadowRenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_Version: 4
++  m_LightLayerMask: 1
++  m_ShadowLayerMask: 1
++  m_RenderingLayers: 1
++  m_ShadowRenderingLayers: 1
+ --- !u!1 &69986089
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -432,6 +543,7 @@ GameObject:
+   m_Component:
+   - component: {fileID: 185412611}
+   - component: {fileID: 185412610}
++  - component: {fileID: 185412612}
+   m_Layer: 0
+   m_Name: Lua
+   m_TagString: Untagged
+@@ -446,11 +558,11 @@ Light:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 185412609}
+-  m_Enabled: 0
++  m_Enabled: 1
+   serializedVersion: 13
+   m_Type: 1
+   m_Color: {r: 0.58, g: 0.72, b: 1, a: 1}
+-  m_Intensity: 0
++  m_Intensity: 0.18000002
+   m_Range: 10
+   m_SpotAngle: 30
+   m_InnerSpotAngle: 21.80208
+@@ -512,13 +624,42 @@ Transform:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 185412609}
+   serializedVersion: 2
+-  m_LocalRotation: {x: -0.17616904, y: 0.81688607, z: 0.3250633, w: 0.44271392}
++  m_LocalRotation: {x: 0.0000000036512346, y: -0.7071068, z: 0.0000000036512349, w: 0.7071067}
+   m_LocalPosition: {x: 0, y: 0, z: 0}
+   m_LocalScale: {x: 1, y: 1, z: 1}
+   m_ConstrainProportionsScale: 0
+   m_Children: []
+   m_Father: {fileID: 1916203354}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!114 &185412612
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 185412609}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
++  m_UsePipelineSettings: 1
++  m_AdditionalLightsShadowResolutionTier: 2
++  m_CustomShadowLayers: 0
++  m_LightCookieSize: {x: 1, y: 1}
++  m_LightCookieOffset: {x: 0, y: 0}
++  m_SoftShadowQuality: 0
++  m_RenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_ShadowRenderingLayersMask:
++    serializedVersion: 0
++    m_Bits: 1
++  m_Version: 4
++  m_LightLayerMask: 1
++  m_ShadowLayerMask: 1
++  m_RenderingLayers: 1
++  m_ShadowRenderingLayers: 1
+ --- !u!1 &455429981
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -597,8 +738,8 @@ Light:
+   m_Enabled: 1
+   serializedVersion: 13
+   m_Type: 1
+-  m_Color: {r: 1, g: 0.95, b: 0.85, a: 1}
+-  m_Intensity: 1.35
++  m_Color: {r: 1, g: 0.56, b: 0.32, a: 1}
++  m_Intensity: 0.023913821
+   m_Range: 10
+   m_SpotAngle: 30
+   m_InnerSpotAngle: 21.80208
+@@ -660,7 +801,7 @@ Transform:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 668874903}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0.3250633, y: -0.44271392, z: 0.17616904, w: 0.81688607}
++  m_LocalRotation: {x: -0.0000000036512346, y: 0.7071067, z: 0.0000000036512342, w: 0.7071068}
+   m_LocalPosition: {x: 0, y: 0, z: 0}
+   m_LocalScale: {x: 1, y: 1, z: 1}
+   m_ConstrainProportionsScale: 0
+@@ -1154,20 +1295,20 @@ MonoBehaviour:
+   sun: {fileID: 668874904}
+   moon: {fileID: 185412610}
+   weather: {fileID: 133175590}
+-  timeOfDay: 9.5
++  timeOfDay: 18
+   cycleTime: 1
+   minutesPerDay: 30
+   animateAtmosphere: 1
+   orbitTilt: 30
+   sunriseBearing: 90
+   sunIntensity: 1.35
+-  moonIntensity: 0.28
++  moonIntensity: 0.36
+   sunDayColor: {r: 1, g: 0.95, b: 0.85, a: 1}
+   moonColor: {r: 0.58, g: 0.72, b: 1, a: 1}
+   dayAmbientSky: {r: 0.51, g: 0.61, b: 0.66, a: 1}
+   dayAmbientHorizon: {r: 0.43, g: 0.47, b: 0.45, a: 1}
+-  nightAmbientSky: {r: 0.13, g: 0.18, b: 0.28, a: 1}
+-  nightAmbientHorizon: {r: 0.07, g: 0.09, b: 0.14, a: 1}
++  nightAmbientSky: {r: 0.18, g: 0.24, b: 0.31, a: 1}
++  nightAmbientHorizon: {r: 0.12, g: 0.16, b: 0.2, a: 1}
+   dayFog: {r: 0.65, g: 0.71, b: 0.71, a: 1}
+   nightFog: {r: 0.025, g: 0.04, b: 0.075, a: 1}
+   updateEnvironment: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\docs\\22-composicao-do-mapa-e-splines.md" "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\22-composicao-do-mapa-e-splines.md"
+new file mode 100644
+index 0000000..d444c8f
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\22-composicao-do-mapa-e-splines.md"
+@@ -0,0 +1,128 @@
++# Composicao do mapa e splines projetadas
++
++## Plano de execucao
++
++1. **Faixas de superficie:** spline editavel, projecao de todos os vertices,
++   subdivisoes longitudinal e transversal, UVs em metros e demonstracao em
++   paisagem, esfera e cone. Reutilizar a construcao nas estradas procedurais.
++2. **Solo e vegetacao:** manchas de densidade e altura da grama em coordenadas
++   de mundo, clareiras, bosques com transicao gradual e solo mineral mais legivel.
++3. **Relevo:** reforcar sulcos e afloramentos fora das planicies naturais.
++   A base continua exigindo apoio plano e seco, sem pedestal artificial.
++4. **Infraestrutura:** estradas continuas, acesso da base e referencias industriais
++   construidas sobre os POIs existentes; postes, cabos e barreiras coerentes.
++5. **Marcas e atmosfera:** desgaste nas vias, pequenos elementos de vegetacao,
++   luzes de servico e atmosfera localizada com custo limitado.
++6. **Validacao:** compilar em copia isolada do projeto, testar projecao/ausencia de
++   superficie, regeneracao, streaming e LOD; capturar resultado e registrar limites.
++
++Este plano acompanha o trabalho. Os resultados e limites verificados sao
++registrados abaixo apos a implementacao; uma etapa listada nao e prova de conclusao.
++
++## Implementacao
++
++### 1. Faixas sobre superficies
++
++`SurfaceSplineMesh` e `SurfaceSplineBuilder` geram uma faixa subdividida com
++projecao direcional, radial ou pelas normais dos pontos. A demonstracao independente
++fica em `Assets/Scenes/Tests/SurfaceSplineDemo.unity`. Uso detalhado no documento 23.
++`TerrainRoadMeshGenerator` reutiliza o construtor para renderizar os caminhos da
++mascara existente. A altura segue os triangulos do LOD aplicado.
++
++### 2. Vegetacao e solo
++
++- Grama com manchas de 38 m, variacao de densidade e altura em ruido continuo
++  de mundo. Os limites de distancia e o pool GPU existentes foram mantidos.
++- Bosques com transicao gradual, arvores menores nas bordas e menos exemplares
++  isolados. Alturas configuradas entre 6 e 16 m antes da reducao nas bordas.
++- Arbustos e madeira caida instanciados em manchas de bosque, usando as mesmas
++  exclusoes de agua, caminhos, POIs e base. O total de props e limitado por chunk.
++- Mais contraste entre solo seco, umido e afloramentos. A textura de biomas e
++  suas UVs continuam sendo a fonte principal de cor.
++
++### 3. Relevo e base
++
++O preset principal usa canais de 13 m de profundidade maxima e escala de 105 m.
++Esse efeito continua multiplicado pela mascara de relevo: planicies naturais
++nao recebem os sulcos. A erosao e uma aproximacao visual, nao uma simulacao
++hidraulica. A escolha da base continua exigindo terreno seco e apoio plano.
++Nao foi acrescentado achatamento, montanha artificial nem pedestal para a base.
++
++### 4. Infraestrutura
++
++- No mundo com streaming, rotas conectam POIs e chegam ao perimetro da base
++  usando a navegabilidade existente. A busca pode recusar caminhos inviaveis.
++- As rotas contornam a area reservada das construcoes industriais.
++- Postes acompanham os caminhos em intervalos aproximados de 65 m. Cabos possuem
++  flecha e conectam pares validos com ate 110 m de separacao. Nao cruzam POIs.
++- Tres prefabs de referencia: posto de radio/vigia, deposito e usina de bombeamento
++  com reservatorios e chamine. A distribuicao e deterministica por semente.
++  Nao e garantida uma instancia de cada tipo em toda janela carregada: depende
++  das chances e dos locais adequados encontrados.
++- A reserva dos POIs tambem afasta grama e arvores. As construcoes usam fundacao
++  parcialmente enterrada e terrenos com inclinacao maxima de 2 graus.
++
++### 5. Uso e atmosfera
++
++As estradas tem marcas de rodas, cascalho e bordas irregulares em shader.
++Os edificios usam pintura, aco, concreto e desgaste dos materiais dieselpunk.
++Ha luminarias fisicas de servico na base e nos POIs. As luzes locais sao sem
++sombras, limitadas por distancia e ativadas quando o ceu escurece.
++Fumaca e bruma junto a usina usam poucos sprites procedurais: maximo de 40 e
++12 particulas, respectivamente. Os efeitos param fora do raio configurado.
++A luz ambiente noturna foi elevada para melhorar a leitura do terreno.
++
++## Ajustes
++
++| Asset/componente | Parametros principais |
++| --- | --- |
++| BaseGiratoriaGrass | Meadow Patch Size, Meadow Variation, Meadow Minimum Density, Height Range |
++| ProceduralTrees | Grove Threshold, Grove Edge Blend, Heights, Scattered Density |
++| WorldScenery | Prototypes, Rock Density, Maximum Instances Per Chunk |
++| BaseGiratoriaTerrain | Erosion, Surface Palette, POI Definitions, Roadside meshes/materials |
++| SplineTrack | Gravel, Wheel Tracks, Track Strength, Gravel Scale, Irregular Edge |
++| LocalAtmosphere nos prefabs | Effects Distance e Light Distance |
++| Ceu Procedural | Night Ambient Sky/Horizon e Moon Intensity |
++
++`Leviathan > Environment > Aplicar composicao do mapa` reaplica estes valores
++e reconstroi os prefabs industriais. Use esse comando apenas para voltar ao preset;
++nao e necessario para jogar ou regenerar a cena ja integrada.
++
++## Limites
++
++- Os edificios sao modelos modulares de prototipo, nao arte final nem interiores
++  jogaveis. Sao referencias visuais; nao adicionam marcadores automaticos de inimigos.
++- As estradas ainda seguem a navegabilidade da grade. Ha curvas suavizadas,
++  mas cruzamentos podem sobrepor faixas. Nao ha pontes, tuneis nem terraplenagem.
++- Cabos terminam nos limites de cada caminho/chunk; em curvas muito fechadas,
++  agua, forte declive ou perto de POIs, a rede pode ficar interrompida.
++- O acesso da base termina no perimetro de seguranca, sem invadir o fosso.
++- As alteracoes de ligacao de POIs se aplicam ao modo com streaming usado pela
++  cena principal; presets antigos de mapa pequeno mantem sua logica de rotas.
++- Bruma e fumaca sao efeitos leves por sprites, sem volume fisico ou colisao
++  com edificios. Crateras deformaveis, ruinas detalhadas e pontes ficam para outra etapa.
++- Nao foi estabelecido um novo tempo de GPU. Medir no build de desenvolvimento
++  em 1080p, com mesmo ponto de camera, horario e semente, e comparar GPU Profiler
++  e FPS. Se preciso, reduzir arvores distantes, props por chunk e particulas.
++
++## Evidencias
++
++Os testes em copia isolada e capturas ficam em `Artifacts/MapComposition`.
++O validador verifica aderencia das estradas ao LOD, exclusao dos POIs, apoio da
++vegetacao, base unica, repeticao da distribuicao apos regeneracao e ausencia de
++erros em Play. O teste da spline verifica tambem a imagem gerada pela GPU.
++O backup anterior ao trabalho fica em `Artifacts/MapComposition/Before`.
++
++Validacao concluida no Unity 6000.6.3f1 com URP 17.6.0, em copia isolada:
++
++- `SplineValidation.txt`: 47 verificacoes aprovadas, nenhuma falha.
++- `MapValidation.txt`: 22 verificacoes aprovadas, nenhuma falha.
++- `BaseRegression.txt`: 57 verificacoes aprovadas, nenhuma falha.
++- Total: 126 verificacoes aprovadas, incluindo entrada e saida de Play,
++  regeneracao, streaming e projecao em paisagem, esfera e cone.
++
++Os arquivos validados foram integrados ao projeto principal. A cena de teste de
++artilharia permaneceu inalterada. Alteracoes locais da cena principal foram
++preservadas; o teste isolado nao substitui a verificacao de futuras edicoes nela.
++O diff das fontes e configuracoes deste trabalho fica em `Changes.diff` nesta
++pasta de evidencias. As capturas finais ficam em `Captures`.
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\docs\\23-spline-projetada.md" "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\23-spline-projetada.md"
+new file mode 100644
+index 0000000..009e357
+--- /dev/null
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\23-spline-projetada.md"
+@@ -0,0 +1,94 @@
++# Spline projetada sobre superficies
++
++Unity 6000.6.3f1, URP 17.6.0. Implementacao em C# e ShaderLab/HLSL,
++sem dependencias adicionais. A curva usa interpolacao cubica Catmull-Rom
++em forma Hermite. O projeto nao possuia o pacote Unity Splines instalado.
++
++## Uso
++
++1. Abra `Assets/Scenes/Tests/SurfaceSplineDemo.unity` para a demonstracao em
++   paisagem, esfera e cone. Ela tambem funciona em Play, sem iniciar o terreno do jogo.
++2. Para criar outra faixa: `GameObject > Leviathan > Spline projetada`.
++3. Arraste os colliders das superficies para **Surfaces**. Use MeshCollider
++   nao convexo para representar fielmente uma malha estatica irregular.
++4. Edite os pontos em **Knots** ou pelas alcas na Scene View. Shift + clique
++   acrescenta um ponto sobre uma superficie. Undo funciona na edicao dos pontos.
++5. Escolha o modo de projecao e ajuste largura e resolucao.
++6. **Reconstruir malha** atualiza explicitamente a geometria. A exportacao `.asset`
++   cria uma copia independente; nao substitui a spline original.
++
++## Modos
++
++| Modo | Uso | Referencia |
++| --- | --- | --- |
++| Directional | Paisagens, pisos, paredes, varias superficies | Direction em coordenadas de mundo; para terreno: (0,-1,0) |
++| Radial | Esferas e objetos ao redor de um centro | Radial Center; se vazio, a origem da spline |
++| KnotNormals | Cone, caminho envolvendo um objeto, direcoes variaveis | Normal local de cada ponto, interpolada ao longo da curva |
++
++Todas as colunas da faixa sao projetadas, incluindo as bordas. A normal do
++colisor orienta a largura e o afastamento. UV.x vai de 0 a 1 na largura;
++UV.y acompanha o comprimento projetado dividido por **Texture Metres**.
++
++## Parametros
++
++- **Width:** largura em metros de mundo. **Knots/Width:** multiplicador por ponto.
++- **Sample Spacing:** distancia aproximada entre amostras longitudinais. Menor
++  acompanha melhor curvas e relevo, com mais vertices/raycasts na reconstrucao.
++- **Width Segments:** subdivisoes transversais. Importante em esferas e faixas largas.
++- **Smoothing:** intensidade das tangentes. 0 conecta pontos por segmentos retos;
++  1 usa a curva interpolada completa. Curvas muito fechadas exigem menor largura.
++- **Surface Offset:** afastamento em metros, aplicado ao longo da normal para
++  reduzir z-fighting. Comece em 0,02 a 0,04 m.
++- **Maximum Surface Error:** tolerancia entre o centro do triangulo e a superficie.
++  Triangulos sem apoio ou com desvio excessivo sao descartados.
++- **Probe Above/Below:** alcance antes/depois da amostra ao longo da projecao.
++  A origem do raio precisa ficar fora do colisor; aumente Above para objetos grandes.
++- **Surface Layers / Surfaces:** filtro por layer e lista opcional de colliders.
++  Triggers, colliders desativados e o colisor gerado pela propria faixa sao ignorados.
++- **Generate Collider:** colisor opcional da malha gerada. Desnecessario para uma
++  faixa decorativa sobre um chao que ja tem colisao.
++- **Auto Rebuild:** atualiza alteracoes do Inspector, transform da spline e bounds
++  dos alvos explicitos. Mudancas via script nos pontos devem chamar `RequestRebuild()`.
++
++O shader `Leviathan/Spline Track` oferece cascalho, marcas de rodas e borda
++irregular. Funciona com luz principal, sombras recebidas, fog, DepthOnly,
++DepthNormals e instanciamento DOTS da URP. Pode ser substituido por outro material.
++
++## Precisao e limites
++
++- O resultado acompanha **a superficie dos colliders**. Um BoxCollider sobre um
++  modelo complexo nao representa os detalhes desse modelo. Um SphereCollider e
++  uma esfera analitica; o MeshCollider acompanha as faces da malha visivel.
++- Uma malha finita aproxima superficies curvas. Nao existe garantia de precisao
++  matematica em qualquer resolucao; reduza o espacamento e aumente as subdivisoes.
++- O raio escolhe a primeira superficie atingida. Para cavernas, sobreposicoes e
++  dobras, use alvos explicitos e normais por ponto, ou divida a faixa em partes.
++- Sem apoio, os triangulos sao omitidos. Uma descontinuidade pode deixar uma
++  abertura intencional; o sistema nao inventa uma ponte sobre o vazio.
++- Amostras finitas podem nao detectar buracos menores que o espacamento.
++- Curvas com raio menor que metade da largura podem se sobrepor. A edicao da
++  curva continua sendo responsabilidade do autor; nao ha corte booleano de cruzamentos.
++- Limite de 250.000 vertices por reconstrucao. A geracao aloca listas e realiza
++  consultas fisicas somente ao reconstruir; nao foi projetada para recalcular
++  uma estrada inteira a cada frame.
++- Mover alvos encontrados apenas por layer nao dispara reconstrucao automatica.
++  Malhas deformadas com bounds inalterados tambem exigem `RequestRebuild()`.
++- A precisao de raycast depende do colisor: [Collider.Raycast](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Collider.Raycast.html)
++  e [RaycastHit.normal](https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/raycasthit/normal).
++
++## Integracao procedural
++
++`TerrainRoadMeshGenerator` extrai caminhos do grafo da mascara de estradas e
++reutiliza `SurfaceSplineBuilder`. A projecao consulta diretamente os triangulos
++do heightmap no LOD aplicado, sem raycasts e sem esperar pelo collider de um
++vizinho. O caminho continua determinado pela navegabilidade e pela semente.
++As faixas usam largura limitada a 85% da celula para manter uma margem dentro
++da exclusao de vegetacao. Agua e abertura da base nao recebem estrada.
++
++## Validacao
++
++`SurfaceSplineValidation.ValidateBatch` e um teste para uma instancia **isolada**
++do Editor: ele cria/salva a demonstracao e encerra o Unity ao concluir.
++Confere contato, fechamento do anel, finitude, falta de superficie, ciclo de vida,
++colisor proprio, direcao invalida e pixels do material na GPU. Relatorio e imagem
++ficam em `Artifacts/MapComposition`.
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\docs\\README.md" "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\README.md"
+index c3cdd9b..477597d 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\MapComposition\\Before\\docs\\README.md"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\README.md"
+@@ -29,6 +29,8 @@ Leviathan e um jogo de operacao individual de artilharia indireta. O jogador int
+ | [19 - Grama na borda da base](19-grama-na-borda-da-base.md) | Exclusao precisa, transicao irregular e seguranca do concreto |
+ | [20 - Distancia e contador FPS](20-distancia-e-contador-fps.md) | Alcances maiores, memoria da grama e diagnostico de FPS sem Canvas |
+ | [21 - Ceu em camadas](21-ceu-em-camadas.md) | Dia/noite, estrelas, auroras, vento e nuvens com paralaxe |
++| [22 - Composicao do mapa](22-composicao-do-mapa-e-splines.md) | Etapas de solo, vegetacao, relevo, estradas, infraestrutura e atmosfera |
++| [23 - Spline projetada](23-spline-projetada.md) | Faixas sobre terreno, esfera, cone e outras superficies estaticas |
+ | [Referencias visuais](referencias/README.md) | Imagens fornecidas pelo autor e como devem orientar o projeto |
+ 
+ ## Status das definicoes

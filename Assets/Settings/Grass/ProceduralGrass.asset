@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ec89d24c78c6ec47addc503bea2fa82, type: 3}
+  m_Name: ProceduralGrass
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.Grass.GrassConfiguration
+  compute: {fileID: 7200000, guid: d7f2f8ff46ac0934bb65b3c9c99fd515, type: 3}
+  material: {fileID: 2100000, guid: c2b5462154520b94687ee6a3ec29b166, type: 2}
+  patchSize: 30
+  bladesPerSquareMeter: 5
+  maximumResidentPatches: 64
+  generationsPerFrame: 2
+  uploadsPerFrame: 1
+  seed: 9173
+  heightRange: {x: 0.35, y: 0.65}
+  widthRange: {x: 0.025, y: 0.045}
+  bendRange: {x: 0.12, y: 0.32}
+  nearDistance: 18
+  middleDistance: 42
+  farDistance: 90
+  transitionWidth: 12
+  middleDensity: 0.42
+  farDensity: 0.12
+  widerDistantBlades: {x: 1.55, y: 2.5}
+  patchFadeSeconds: 0.25
+  normalizedHeightRange: {x: 0.17, y: 0.78}
+  biomeRange: {x: 0.12, y: 0.82}
+  maximumSlope: 28
+  slopeFade: 10
+  excludeProps: 1
+  rootColor: {r: 0.13, g: 0.26, b: 0.09, a: 1}
+  tipColor: {r: 0.45, g: 0.66, b: 0.23, a: 1}
+  biomeColorInfluence: 0.3
+  translucency: 0.35
+  specular: 0.08
+  roundedNormals: 0.6
+  viewThickening: 0.65
+  useWorldWeather: 1
+  windDirection: {x: 0.7, y: 0.3}
+  windSpeed: 3
+  windStrength: 0.25
+  windNoiseScale: 0.08
+  playerInteraction: 1
+  playerRadius: 1.3
+  castNearShadows: 1
+  shadowDistance: 22
+  culling: 1
+  collectGpuStatistics: 1
+  drawGizmos: 0

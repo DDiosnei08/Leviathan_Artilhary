@@ -1,0 +1,39 @@
+INFO Unity=6000.6.3f1 GPU=AMD Radeon RX 6600 API=Direct3D11 Size=1920x1080 Development=True
+PASS Build starts with one base
+PASS Build starts without gameplay Canvas
+PASS Grass buffers generated in standalone
+PASS Imported cannon bindings survive build
+PASS Nonblank render without error-magenta: 01_BuildOverview pink=0
+INFO Hidden development-player total-frame samples=6426 median_ms=1,954202 p95_ms=3,361005 allocated_bytes=218489469
+INFO These are CPU/wall frame intervals, not GPU timings or isolated grass cost.
+PASS Active camera and grass follow LeftCannon
+PASS Exactly one audio listener in LeftCannon
+PASS Nonblank render without error-magenta: 02_LeftCannon pink=0
+PASS Active camera and grass follow RightCannon
+PASS Exactly one audio listener in RightCannon
+PASS Nonblank render without error-magenta: 02_RightCannon pink=0
+PASS Active camera and grass follow Map
+PASS Exactly one audio listener in Map
+PASS Nonblank render without error-magenta: 02_Map pink=0
+PASS Active camera and grass follow Player
+PASS Exactly one audio listener in Player
+FAIL Operator settles on a physical floor in player view
+PASS Nonblank render without error-magenta: 02_Player pink=0
+PASS Artillery test scene loads in standalone
+PASS Artillery upper stop
+PASS Artillery lower stop
+PASS Azimuth wraps negative input
+PASS Artillery reset
+PASS Artillery test contains physical wheels
+PASS Handwheel affects controller: ElevationHandwheelPivot
+PASS Handwheel affects controller: AzimuthHandwheelPivot
+PASS Nonblank render without error-magenta: 03_ArtilleryTest pink=0
+PASS Saved spline scene loads all three surfaces in build
+PASS Standalone projected mesh: Spline Paisagem
+PASS Standalone projected mesh: Spline Cone
+PASS Standalone projected mesh: Spline Esfera
+PASS Previous gameplay base is released on scene change
+PASS Nonblank render without error-magenta: 04_Spline pink=0
+PASS Returning to game scene creates one base
+PASS Grass rebuilds after scene unload and reload
+FAIL No Unity exceptions or assertions across standalone scene transitions

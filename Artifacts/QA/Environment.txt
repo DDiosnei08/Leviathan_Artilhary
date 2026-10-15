@@ -1,0 +1,12 @@
+PASS Eroded chunk borders match on both axes; max error=0
+PASS Normal sampling halos match across eroded chunk borders; max error=0
+PASS Erosion generation repeats exactly for the same seed
+PASS The scene has a valid naturally flat base site
+PASS Placing the base does not change any natural height sample
+PASS Erosion adds measurable surface relief; maximum change=13
+PASS The full base footprint fits natural flat ground; range=0,04675293
+PASS Base footprint is dry
+FAIL System.InvalidOperationException: Denser, taller grass preset is connected
+  at EnvironmentEnrichmentValidation.Check (System.Boolean condition, System.String label) [0x00020] in C:\ProjetoENTEC\MapCompositionWork\Assets\Editor\Environment\EnvironmentEnrichmentValidation.cs:44 
+  at EnvironmentEnrichmentValidation.ValidateHeights () [0x0050b] in C:\ProjetoENTEC\MapCompositionWork\Assets\Editor\Environment\EnvironmentEnrichmentValidation.cs:82 
+  at EnvironmentEnrichmentValidation.ValidateBatch () [0x0001b] in C:\ProjetoENTEC\MapCompositionWork\Assets\Editor\Environment\EnvironmentEnrichmentValidation.cs:30 

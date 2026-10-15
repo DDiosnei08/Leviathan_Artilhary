@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ea794c92fbb45d449d1eb28f1c0858c, type: 3}
+  m_Name: ProceduralTrees
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.Vegetation.TreeConfiguration
+  material: {fileID: 2100000, guid: 7435b77387ef5da43bbf960dbaad153c, type: 2}
+  broadleafNear: {fileID: 4300000, guid: d1b1bd9911cc12448b9efa92f194190d, type: 2}
+  broadleafFar: {fileID: 4300000, guid: 55c49a9952260a44590f052998a0de8f, type: 2}
+  pineNear: {fileID: 4300000, guid: 7c48e1aebcc7fbe47b2dace9ab6e7769, type: 2}
+  pineFar: {fileID: 4300000, guid: 22d8f449c86ecf24aabe7be8d5c92b23, type: 2}
+  spacing: 14
+  density: 0.68
+  scatteredDensity: 0.065
+  groveScale: 220
+  groveThreshold: 0.48
+  groveEdgeBlend: 0.1
+  maximumTreesPerChunk: 1400
+  heights: {x: 6, y: 16}
+  normalizedAltitude: {x: 0.15, y: 0.76}
+  maximumSlope: 26
+  nearDistance: 125
+  farDistance: 1400
+  shadowDistance: 75
+  windDirection: {x: 0.7, y: 0.3}
+  windStrength: 0.025
+  buildsPerFrame: 1

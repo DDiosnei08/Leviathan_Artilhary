@@ -1,0 +1,219 @@
+diff --git "a/Artifacts\\LayeredSky\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity" b/Assets/Scenes/Leviathan_BaseGiratoria.unity
+index 027713a..09f2854 100644
+--- "a/Artifacts\\LayeredSky\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
++++ b/Assets/Scenes/Leviathan_BaseGiratoria.unity
+@@ -26,7 +26,7 @@ RenderSettings:
+   m_AmbientIntensity: 1
+   m_AmbientMode: 1
+   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+-  m_SkyboxMaterial: {fileID: 2100000, guid: c1f64a2044e4bbf40a6a735929745ad4, type: 2}
++  m_SkyboxMaterial: {fileID: 2100000, guid: 7b7703022fe21564d98bd2d0c0103769, type: 2}
+   m_HaloStrength: 0.5
+   m_FlareStrength: 1
+   m_FlareFadeSpeed: 3
+@@ -422,6 +422,103 @@ Transform:
+   m_Children: []
+   m_Father: {fileID: 0}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!1 &185412609
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 185412611}
++  - component: {fileID: 185412610}
++  m_Layer: 0
++  m_Name: Lua
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!108 &185412610
++Light:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 185412609}
++  m_Enabled: 0
++  serializedVersion: 13
++  m_Type: 1
++  m_Color: {r: 0.58, g: 0.72, b: 1, a: 1}
++  m_Intensity: 0
++  m_Range: 10
++  m_SpotAngle: 30
++  m_InnerSpotAngle: 21.80208
++  m_CookieSize2D: {x: 0.5, y: 0.5}
++  m_Shadows:
++    m_Type: 2
++    m_Resolution: -1
++    m_CustomResolution: -1
++    m_Strength: 0.5
++    m_Bias: 0.05
++    m_NormalBias: 0.4
++    m_NearPlane: 0.2
++    m_CullingMatrixOverride:
++      e00: 1
++      e01: 0
++      e02: 0
++      e03: 0
++      e10: 0
++      e11: 1
++      e12: 0
++      e13: 0
++      e20: 0
++      e21: 0
++      e22: 1
++      e23: 0
++      e30: 0
++      e31: 0
++      e32: 0
++      e33: 1
++    m_UseCullingMatrixOverride: 0
++  m_Cookie: {fileID: 0}
++  m_DrawHalo: 0
++  m_Flare: {fileID: 0}
++  m_RenderMode: 0
++  m_CullingMask:
++    serializedVersion: 2
++    m_Bits: 4294967295
++  m_RenderingLayerMask: 1
++  m_Lightmapping: 4
++  m_LightShadowCasterMode: 0
++  m_AreaSize: {x: 1, y: 1}
++  m_BounceIntensity: 1
++  m_ColorTemperature: 6570
++  m_UseColorTemperature: 0
++  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
++  m_UseBoundingSphereOverride: 0
++  m_UseViewFrustumForShadowCasterCull: 1
++  m_ForceVisible: 0
++  m_ShapeRadius: 0.025
++  m_ShadowAngle: 0
++  m_LightUnit: 1
++  m_LuxAtDistance: 1
++  m_EnableSpotReflector: 1
++--- !u!4 &185412611
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 185412609}
++  serializedVersion: 2
++  m_LocalRotation: {x: -0.17616904, y: 0.81688607, z: 0.3250633, w: 0.44271392}
++  m_LocalPosition: {x: 0, y: 0, z: 0}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 1916203354}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+ --- !u!1 &455429981
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -563,7 +660,7 @@ Transform:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 668874903}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0.31295618, y: -0.26062024, z: 0.08973874, w: 0.9088908}
++  m_LocalRotation: {x: 0.3250633, y: -0.44271392, z: 0.17616904, w: 0.81688607}
+   m_LocalPosition: {x: 0, y: 0, z: 0}
+   m_LocalScale: {x: 1, y: 1, z: 1}
+   m_ConstrainProportionsScale: 0
+@@ -1024,6 +1121,73 @@ Transform:
+   m_Children: []
+   m_Father: {fileID: 0}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!1 &1916203352
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 1916203354}
++  - component: {fileID: 1916203353}
++  m_Layer: 0
++  m_Name: Ceu Procedural
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!114 &1916203353
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1916203352}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 0e1de9938599de448804b47755957a89, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.World.LayeredSkyController
++  skyMaterial: {fileID: 2100000, guid: 7b7703022fe21564d98bd2d0c0103769, type: 2}
++  sun: {fileID: 668874904}
++  moon: {fileID: 185412610}
++  weather: {fileID: 133175590}
++  timeOfDay: 9.5
++  cycleTime: 1
++  minutesPerDay: 30
++  animateAtmosphere: 1
++  orbitTilt: 30
++  sunriseBearing: 90
++  sunIntensity: 1.35
++  moonIntensity: 0.28
++  sunDayColor: {r: 1, g: 0.95, b: 0.85, a: 1}
++  moonColor: {r: 0.58, g: 0.72, b: 1, a: 1}
++  dayAmbientSky: {r: 0.51, g: 0.61, b: 0.66, a: 1}
++  dayAmbientHorizon: {r: 0.43, g: 0.47, b: 0.45, a: 1}
++  nightAmbientSky: {r: 0.13, g: 0.18, b: 0.28, a: 1}
++  nightAmbientHorizon: {r: 0.07, g: 0.09, b: 0.14, a: 1}
++  dayFog: {r: 0.65, g: 0.71, b: 0.71, a: 1}
++  nightFog: {r: 0.025, g: 0.04, b: 0.075, a: 1}
++  updateEnvironment: 1
++  environmentUpdateInterval: 30
++--- !u!4 &1916203354
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1916203352}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 0, z: 0}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children:
++  - {fileID: 185412611}
++  m_Father: {fileID: 0}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+ --- !u!1 &1927004541
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -1314,3 +1478,4 @@ SceneRoots:
+   - {fileID: 135269767}
+   - {fileID: 1750613294}
+   - {fileID: 1706506652}
++  - {fileID: 1916203354}
+warning: in the working copy of 'Artifacts\LayeredSky\Before\docs\README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/README.md', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\LayeredSky\\Before\\docs\\README.md" b/docs/README.md
+index ec642c9..c3cdd9b 100644
+--- "a/Artifacts\\LayeredSky\\Before\\docs\\README.md"
++++ b/docs/README.md
+@@ -28,6 +28,7 @@ Leviathan e um jogo de operacao individual de artilharia indireta. O jogador int
+ | [18 - Polimento dieselpunk](18-polimento-visual-dieselpunk.md) | Paleta mineral, pintura e metal, props, vegetacao, agua e atmosfera |
+ | [19 - Grama na borda da base](19-grama-na-borda-da-base.md) | Exclusao precisa, transicao irregular e seguranca do concreto |
+ | [20 - Distancia e contador FPS](20-distancia-e-contador-fps.md) | Alcances maiores, memoria da grama e diagnostico de FPS sem Canvas |
++| [21 - Ceu em camadas](21-ceu-em-camadas.md) | Dia/noite, estrelas, auroras, vento e nuvens com paralaxe |
+ | [Referencias visuais](referencias/README.md) | Imagens fornecidas pelo autor e como devem orientar o projeto |
+ 
+ ## Status das definicoes

@@ -1,0 +1,62 @@
+diff --git a/C:/ProjetoENTEC/GrassValidationWork/BeforeGrass/TerrainChunk.cs b/C:/ProjetoENTEC/Leviathan2/Assets/Scripts/World/ProceduralTerrain/TerrainChunk.cs
+index 79b11c0..c2ae2a9 100644
+--- a/C:/ProjetoENTEC/GrassValidationWork/BeforeGrass/TerrainChunk.cs
++++ b/C:/ProjetoENTEC/Leviathan2/Assets/Scripts/World/ProceduralTerrain/TerrainChunk.cs
+@@ -13,6 +13,10 @@ namespace ProjectLeviathan.ProceduralTerrain
+         public MeshCollider MeshCollider { get; private set; }
+         public TerrainSettings Settings { get; }
+         public int CurrentLod { get; private set; }
++        public int AppliedLod { get; private set; }
++        public Texture2D BiomeTexture => colorTexture;
++        public event System.Action<TerrainChunk> DataChanged;
++        public event System.Action<TerrainChunk> Disposing;
+         public bool HasGeneratedMesh { get; private set; }
+         public bool GenerationFailed { get; private set; }
+         public HeightMap GeneratedData { get; private set; }
+@@ -203,6 +207,8 @@ namespace ProjectLeviathan.ProceduralTerrain
+ 
+             GenerationFailed = false;
+             HasGeneratedMesh = true;
++            AppliedLod = CurrentLod;
++            DataChanged?.Invoke(this);
+         }
+ 
+         public void RefreshTerrainAppearance()
+@@ -303,6 +309,7 @@ namespace ProjectLeviathan.ProceduralTerrain
+             }
+ 
+             WorldFeaturesReady = true;
++            DataChanged?.Invoke(this);
+         }
+ 
+         void RefreshWaterGeometry()
+@@ -551,6 +558,9 @@ namespace ProjectLeviathan.ProceduralTerrain
+ 
+         public void Dispose()
+         {
++            Disposing?.Invoke(this);
++            DataChanged = null;
++            Disposing = null;
+             ClearWaterGeometry();
+             ClearWorldFeatureVisuals();
+             Mesh mesh = MeshFilter != null ? MeshFilter.sharedMesh : null;
+diff --git a/C:/ProjetoENTEC/GrassValidationWork/BeforeGrass/TerrainWorldController.cs b/C:/ProjetoENTEC/Leviathan2/Assets/Scripts/World/ProceduralTerrain/TerrainWorldController.cs
+index 32caebe..a1be830 100644
+--- a/C:/ProjetoENTEC/GrassValidationWork/BeforeGrass/TerrainWorldController.cs
++++ b/C:/ProjetoENTEC/Leviathan2/Assets/Scripts/World/ProceduralTerrain/TerrainWorldController.cs
+@@ -21,6 +21,7 @@ namespace ProjectLeviathan.ProceduralTerrain
+ 
+         private Dictionary<Vector2Int, TerrainChunk> terrainChunks = new Dictionary<Vector2Int, TerrainChunk>();
+         public IReadOnlyDictionary<Vector2Int, TerrainChunk> TerrainChunks => terrainChunks;
++        public event System.Action<TerrainChunk> ChunkCreated;
+         private TerrainWorldFeatureGenerationResult worldFeatureGeneration;
+         private bool featureGenerationAttempted;
+         private Vector2Int viewerChunkCoord;
+@@ -639,6 +640,7 @@ namespace ProjectLeviathan.ProceduralTerrain
+         {
+             TerrainChunk chunk = new TerrainChunk(coord, terrainSettings, transform);
+             terrainChunks[coord] = chunk;
++            ChunkCreated?.Invoke(chunk);
+             chunk.SetVisible(true);
+         }
+     }

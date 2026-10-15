@@ -1,0 +1,141 @@
+warning: in the working copy of 'Artifacts\RenderDistanceFps\Before\Assets\Scripts\World\Grass\GrassManager.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Assets/Scripts/World/Grass/GrassManager.cs', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Scripts\\World\\Grass\\GrassManager.cs" b/Assets/Scripts/World/Grass/GrassManager.cs
+index 482c766..262ae7d 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Scripts\\World\\Grass\\GrassManager.cs"
++++ b/Assets/Scripts/World/Grass/GrassManager.cs
+@@ -193,15 +193,18 @@ void Tick()
+                     Vector2Int key = new Vector2Int(x, z);
+                     if (!tile.patches.TryGetValue(key, out GrassPatch patch))
+                     {
++                        Vector2 origin = new Vector2(x * patchSize, z * patchSize);
++                        Bounds b = chunk.MeshFilter.sharedMesh.bounds;
++                        Bounds patchBounds = new Bounds(chunk.GameObject.transform.TransformPoint(new Vector3(origin.x + patchSize * 0.5f, b.center.y, origin.y + patchSize * 0.5f)),
++                            new Vector3(patchSize + 2, b.size.y + 4, patchSize + 2));
++                        // Do not repeatedly generate rectangle corners that distance eviction returns next frame.
++                        if (FlatDistance(patchBounds, camera) > configuration.farDistance) continue;
+                         if (pool.Leased >= configuration.maximumResidentPatches || generations <= 0) continue;
+                         patch = freePatches.Count > 0 ? freePatches.Pop() : new GrassPatch();
+-                        patch.buffers = pool.Rent(); patch.origin = new Vector2(x * patchSize, z * patchSize);
+-                        Vector3 world = chunk.GameObject.transform.TransformPoint(new Vector3(patch.origin.x, 0, patch.origin.y));
++                        patch.buffers = pool.Rent(); patch.origin = origin;
+                         int side = Mathf.RoundToInt(size / patchSize);
+                         patch.global = new Vector2Int(chunk.Coordinate.x * side + x, chunk.Coordinate.y * side + z);
+-                        Bounds b = chunk.MeshFilter.sharedMesh.bounds;
+-                        patch.bounds = new Bounds(chunk.GameObject.transform.TransformPoint(new Vector3(patch.origin.x + patchSize * 0.5f, b.center.y, patch.origin.y + patchSize * 0.5f)),
+-                            new Vector3(patchSize + 2, b.size.y + 4, patchSize + 2));
++                        patch.bounds = patchBounds;
+                         tile.patches.Add(key, patch);
+                     }
+                     if (!patch.generated)
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset" b/Assets/Settings/Grass/BaseGiratoriaGrass.asset
+index bce6bc5..82e6d5e 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
++++ b/Assets/Settings/Grass/BaseGiratoriaGrass.asset
+@@ -16,7 +16,7 @@ MonoBehaviour:
+   material: {fileID: 2100000, guid: c2b5462154520b94687ee6a3ec29b166, type: 2}
+   patchSize: 30
+   bladesPerSquareMeter: 9
+-  maximumResidentPatches: 80
++  maximumResidentPatches: 320
+   generationsPerFrame: 3
+   uploadsPerFrame: 1
+   seed: 9173
+@@ -25,8 +25,8 @@ MonoBehaviour:
+   bendRange: {x: 0.12, y: 0.32}
+   nearDistance: 28
+   middleDistance: 65
+-  farDistance: 120
+-  transitionWidth: 12
++  farDistance: 240
++  transitionWidth: 20
+   middleDensity: 0.65
+   farDensity: 0.22
+   widerDistantBlades: {x: 1.55, y: 2.5}
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset" b/Assets/Settings/Vegetation/ProceduralTrees.asset
+index 7c6b774..91c4e4c 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Vegetation\\ProceduralTrees.asset"
++++ b/Assets/Settings/Vegetation/ProceduralTrees.asset
+@@ -27,7 +27,7 @@ MonoBehaviour:
+   normalizedAltitude: {x: 0.15, y: 0.76}
+   maximumSlope: 26
+   nearDistance: 125
+-  farDistance: 700
++  farDistance: 1400
+   shadowDistance: 75
+   windDirection: {x: 0.7, y: 0.3}
+   windStrength: 0.025
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Vegetation\\WorldScenery.asset" b/Assets/Settings/Vegetation/WorldScenery.asset
+index f4ad888..b828b79 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
++++ b/Assets/Settings/Vegetation/WorldScenery.asset
+@@ -55,7 +55,7 @@ MonoBehaviour:
+   maximumRockSlope: 38
+   maximumInstancesPerChunk: 700
+   buildsPerFrame: 1
+-  drawDistance: 500
++  drawDistance: 900
+   shadowDistance: 75
+   roadsideSpacing: 65
+   roadsideFurniture: 1
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset" b/Assets/Settings/Terrain/BaseGiratoriaTerrain.asset
+index 9dce35a..9f6f23d 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
++++ b/Assets/Settings/Terrain/BaseGiratoriaTerrain.asset
+@@ -44,7 +44,7 @@ MonoBehaviour:
+   useInfiniteWorld: 0
+   finiteMapChunksPerSide: 17
+   finiteMapFullLoadMaxChunksPerSide: 3
+-  finiteMapStreamingRadiusChunks: 1
++  finiteMapStreamingRadiusChunks: 2
+   finiteMapEditorPreviewRadiusChunks: 1
+   noiseSettings:
+     seed: -1204466725
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity" b/Assets/Scenes/Leviathan_BaseGiratoria.unity
+index eff5054..cb48bce 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
++++ b/Assets/Scenes/Leviathan_BaseGiratoria.unity
+@@ -609,6 +609,7 @@ GameObject:
+   m_Component:
+   - component: {fileID: 743599087}
+   - component: {fileID: 743599086}
++  - component: {fileID: 743599088}
+   m_Layer: 0
+   m_Name: Operacao da Base
+   m_TagString: Untagged
+@@ -639,6 +640,21 @@ MonoBehaviour:
+   stationInteractor: {fileID: 1307170351}
+   initialView: 0
+   stationDistance: 3
++--- !u!114 &743599088
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 743599085}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 24b10d8d983e48c3b72612259f1c1a55, type: 3}
++  m_Name:
++  m_EditorClassIdentifier: Assembly-CSharp::ProjectLeviathan.Diagnostics.TestFpsCounter
++  visible: 1
++  developmentOnly: 1
++  sampleInterval: 0.5
+ --- !u!4 &743599087
+ Transform:
+   m_ObjectHideFlags: 0
+warning: in the working copy of 'Artifacts\RenderDistanceFps\Before\docs\README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/README.md', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\RenderDistanceFps\\Before\\docs\\README.md" b/docs/README.md
+index aa7b574..ec642c9 100644
+--- "a/Artifacts\\RenderDistanceFps\\Before\\docs\\README.md"
++++ b/docs/README.md
+@@ -27,6 +27,7 @@ Leviathan e um jogo de operacao individual de artilharia indireta. O jogador int
+ | [17 - Varredura e limpeza](17-varredura-e-limpeza.md) | Dependencias, arquivo recuperavel, menos GC no terreno e colisao de props proximos |
+ | [18 - Polimento dieselpunk](18-polimento-visual-dieselpunk.md) | Paleta mineral, pintura e metal, props, vegetacao, agua e atmosfera |
+ | [19 - Grama na borda da base](19-grama-na-borda-da-base.md) | Exclusao precisa, transicao irregular e seguranca do concreto |
++| [20 - Distancia e contador FPS](20-distancia-e-contador-fps.md) | Alcances maiores, memoria da grama e diagnostico de FPS sem Canvas |
+ | [Referencias visuais](referencias/README.md) | Imagens fornecidas pelo autor e como devem orientar o projeto |
+ 
+ ## Status das definicoes

@@ -1,0 +1,18 @@
+[
+  {
+    "path": "Assets\\Scenes\\Demos\\Base_Cartum_Terreno_Agua.unity",
+    "hash": "BA96A4DCC5FF01D7FDEA3BCC64A16552F9BE9F07C3E801CB635E062A874B3924"
+  },
+  {
+    "path": "Assets\\Scenes\\Demos\\Base_Provisoria_Integrada.unity",
+    "hash": "C293F4A1D0D83CE88DEE93A550218A96AF1D4E0939E4B7AEAA2E5AF25F8191C9"
+  },
+  {
+    "path": "Assets\\Scenes\\Tests\\Test_ArtilleryControls\\Test_ArtilleryControls.unity",
+    "hash": "D43125710EC6B8B1BCB0939738EA32CAB21849C3F156C8A172317862E76324C5"
+  },
+  {
+    "path": "Assets\\Scenes\\Tests\\Test_ControllerPlayer\\Test_controlsPlayer.unity",
+    "hash": "EF2A5A81E4E67FD027E3E95945CC592D7423099A5F46C44BEE722F4B3C31280B"
+  }
+]

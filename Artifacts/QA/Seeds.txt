@@ -1,0 +1,48 @@
+PASS Natural supported base site exists for seed=0
+PASS Deterministic base solve seed=0
+PASS Dense independent footprint support seed=0 range=0,01223755
+PASS Natural supported base site exists for seed=1
+PASS Deterministic base solve seed=1
+PASS Dense independent footprint support seed=1 range=0,043396
+PASS Natural supported base site exists for seed=2
+PASS Deterministic base solve seed=2
+PASS Dense independent footprint support seed=2 range=0,1838074
+PASS Natural supported base site exists for seed=3
+PASS Deterministic base solve seed=3
+PASS Dense independent footprint support seed=3 range=0,07672119
+PASS Natural supported base site exists for seed=4
+PASS Deterministic base solve seed=4
+PASS Dense independent footprint support seed=4 range=0,02966309
+PASS Natural supported base site exists for seed=5
+PASS Deterministic base solve seed=5
+PASS Dense independent footprint support seed=5 range=0,1299744
+PASS Natural supported base site exists for seed=7
+PASS Deterministic base solve seed=7
+PASS Dense independent footprint support seed=7 range=0,06820679
+PASS Natural supported base site exists for seed=42
+PASS Deterministic base solve seed=42
+PASS Dense independent footprint support seed=42 range=0,02700806
+PASS Natural supported base site exists for seed=100
+PASS Deterministic base solve seed=100
+PASS Dense independent footprint support seed=100 range=0,05731201
+PASS Natural supported base site exists for seed=999
+PASS Deterministic base solve seed=999
+PASS Dense independent footprint support seed=999 range=0,0909729
+PASS Natural supported base site exists for seed=12345
+PASS Deterministic base solve seed=12345
+PASS Dense independent footprint support seed=12345 range=0,1391602
+PASS Natural supported base site exists for seed=9173
+PASS Deterministic base solve seed=9173
+PASS Dense independent footprint support seed=9173 range=0,1217651
+PASS Natural supported base site exists for seed=-1
+PASS Deterministic base solve seed=-1
+PASS Dense independent footprint support seed=-1 range=0,1287537
+PASS Natural supported base site exists for seed=-42
+PASS Deterministic base solve seed=-42
+PASS Dense independent footprint support seed=-42 range=0,09118652
+PASS Natural supported base site exists for seed=-2147483648
+PASS Deterministic base solve seed=-2147483648
+PASS Dense independent footprint support seed=-2147483648 range=0,1476746
+PASS Natural supported base site exists for seed=2147483647
+PASS Deterministic base solve seed=2147483647
+PASS Dense independent footprint support seed=2147483647 range=0,1751709

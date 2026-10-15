@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: IndustrialSteel
+  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _GrainStrength: 0.055
+    - _GrimeStrength: 0.15
+    - _Metallic: 0.65
+    - _Saturation: 0.85
+    - _Smoothness: 0.35
+    - _VertexColorStrength: 0
+    - _VertexMetalMask: 0
+    - _WearAmount: 0.12
+    - _WeatherScale: 1.7
+    m_Colors:
+    - _BaseColor: {r: 0.18, g: 0.21, b: 0.22, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _GrimeColor: {r: 0.35999998, g: 0.33999997, b: 0.27999997, a: 1}
+    - _WearColor: {r: 0.32999998, g: 0.21999997, b: 0.14999998, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

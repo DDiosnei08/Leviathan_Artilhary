@@ -1,0 +1,22 @@
+PASS Sky, sun and moon are integrated
+PASS URP sky shader supported on AMD Radeon RX 6600
+PASS No error materials in 01_Dia
+PASS Day uses sunlight without an extra active moon light
+PASS No error materials in 02_Amanhecer
+PASS No error materials in 03_Entardecer
+PASS No error materials in 04_Noite
+PASS Night uses moonlight as URP main light
+PASS Many GPU-rendered stars are visible through clouds; affected pixels=2692
+PASS Colored aurora is rendered at night; affected pixels=24821
+PASS Lower cloud layer has world-space camera parallax
+PASS Upper cloud layer has independent world-space camera parallax
+PASS Cloud layers animate with wind on the GPU
+PASS Aurora curtains animate on the GPU independently of clouds and stars
+PASS Day/night clock wraps past midnight
+PASS Runtime time progression does not overwrite saved start hour
+PASS Sky cycle preserves seed and base location
+PASS One base remains
+PASS Sky introduces no Canvas or gameplay overlays
+PASS Disabling the sky restores the previous environment
+PASS URP sky shader supported on AMD Radeon RX 6600
+PASS All sky phases, parallax, wind and cleanup run without errors

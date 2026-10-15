@@ -1,0 +1,712 @@
+{
+  "generatedAt": "2026-10-13T14:26:35.3902973-03:00",
+  "assetCount": 106,
+  "assets": [
+    {
+      "originalPath": "Assets/Artillery",
+      "path": "Assets/Models/Artillery",
+      "guid": "e0a30930edea249448bc52e19bface8e",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Documentation",
+      "path": "Assets/Documentation",
+      "guid": "65993256d1d5911439ab784ae1874b72",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Editor",
+      "path": "Assets/Editor",
+      "guid": "7f249296713165a41b347a95f050c184",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/InputSystem_Actions.inputactions",
+      "path": "Assets/Settings/Input/InputSystem_Actions.inputactions",
+      "guid": "052faaac586de48259a63d0c4782560b",
+      "sha256": "1C6CBB519D65ECFE19A29231735B7F54741A20AC1A8AD4F46A18E1BFB28A3C39"
+    },
+    {
+      "originalPath": "Assets/Materials",
+      "path": "Assets/Materials",
+      "guid": "d2294080f7779f94c92d50aa01afbb4d",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Readme.asset",
+      "path": "Assets/Samples/UnityTemplate/Readme.asset",
+      "guid": "8105016687592461f977c054a80ce2f2",
+      "sha256": "4CA7614FE45A13AC0423B2C4CED1BCD13B0F889649BD9BD70BB2D2A4CEEE5AFA"
+    },
+    {
+      "originalPath": "Assets/Scenes",
+      "path": "Assets/Scenes",
+      "guid": "9c53962885c2c4f449125a979d6ad240",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scripts",
+      "path": "Assets/Scripts",
+      "guid": "c843f52ff4d17c749b9c5790ecf78e33",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Settings",
+      "path": "Assets/Settings",
+      "guid": "709f11a7f3c4041caa4ef136ea32d874",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Shaders",
+      "path": "Assets/Shaders",
+      "guid": "2a654f271ef541c0b60a4208108db64d",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/TutorialInfo",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo",
+      "guid": "ba062aa6c92b140379dbc06b43dd3b9b",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Artillery/Gauges",
+      "path": "Assets/Models/Artillery/Gauges",
+      "guid": "efc3fdb6f7268b64b9b5430a12589308",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Artillery/Gauges/ArtilleryGaugeSet.fbx",
+      "path": "Assets/Models/Artillery/Gauges/ArtilleryGaugeSet.fbx",
+      "guid": "9b00e6ed81e31d74fa143298464c5a21",
+      "sha256": "1FCFA1832F54A62FFF7D88CA96CAB075107D85D3F3B0251E5289F987E149A6FA"
+    },
+    {
+      "originalPath": "Assets/Documentation/BASE-PROVISORIA-INTEGRADA.md",
+      "path": "Assets/Documentation/BASE-PROVISORIA-INTEGRADA.md",
+      "guid": "973aba324b764a849a510b49b15342e3",
+      "sha256": "4265C2AAD717713F47156B947429DF0143660A07B371D068181F8A23B8D9D942"
+    },
+    {
+      "originalPath": "Assets/Documentation/GUIA-RAPIDO.md",
+      "path": "Assets/Documentation/GUIA-RAPIDO.md",
+      "guid": "d9e6f43390519834eb6c983d99fd6553",
+      "sha256": "96AC2A5CFB7F4BDB00A82D49D4DBC71C249E6BD07FC94D26C74102554863694E"
+    },
+    {
+      "originalPath": "Assets/Documentation/TERRAIN-PROCEDURAL.md",
+      "path": "Assets/Documentation/TERRAIN-PROCEDURAL.md",
+      "guid": "dad305c5cb1fca94a95de6a96933ec70",
+      "sha256": "97987BD30BE4A70FEC5C86B8FC43F7B7994A27934D7647A5F059671EE67C00B7"
+    },
+    {
+      "originalPath": "Assets/Documentation/TEST-SCENES.md",
+      "path": "Assets/Documentation/TEST-SCENES.md",
+      "guid": "97aa4609a155e5149bc62fc5f7359e72",
+      "sha256": "DBF8A48212C47A0E48A6BE5627D3A4F307699DFC58CFB6DBE45DBB0C2DBDD189"
+    },
+    {
+      "originalPath": "Assets/Editor/CartoonShaderSceneBuilder.cs",
+      "path": "Assets/Editor/SceneBuilders/CartoonShaderSceneBuilder.cs",
+      "guid": "e4315a5c1d58475d9476e2d34b6c85c1",
+      "sha256": "DAB78EFB3F24CE6B13A6879D15C87539F0061B2D785379FD317BF74C5BC2EBF1"
+    },
+    {
+      "originalPath": "Assets/Editor/IntegratedBattlefieldSceneBuilder.cs",
+      "path": "Assets/Editor/SceneBuilders/IntegratedBattlefieldSceneBuilder.cs",
+      "guid": "2e0af207764a4b6ba3fbf50fd7c408fd",
+      "sha256": "88112810CD84A80771BC554F07A29D950274384E4CF8B91153E137DA2478253F"
+    },
+    {
+      "originalPath": "Assets/Editor/TerrainEditorWindow.cs",
+      "path": "Assets/Editor/Terrain/TerrainEditorWindow.cs",
+      "guid": "d571a14314cd27248a98a65b788e0d7e",
+      "sha256": "F9681C52FE31D84A099066B80B70E196F73BC09CF967453383C566BFBA60D0BB"
+    },
+    {
+      "originalPath": "Assets/Editor/TerrainWorldControllerEditor.cs",
+      "path": "Assets/Editor/Terrain/TerrainWorldControllerEditor.cs",
+      "guid": "6b3d7997c3c14a7391a522bea8cd21c5",
+      "sha256": "9D5C5C1C60745537D1952B6ABC74808FC72F7FCCDF637F1EB46242AC2785094F"
+    },
+    {
+      "originalPath": "Assets/Materials/BaseConcrete.mat",
+      "path": "Assets/Materials/Base/BaseConcrete.mat",
+      "guid": "3b3b238d3bf93d144a42291bd650d62d",
+      "sha256": "A08072211B31CABCC3ACCBA776E5FC7917735B815B3A7F71BF51D6EEB9DC854A"
+    },
+    {
+      "originalPath": "Assets/Materials/BaseMetal.mat",
+      "path": "Assets/Materials/Base/BaseMetal.mat",
+      "guid": "d9e6cb6e32848564ca1d137195716f76",
+      "sha256": "01C4A8C05232DF1A4BE5368EE134E891D2BF245206034EE19AF7FDC653BAE536"
+    },
+    {
+      "originalPath": "Assets/Materials/BaseSafety.mat",
+      "path": "Assets/Materials/Base/BaseSafety.mat",
+      "guid": "70facf8f549ece74991a739f027aec8b",
+      "sha256": "9FB7370A3FED5BE31CBFF7854E18F655E726E4B3A3DC452BAEF173C1008F5F18"
+    },
+    {
+      "originalPath": "Assets/Materials/BaseSandbags.mat",
+      "path": "Assets/Materials/Base/BaseSandbags.mat",
+      "guid": "38e85ad0c4e919249a69f68e6e402658",
+      "sha256": "EC1E5C73237264D6B56426220AAF577C45C1F31FF7D8CAF241F0E5F6649B65AB"
+    },
+    {
+      "originalPath": "Assets/Materials/BaseSupplies.mat",
+      "path": "Assets/Materials/Base/BaseSupplies.mat",
+      "guid": "c3bb0e6a3483b3048909098a97316cbe",
+      "sha256": "EEE5A6E0DAFA40EFA01A9F3AE42FA8188B6267EFA6649BD8CC019E1C8DFC607D"
+    },
+    {
+      "originalPath": "Assets/Materials/MeshMaterial.mat",
+      "path": "Assets/Materials/Legacy/MeshMaterial.mat",
+      "guid": "51bd2a2a68c8ac94b87dfddaa36eb14f",
+      "sha256": "63A08DD14C97DA328F1C5492490B21E375FBD1F93973B1F1F14899E17CC581BB"
+    },
+    {
+      "originalPath": "Assets/Materials/TerrainCartoon.mat",
+      "path": "Assets/Materials/Terrain/TerrainCartoon.mat",
+      "guid": "ead44b04c334435792234fed8628f0cb",
+      "sha256": "77BE9B758CA06B39CE58335877A253D16D24FD174897EE27E805B9AB1AA6ACF7"
+    },
+    {
+      "originalPath": "Assets/Materials/WaterCartoon.mat",
+      "path": "Assets/Materials/Water/WaterCartoon.mat",
+      "guid": "962ce06fd2c540b78c4cb6f7d21f7b63",
+      "sha256": "DD6118212A790B169F8D1C6A6248D3812488B60D30276097D845F67484595864"
+    },
+    {
+      "originalPath": "Assets/Scenes/Base_Cartum_Terreno_Agua.unity",
+      "path": "Assets/Scenes/Demos/Base_Cartum_Terreno_Agua.unity",
+      "guid": "cb2e8412347ae0f42b9d22d672e66814",
+      "sha256": "BA96A4DCC5FF01D7FDEA3BCC64A16552F9BE9F07C3E801CB635E062A874B3924"
+    },
+    {
+      "originalPath": "Assets/Scenes/Base_Provisoria_Integrada.unity",
+      "path": "Assets/Scenes/Demos/Base_Provisoria_Integrada.unity",
+      "guid": "c0d59ad46dbe69247a1d496f1cded532",
+      "sha256": "C293F4A1D0D83CE88DEE93A550218A96AF1D4E0939E4B7AEAA2E5AF25F8191C9"
+    },
+    {
+      "originalPath": "Assets/Scenes/SampleScene.unity",
+      "path": "Assets/Scenes/Templates/SampleScene.unity",
+      "guid": "99c9720ab356a0642a771bea13969a05",
+      "sha256": "07FCE8B04804DDCCB3026DB5B43D8DC41BA138E49D50D36A5C24877081EACDCA"
+    },
+    {
+      "originalPath": "Assets/Scenes/Test_ArtilleryControls",
+      "path": "Assets/Scenes/Tests/Test_ArtilleryControls",
+      "guid": "185b715a1e5efd24ca036732abaa0b82",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scenes/Test_ControllerPlayer",
+      "path": "Assets/Scenes/Tests/Test_ControllerPlayer",
+      "guid": "61aefeef87a34d741b648e9a31801193",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scenes/Test_ArtilleryControls/Test_ArtilleryControls.unity",
+      "path": "Assets/Scenes/Tests/Test_ArtilleryControls/Test_ArtilleryControls.unity",
+      "guid": "22698747ec6975b4f9e5e4257d4bb15c",
+      "sha256": "D43125710EC6B8B1BCB0939738EA32CAB21849C3F156C8A172317862E76324C5"
+    },
+    {
+      "originalPath": "Assets/Scenes/Test_ControllerPlayer/Test_controlsPlayer.unity",
+      "path": "Assets/Scenes/Tests/Test_ControllerPlayer/Test_controlsPlayer.unity",
+      "guid": "de83207a5d5af0746bf728f440c60017",
+      "sha256": "EF2A5A81E4E67FD027E3E95945CC592D7423099A5F46C44BEE722F4B3C31280B"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest",
+      "path": "Assets/Scripts/Gameplay/Artillery",
+      "guid": "9e616e8ad8f0b4a4aa406e59f6c02d0a",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest",
+      "path": "Assets/Scripts/Gameplay/CommandRoom",
+      "guid": "1fd3e505dd347a745b75b43d390bd53c",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scripts/Gameplay",
+      "path": "Assets/Scripts/Gameplay",
+      "guid": "2a9d23021365530439379e259364b9f4",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain",
+      "path": "Assets/Scripts/World/ProceduralTerrain",
+      "guid": "39f644d83ed0f1440ac8bf387adeaa6c",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scripts/World",
+      "path": "Assets/Scripts/World",
+      "guid": "d6910968c94a30b4ebfcb921477e4f57",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/ArtilleryGaugeDriver.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/ArtilleryGaugeDriver.cs",
+      "guid": "a0e2e9af6a78ad246b62b279f3e8a74b",
+      "sha256": "B1D4B57E15EBE57CD156545D8B4EC986619F52E0C279C6D03854BAABBCC4746E"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/ArtilleryTestController.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/ArtilleryTestController.cs",
+      "guid": "aaa11381eafc7084b97d1e609ebac184",
+      "sha256": "AA733D09275BB1DCA2B67915D843CD52616445150CAF7274DE47540EE5A115F4"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/ArtilleryTestSceneBuilder.cs",
+      "path": "Assets/Scripts/Prototypes/ArtilleryTestSceneBuilder.cs",
+      "guid": "309b06be268288e4c84fd0ca024a241c",
+      "sha256": "52F0D7324231E425F10F2A02044F1BF2A5A8E4986D517D1EA3F09A2345A5792B"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/AzimuthDialLabels.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/AzimuthDialLabels.cs",
+      "guid": "5d627bfbc11db9c43adce07b8faf3ae5",
+      "sha256": "108E536F9E10EE0F0B166FB6596EF7660B3BB67513333B1E8C1D2C78331835DD"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/AzimuthDialMarks.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/AzimuthDialMarks.cs",
+      "guid": "595e21b45c8e75d4ca5e196f92c3cfb8",
+      "sha256": "0D0C5F2DC2F52CF5AFF8E66DA5A28BA32CBB0809D1E337747E3227477CB3AA65"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/ElevationDialLabels.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/ElevationDialLabels.cs",
+      "guid": "b5221ec421712534c8c0dc13344a086c",
+      "sha256": "A629C54E6290C724F023DFE0573902D1DE927A614F38315F5F5D8D13A98F56F7"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/ElevationDialMarks.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/ElevationDialMarks.cs",
+      "guid": "501cca79b1e18114c8e33cab22ac0418",
+      "sha256": "495384E04E86F3A22490324AB502729053F0CA5DC8BB6CF60D1BFA623F8BB4D9"
+    },
+    {
+      "originalPath": "Assets/Scripts/ArtilleryTest/HandwheelInteraction.cs",
+      "path": "Assets/Scripts/Gameplay/Artillery/HandwheelInteraction.cs",
+      "guid": "3e415fd287d2a8548a3d164a5556eb8e",
+      "sha256": "5142F5E121DE54FC560E64DADE80A318813536D8822876625A6CA0DD2A3628D0"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/ArtilleryCommandLever.cs",
+      "path": "Assets/Scripts/Gameplay/CommandRoom/ArtilleryCommandLever.cs",
+      "guid": "afdfac6bbe625b3418fcdb99fd6ac8a8",
+      "sha256": "F196DD838B85EC1A24021E6B8F52770B738A9349E7450516C0635FB2E87108AA"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/CommandRoomCameraFocusZone.cs",
+      "path": "Assets/Scripts/Gameplay/CommandRoom/CommandRoomCameraFocusZone.cs",
+      "guid": "e6f84023307fae94abc9e4f09671b7dc",
+      "sha256": "1B2BAAF069A21301B1254DE928B07D447867D40ADB05673D80D701EABB9B25EC"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/CommandRoomClickable.cs",
+      "path": "Assets/Scripts/Gameplay/CommandRoom/CommandRoomClickable.cs",
+      "guid": "d40d32b1a827f004192f874cd8ea380c",
+      "sha256": "611D3CB7E72CC9D2B046D144DFE34F47466C11A1AAEFA7836CD4E9E225274863"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/CommandRoomInteractor.cs",
+      "path": "Assets/Scripts/Gameplay/CommandRoom/CommandRoomInteractor.cs",
+      "guid": "ac444329610e8024e83cf4b98244d51a",
+      "sha256": "8059FCE73157F950D82AEA01E7990DA528874439802D8E41772A843811776B93"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/CommandRoomTestSceneBuilder.cs",
+      "path": "Assets/Scripts/Prototypes/CommandRoomTestSceneBuilder.cs",
+      "guid": "c8a23901e6a54b643891f232d4ddf0a9",
+      "sha256": "A06EF2B530D937CAC95C070FE8007FD470056EBA5C1E4EC97AD345B7173BAA3D"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/IntegratedBattlefieldRig.cs",
+      "path": "Assets/Scripts/Prototypes/IntegratedBattlefieldRig.cs",
+      "guid": "53abeb747c924c7a9c9bce8951ac9072",
+      "sha256": "4BEB2F7F3A717E5CDA89A2DE41EE0C190DA69766B10A308D41EAF6A0B3978A23"
+    },
+    {
+      "originalPath": "Assets/Scripts/CommandAndPlayerTest/LeviathanPlayerController.cs",
+      "path": "Assets/Scripts/Gameplay/Player/LeviathanPlayerController.cs",
+      "guid": "ccaf32d242a21bd47bbcb6c33da5af8b",
+      "sha256": "1764B7184140190DE2021D57A2B5A3CC7E3136056C5A42A7517AA4D3E72E98D2"
+    },
+    {
+      "originalPath": "Assets/Scripts/Gameplay/TerrainPlacer.cs",
+      "path": "Assets/Scripts/Gameplay/TerrainPlacer.cs",
+      "guid": "2fb1a0eb77d94614b37555bb773428a0",
+      "sha256": "21B34A74F32D148966C7221BE9F4D1558D6B5AF37658C4F56E2977518BE5B10D"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/CartoonShaderShowcase.cs",
+      "path": "Assets/Scripts/Prototypes/CartoonShaderShowcase.cs",
+      "guid": "3decc3aa480d407d98205db3c35a676c",
+      "sha256": "D0C95A2BB344DD13FADB5962ED10C68E1DB0E57711884B6DD323D5FFD2C8D8A3"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/FalloffGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/FalloffGenerator.cs",
+      "guid": "18f24cc08a9578a429255e40058925f6",
+      "sha256": "7B584BB30054FBB633FF1F74844087CD87B8815E19D134A62C2EC5AF738A102F"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/HeightMap.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/HeightMap.cs",
+      "guid": "6410e60537d255f4b9c3c6b85d12a446",
+      "sha256": "CF6FDBB033BB2E399331C833B76880F8BCDCBBBCD5A273A9441A4F311E1C057F"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/HeightMapGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/HeightMapGenerator.cs",
+      "guid": "4b9319b9ebbf71f489c47a9ef5d439c1",
+      "sha256": "AD37BCBD7779596E3130F3E0E1F31408122C6E35FD47ECAF7D6F490F23CD168F"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/LODInfo.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/LODInfo.cs",
+      "guid": "84e19c152fb18be42a027adb41d7c419",
+      "sha256": "7888F02D6FAEFA206A82276ED4137838D748217C3F763C865738AF6BBD7B654A"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/MeshData.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/MeshData.cs",
+      "guid": "9c7d715a2c166c14aa4f016406ea3183",
+      "sha256": "F4E62A10C5418BA940BF3394F83AD606EE12DF3566A6BD7E081436E17B95A1AF"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/MeshGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/MeshGenerator.cs",
+      "guid": "f2921e55546ab2a4aab59476621fd710",
+      "sha256": "45C9D0417337E41EBB9081AE1BF49ABE4AC21CDA23064E1B949B7924574E176B"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/Noise.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/Noise.cs",
+      "guid": "26d049f026bdd3b4f8bd176c5c332fd9",
+      "sha256": "CA0E82E2F00D950EF421DD50A4361DD6D86857DDEFB822B9746C57B786A4B822"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/NoiseSettings.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/NoiseSettings.cs",
+      "guid": "4e4e78a706b7052479f34c55ef61a8cf",
+      "sha256": "3BF07B813BA944E2F196FD4B05161377E01806782450005E415AF6E0C8460642"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/ProceduralBattlefieldSetup.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/ProceduralBattlefieldSetup.cs",
+      "guid": "6d8b4ffcbaf84d549b6abff761c09b6d",
+      "sha256": "608A620351C49223011EB75C69EB2107ADABDC059977945D31529B76AB70BA25"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/ProceduralTerrainBootstrap.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/ProceduralTerrainBootstrap.cs",
+      "guid": "888b234f958438549b28a8da812b71e5",
+      "sha256": "BC0EC41ACE04CBFD07D44795342B68C0560DC6CAAC695387D1D84D24C50C6A78"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainBiomePreset.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainBiomePreset.cs",
+      "guid": "245fae757362e1243aa600f2eb527445",
+      "sha256": "F8BE5F951BF0005231441D7BA7EB66B46530B08DB8673962EDA6D80A816A715B"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainChunk.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainChunk.cs",
+      "guid": "c6ca1e5a0202430448fd30c741c5af03",
+      "sha256": "A7C888148009A5DBD519F623346F9280315172DE1149A03AED1E782EE20C4C68"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainDebug.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainDebug.cs",
+      "guid": "4761e1ecdcb3412489a62ebab4f6eae8",
+      "sha256": "89B4B739AB187930F800B1DE5704C42B76BD3114A9CDDBF49CB152C47A358D84"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainGenerationSettings.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainGenerationSettings.cs",
+      "guid": "3345bcd1112b4664a796d8f7334d7e54",
+      "sha256": "94E98CAFFA802B31E3A34B3EA370804A6574505E66BF481EF6A838D1105F49A8"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainGizmos.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainGizmos.cs",
+      "guid": "bdbf9acf5ec4e5941bd32301a1c0df52",
+      "sha256": "CCCC5909420E83600B7EE17CD138A37BEBF1AF6C30F6E7D94F7A345BEDC70AF8"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainPropGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainPropGenerator.cs",
+      "guid": "af4c11b97d349ed4a98b0a49e0c0c727",
+      "sha256": "F7C6F5F9F4E634B541BAD89452ED231EC4B39C4D46E0ED097860D2C336D116D5"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainRoadMeshGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainRoadMeshGenerator.cs",
+      "guid": "021ab7608dbd4f7589c3d85f26e92484",
+      "sha256": "4D54ED50A1E137FBA6A1CAE3929E10DB3A6B8574081991F6E45FB87BAF1D69CC"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainSettings.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainSettings.cs",
+      "guid": "f98590a213b19194fa7f55d5042148a7",
+      "sha256": "9CB58AAAF6960B7B102AA4ABA6DFAF0CE12296188E04B65C092AE6E4A81CDDBA"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainType.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainType.cs",
+      "guid": "11cdd50cbe66cc946864176da7a7d97b",
+      "sha256": "64D8CF988B6EC5890AB8053045DEF63D7399B86A7DAE395AC3C9ADBA1242A175"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainWaterMeshGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainWaterMeshGenerator.cs",
+      "guid": "3ed6459d411143d6a57c2106537d7c02",
+      "sha256": "EB6AB4CBA0C17FBCD365788B99E705BDC942249ECBE26CF38BA3F51EFDCD0316"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainWorldController.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainWorldController.cs",
+      "guid": "ccd4a2d5b41d985409d2a2910ec17771",
+      "sha256": "CD8353AA8D17BB60D48DF04466C9D4F54925477988459D20171550E7B4E75F0A"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TerrainWorldFeatures.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TerrainWorldFeatures.cs",
+      "guid": "1ce4d0f31ec24874a4ebb1ecbe55c32d",
+      "sha256": "5BD5B57B95667E9CA074ECCB95182E3B257A71211E74410FFBEE8678ABCF5CC4"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/TextureGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/TextureGenerator.cs",
+      "guid": "5b429649a6dcd3d4b8094b07a81fa074",
+      "sha256": "D504F5657D9CF89595FB9DC3A8E7A01520B3BAEC806E60DB0F5A94B6A1D83053"
+    },
+    {
+      "originalPath": "Assets/Scripts/ProceduralTerrain/ThreadedTerrainGenerator.cs",
+      "path": "Assets/Scripts/World/ProceduralTerrain/ThreadedTerrainGenerator.cs",
+      "guid": "4a501be685bd57446ad58a5bb4d4ea8d",
+      "sha256": "7B4B826FD06ED7FEDE19BCA5851F576C5A0CCEEAB0BD0E7430F2F9D003BFB884"
+    },
+    {
+      "originalPath": "Assets/Scripts/World/WorldWeatherProvider.cs",
+      "path": "Assets/Scripts/World/WorldWeatherProvider.cs",
+      "guid": "3c78ff4556d445c58b1468631e4d2a75",
+      "sha256": "5BD52444AE8682CA16141032BFD17EB04C3AB0A171F3C7FAA41688639F1A20BC"
+    },
+    {
+      "originalPath": "Assets/Settings/BaseProvisoriaTerrain.asset",
+      "path": "Assets/Settings/Terrain/BaseProvisoriaTerrain.asset",
+      "guid": "25e716959c85c6545b142d319173e4d7",
+      "sha256": "26B9A446949152C8F459710859B6C24A4561567694C909AB91A5CA6DA190F001"
+    },
+    {
+      "originalPath": "Assets/Settings/CartoonShaderDemo.asset",
+      "path": "Assets/Settings/Terrain/CartoonShaderDemo.asset",
+      "guid": "f437fb800a14fc94e99a0729efde2262",
+      "sha256": "FBA6D48A85131DCDBEF810E7A86A2A6891E4906D5BB85A0FBCBF846DEAE123AD"
+    },
+    {
+      "originalPath": "Assets/Settings/DefaultVolumeProfile.asset",
+      "path": "Assets/Settings/Volumes/DefaultVolumeProfile.asset",
+      "guid": "ab09877e2e707104187f6f83e2f62510",
+      "sha256": "6698BFACFAD479ACFD9766D00ABA81AB52527D3B15C8B133D03ED7A2401499D6"
+    },
+    {
+      "originalPath": "Assets/Settings/LeviathanTerrain.asset",
+      "path": "Assets/Settings/Terrain/LeviathanTerrain.asset",
+      "guid": "3407d706684d47a183c3f93d70d92d11",
+      "sha256": "81493CBFA089418411869BA6FE6A6E3C0FCD9B72B6F1E37D2B896F21828D99F5"
+    },
+    {
+      "originalPath": "Assets/Settings/Mobile_Renderer.asset",
+      "path": "Assets/Settings/Rendering/Mobile_Renderer.asset",
+      "guid": "65bc7dbf4170f435aa868c779acfb082",
+      "sha256": "AA93274C9521FA941170BECEC9E87C5FA36B8587EEFD5EEB5C0EED0D1D4B1DBE"
+    },
+    {
+      "originalPath": "Assets/Settings/Mobile_RPAsset.asset",
+      "path": "Assets/Settings/Rendering/Mobile_RPAsset.asset",
+      "guid": "5e6cbd92db86f4b18aec3ed561671858",
+      "sha256": "8D551911E1E411B063203E4EE970B4C1BCC209DC561AA7ECFE8824F85C2498F4"
+    },
+    {
+      "originalPath": "Assets/Settings/PC_Renderer.asset",
+      "path": "Assets/Settings/Rendering/PC_Renderer.asset",
+      "guid": "f288ae1f4751b564a96ac7587541f7a2",
+      "sha256": "3D0B01D8DED3327263B6690BE128A3DE58D17C514943AE42FE743A3E084A9C79"
+    },
+    {
+      "originalPath": "Assets/Settings/PC_RPAsset.asset",
+      "path": "Assets/Settings/Rendering/PC_RPAsset.asset",
+      "guid": "4b83569d67af61e458304325a23e5dfd",
+      "sha256": "65B657B87062616FCA959AECBB64B4B01DFD3B0051AC1119FB65BE615539DF96"
+    },
+    {
+      "originalPath": "Assets/Settings/SampleSceneProfile.asset",
+      "path": "Assets/Settings/Volumes/SampleSceneProfile.asset",
+      "guid": "10fc4df2da32a41aaa32d77bc913491c",
+      "sha256": "A8677D4BAC051D24CAA11CD622E39F968155EE277BFCE132274F1DE225692FE9"
+    },
+    {
+      "originalPath": "Assets/Settings/UniversalRenderPipelineGlobalSettings.asset",
+      "path": "Assets/Settings/Rendering/UniversalRenderPipelineGlobalSettings.asset",
+      "guid": "18dc0cd2c080841dea60987a38ce93fa",
+      "sha256": "F074F70005181226C7614CBFB06B064E692C1032763BEF94CCF334D91D0056D0"
+    },
+    {
+      "originalPath": "Assets/Shaders/CartoonCommon.hlsl",
+      "path": "Assets/Shaders/Environment/CartoonCommon.hlsl",
+      "guid": "f3a88be2914948568b0a8c310e8365d6",
+      "sha256": "BB5EE53C0768912F964921ABF05ABACF069E8E30CD003CF8759774D183E8B369"
+    },
+    {
+      "originalPath": "Assets/Shaders/CartoonTerrain.shader",
+      "path": "Assets/Shaders/Environment/CartoonTerrain.shader",
+      "guid": "0a5cebb25e7a4f77ad31a1dde1a457c5",
+      "sha256": "EB95D8C68CA2B8576E9929F92B816268BB2B900B7FF20A56C5C5AF713D113C1D"
+    },
+    {
+      "originalPath": "Assets/Shaders/CartoonWater.shader",
+      "path": "Assets/Shaders/Environment/CartoonWater.shader",
+      "guid": "905d50d8072442b780a36c520d650309",
+      "sha256": "68A1F04C08DA66E046719E40A1105399397377804FD7D7DB0088F16500E96D37"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/Editor",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/Editor",
+      "guid": "3ad9b87dffba344c89909c6d1b1c17e1",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/Icons",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/Icons",
+      "guid": "8a0c9218a650547d98138cd835033977",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/Layout.wlt",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/Layout.wlt",
+      "guid": "eabc9546105bf4accac1fd62a63e88e6",
+      "sha256": "0A18BF035AA7CE914F19F7CE6B60A5A2D33E2371AF6F492A8EA7A1BC78755B8B"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/Readme.cs",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/Readme.cs",
+      "guid": "fcf7219bab7fe46a1ad266029b2fee19",
+      "sha256": "6C1D741BCCB431EF270AA99BEA9498ABD5F17191DDB022834F82582C13AA8D64"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/StyleSheets",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets",
+      "guid": "5a9bcd70e6a4b4b05badaa72e827d8e0",
+      "sha256": null
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/Editor/ReadmeEditor.cs",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/Editor/ReadmeEditor.cs",
+      "guid": "476cc7d7cd9874016adc216baab94a0a",
+      "sha256": "4EAA92BC653D0DFA552685C9766BE3CCD6D94715570FC709510E56D2AB299472"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/Icons/URP.png",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/Icons/URP.png",
+      "guid": "727a75301c3d24613a3ebcec4a24c2c8",
+      "sha256": "1D17A9FF3537859ABE2C008603D29D90CF43191AE77AA386167CC65E53BA03D9"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/StyleSheets/ReadmeEditor.uss",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets/ReadmeEditor.uss",
+      "guid": "d2c670ece470f4c4fa6712b8dc28a9bb",
+      "sha256": "EF26F35935595D237802D5FD7EC7608DF7EC1E2EBED25BDE15AA4972C7CB55C9"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/StyleSheets/ReadmeEditorDark.uss",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets/ReadmeEditorDark.uss",
+      "guid": "1f902e57f049a7f47986618de93f5ee1",
+      "sha256": "55520CCB7AB7E06C25283F608A4391F25C3A62E19F4BD8EE270BB80FB50F3FF8"
+    },
+    {
+      "originalPath": "Assets/TutorialInfo/StyleSheets/ReadmeEditorLight.uss",
+      "path": "Assets/Samples/UnityTemplate/TutorialInfo/StyleSheets/ReadmeEditorLight.uss",
+      "guid": "69e7ab73923f93149821ac3a88b84856",
+      "sha256": "5E9ACE1270007DC66B8B1C29063DE8D3A6F056485AE116DFA38D2C5519334445"
+    }
+  ],
+  "moves": {
+    "Assets/Scripts/ArtilleryTest": "Assets/Scripts/Gameplay/Artillery",
+    "Assets/Scripts/CommandAndPlayerTest": "Assets/Scripts/Gameplay/CommandRoom",
+    "Assets/Scripts/ProceduralTerrain": "Assets/Scripts/World/ProceduralTerrain",
+    "Assets/Editor/IntegratedBattlefieldSceneBuilder.cs": "Assets/Editor/SceneBuilders/IntegratedBattlefieldSceneBuilder.cs",
+    "Assets/Editor/CartoonShaderSceneBuilder.cs": "Assets/Editor/SceneBuilders/CartoonShaderSceneBuilder.cs",
+    "Assets/Editor/TerrainEditorWindow.cs": "Assets/Editor/Terrain/TerrainEditorWindow.cs",
+    "Assets/Editor/TerrainWorldControllerEditor.cs": "Assets/Editor/Terrain/TerrainWorldControllerEditor.cs",
+    "Assets/Scenes/Base_Provisoria_Integrada.unity": "Assets/Scenes/Demos/Base_Provisoria_Integrada.unity",
+    "Assets/Scenes/Base_Cartum_Terreno_Agua.unity": "Assets/Scenes/Demos/Base_Cartum_Terreno_Agua.unity",
+    "Assets/Scenes/Test_ArtilleryControls": "Assets/Scenes/Tests/Test_ArtilleryControls",
+    "Assets/Scenes/Test_ControllerPlayer": "Assets/Scenes/Tests/Test_ControllerPlayer",
+    "Assets/Scenes/SampleScene.unity": "Assets/Scenes/Templates/SampleScene.unity",
+    "Assets/Artillery": "Assets/Models/Artillery",
+    "Assets/Materials/BaseConcrete.mat": "Assets/Materials/Base/BaseConcrete.mat",
+    "Assets/Materials/BaseMetal.mat": "Assets/Materials/Base/BaseMetal.mat",
+    "Assets/Materials/BaseSandbags.mat": "Assets/Materials/Base/BaseSandbags.mat",
+    "Assets/Materials/BaseSafety.mat": "Assets/Materials/Base/BaseSafety.mat",
+    "Assets/Materials/BaseSupplies.mat": "Assets/Materials/Base/BaseSupplies.mat",
+    "Assets/Materials/TerrainCartoon.mat": "Assets/Materials/Terrain/TerrainCartoon.mat",
+    "Assets/Materials/WaterCartoon.mat": "Assets/Materials/Water/WaterCartoon.mat",
+    "Assets/Materials/MeshMaterial.mat": "Assets/Materials/Legacy/MeshMaterial.mat",
+    "Assets/Shaders/CartoonCommon.hlsl": "Assets/Shaders/Environment/CartoonCommon.hlsl",
+    "Assets/Shaders/CartoonTerrain.shader": "Assets/Shaders/Environment/CartoonTerrain.shader",
+    "Assets/Shaders/CartoonWater.shader": "Assets/Shaders/Environment/CartoonWater.shader",
+    "Assets/Settings/BaseProvisoriaTerrain.asset": "Assets/Settings/Terrain/BaseProvisoriaTerrain.asset",
+    "Assets/Settings/LeviathanTerrain.asset": "Assets/Settings/Terrain/LeviathanTerrain.asset",
+    "Assets/Settings/CartoonShaderDemo.asset": "Assets/Settings/Terrain/CartoonShaderDemo.asset",
+    "Assets/Settings/PC_RPAsset.asset": "Assets/Settings/Rendering/PC_RPAsset.asset",
+    "Assets/Settings/PC_Renderer.asset": "Assets/Settings/Rendering/PC_Renderer.asset",
+    "Assets/Settings/Mobile_RPAsset.asset": "Assets/Settings/Rendering/Mobile_RPAsset.asset",
+    "Assets/Settings/Mobile_Renderer.asset": "Assets/Settings/Rendering/Mobile_Renderer.asset",
+    "Assets/Settings/UniversalRenderPipelineGlobalSettings.asset": "Assets/Settings/Rendering/UniversalRenderPipelineGlobalSettings.asset",
+    "Assets/Settings/SampleSceneProfile.asset": "Assets/Settings/Volumes/SampleSceneProfile.asset",
+    "Assets/Settings/DefaultVolumeProfile.asset": "Assets/Settings/Volumes/DefaultVolumeProfile.asset",
+    "Assets/InputSystem_Actions.inputactions": "Assets/Settings/Input/InputSystem_Actions.inputactions",
+    "Assets/TutorialInfo": "Assets/Samples/UnityTemplate/TutorialInfo",
+    "Assets/Readme.asset": "Assets/Samples/UnityTemplate/Readme.asset"
+  },
+  "secondaryMoves": {
+    "Assets/Scripts/Gameplay/Artillery/ArtilleryTestSceneBuilder.cs": "Assets/Scripts/Prototypes/ArtilleryTestSceneBuilder.cs",
+    "Assets/Scripts/Gameplay/CommandRoom/CommandRoomTestSceneBuilder.cs": "Assets/Scripts/Prototypes/CommandRoomTestSceneBuilder.cs",
+    "Assets/Scripts/Gameplay/CommandRoom/LeviathanPlayerController.cs": "Assets/Scripts/Gameplay/Player/LeviathanPlayerController.cs",
+    "Assets/Scripts/Gameplay/CommandRoom/IntegratedBattlefieldRig.cs": "Assets/Scripts/Prototypes/IntegratedBattlefieldRig.cs",
+    "Assets/Scripts/World/ProceduralTerrain/CartoonShaderShowcase.cs": "Assets/Scripts/Prototypes/CartoonShaderShowcase.cs"
+  },
+  "artifactMoves": {
+    "Artifacts/BaseProvisoriaOverview.png": "Artifacts/Integration/Captures/BaseProvisoriaOverview.png",
+    "Artifacts/BaseProvisoriaOperator.png": "Artifacts/Integration/Captures/BaseProvisoriaOperator.png",
+    "Artifacts/integration-build.log": "Artifacts/Integration/Logs/integration-build.log",
+    "Artifacts/integration-play.log": "Artifacts/Integration/Logs/integration-play.log",
+    "Artifacts/CartoonBase.png": "Artifacts/Shaders/Captures/CartoonBase.png",
+    "Artifacts/CartoonWater_A.png": "Artifacts/Shaders/Captures/CartoonWater_A.png",
+    "Artifacts/CartoonWater_B.png": "Artifacts/Shaders/Captures/CartoonWater_B.png",
+    "Artifacts/shader-build.log": "Artifacts/Shaders/Logs/shader-build.log",
+    "Artifacts/shader-play.log": "Artifacts/Shaders/Logs/shader-play.log"
+  },
+  "pathRewrites": [
+    "Assets/Documentation/BASE-PROVISORIA-INTEGRADA.md",
+    "Assets/Documentation/GUIA-RAPIDO.md",
+    "Assets/Editor/SceneBuilders/CartoonShaderSceneBuilder.cs",
+    "Assets/Editor/SceneBuilders/IntegratedBattlefieldSceneBuilder.cs",
+    "Assets/Samples/UnityTemplate/TutorialInfo/Editor/ReadmeEditor.cs",
+    "Assets/Scripts/World/ProceduralTerrain/ProceduralBattlefieldSetup.cs",
+    "docs/08-estado-e-implementacao.md",
+    "docs/10-shaders-terreno-e-agua.md",
+    "docs/README.md",
+    "ProjectSettings/EditorBuildSettings.asset",
+    "ProjectSettings/ProjectSettings.asset"
+  ]
+}

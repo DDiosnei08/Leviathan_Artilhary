@@ -1,0 +1,19 @@
+PASS Two adjacent fixed tiles generated, with 10 m terrain cells
+PASS Compute shader supported and compiles on AMD Radeon RX 6600
+PASS Grass generated: 14557
+PASS Every candidate agrees with world-space edge math across both chunks; mismatches=0
+PASS No extra exclusion stripe on chunk seam: 80/81
+PASS Grass returns close to concrete instead of the old 30 m scenery exclusion; near blades=812
+INFO Closest accepted root distance=6,623219
+PASS GPU edge distribution is deterministic after rebuild
+PASS Grass generated: 14567
+PASS Every candidate agrees with world-space edge math across both chunks; mismatches=0
+PASS No extra exclusion stripe on chunk seam: 88/87
+PASS Grass returns close to concrete instead of the old 30 m scenery exclusion; near blades=808
+INFO Closest accepted root distance=6,244721
+PASS A relocated base invalidates grass even on identical flat terrain
+PASS Grass generated: 16200
+PASS Every candidate agrees with world-space edge math across both chunks; mismatches=0
+PASS No base means no radial grass exclusion
+PASS GPU generation has no compilation or runtime errors
+PASS Disabling grass releases tile buffers

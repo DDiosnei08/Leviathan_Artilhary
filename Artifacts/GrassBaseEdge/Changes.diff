@@ -1,0 +1,185 @@
+warning: in the working copy of 'Artifacts\GrassBaseEdge\Before\Assets\Scripts\World\Grass\GrassConfiguration.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Assets/Scripts/World/Grass/GrassConfiguration.cs', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Scripts\\World\\Grass\\GrassConfiguration.cs" b/Assets/Scripts/World/Grass/GrassConfiguration.cs
+index 1c5f4cc..d6c7541 100644
+--- "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Scripts\\World\\Grass\\GrassConfiguration.cs"
++++ b/Assets/Scripts/World/Grass/GrassConfiguration.cs
+@@ -32,6 +32,14 @@ public sealed class GrassConfiguration : ScriptableObject
+         [Range(0f, 60f)] public float maximumSlope = 28f;
+         [Range(0f, 20f)] public float slopeFade = 10f;
+         public bool excludeProps = true;
++        [Header("Base grass edge (does not affect trees or scenery)")]
++        [Tooltip("Clear ground outside the concrete foundation, in metres.")]
++        [Min(0f)] public float baseClearance = 0.8f;
++        [Tooltip("Distance over which grass density returns to normal, in metres.")]
++        [Min(0.1f)] public float baseEdgeFade = 2f;
++        [Tooltip("Outward variation of the edge; never encroaches on the foundation.")]
++        [Min(0f)] public float baseEdgeVariation = 1.5f;
++        [Min(0.001f)] public float baseEdgeNoiseScale = 0.18f;
+         [Header("Appearance")]
+         public Color rootColor = new Color(0.13f, 0.26f, 0.09f);
+         public Color tipColor = new Color(0.45f, 0.66f, 0.23f);
+@@ -65,6 +73,10 @@ void OnValidate()
+             heightRange.y = Mathf.Max(heightRange.x, heightRange.y);
+             widthRange.x = Mathf.Max(0.005f, widthRange.x);
+             widthRange.y = Mathf.Max(widthRange.x, widthRange.y);
++            baseClearance = Mathf.Max(0f, baseClearance);
++            baseEdgeFade = Mathf.Max(0.1f, baseEdgeFade);
++            baseEdgeVariation = Mathf.Max(0f, baseEdgeVariation);
++            baseEdgeNoiseScale = Mathf.Max(0.001f, baseEdgeNoiseScale);
+             middleDistance = Mathf.Max(nearDistance + 5f, middleDistance);
+             farDistance = Mathf.Max(middleDistance + 10f, farDistance);
+         }
+warning: in the working copy of 'Artifacts\GrassBaseEdge\Before\Assets\Scripts\World\Grass\GrassTile.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Assets/Scripts/World/Grass/GrassTile.cs', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Scripts\\World\\Grass\\GrassTile.cs" b/Assets/Scripts/World/Grass/GrassTile.cs
+index 8d94753..63e3f2c 100644
+--- "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Scripts\\World\\Grass\\GrassTile.cs"
++++ b/Assets/Scripts/World/Grass/GrassTile.cs
+@@ -52,6 +52,14 @@ static uint SurfaceHash(HeightMap map)
+             uint hash = 2166136261;
+             unchecked
+             {
++                // An otherwise identical flat tile still needs new grass when the base relocates.
++                hash = (hash ^ (map.BaseSite.valid ? 1u : 0u)) * 16777619;
++                if (map.BaseSite.valid)
++                {
++                    hash = (hash ^ (uint)map.BaseSite.center.x.GetHashCode()) * 16777619;
++                    hash = (hash ^ (uint)map.BaseSite.center.y.GetHashCode()) * 16777619;
++                    hash = (hash ^ (uint)map.BaseSite.carveRadius.GetHashCode()) * 16777619;
++                }
+                 for (int y = 0; y < map.Height; y++) for (int x = 0; x < map.Width; x++)
+                 {
+                     hash = (hash ^ (uint)map.Values[x,y].GetHashCode()) * 16777619;
+@@ -71,7 +79,6 @@ internal void Upload(GrassConfiguration config, GrassExclusionVolume[] volumes)
+             HeightMap map = terrain.GeneratedData;
+             TerrainSettings settings = terrain.Settings;
+             int n = map.Width;
+-            float cell = settings.chunkSize / (n - 1);
+             if (n != heights.width) throw new InvalidOperationException("Regenerate the world after changing its chunk resolution.");
+             float World(float v) => generation.EvaluateHeight(Mathf.Clamp01(v)) * settings.heightMultiplier;
+             for (int y = 0; y < n; y++)
+@@ -95,8 +102,7 @@ internal void Upload(GrassConfiguration config, GrassExclusionVolume[] volumes)
+                 if (map.Water[x, y] > 0.01f || map.Roads[x, y] > 0.01f || map.PoiMask[x, y] > 0.01f ||
+                     map.Values[x, y] < config.normalizedHeightRange.x || map.Values[x, y] > config.normalizedHeightRange.y ||
+                     map.Biomes[x, y] < config.biomeRange.x || map.Biomes[x, y] > config.biomeRange.y) eligibility = 0;
+-                if (map.BaseSite.IsExcluded(map.WorldOrigin.x + x * cell, map.WorldOrigin.y + settings.chunkSize - y * cell,
+-                    cell*.5f)) eligibility = 0;
++                // The base edge is evaluated per blade on the GPU, not on this coarse grid.
+                 mask[index] = new Color(normal.x, normal.y, normal.z, eligibility);
+             }
+             heights.SetPixelData(height, 0); heights.Apply(false, false);
+warning: in the working copy of 'Artifacts\GrassBaseEdge\Before\Assets\Scripts\World\Grass\GrassManager.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Assets/Scripts/World/Grass/GrassManager.cs', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Scripts\\World\\Grass\\GrassManager.cs" b/Assets/Scripts/World/Grass/GrassManager.cs
+index 607255f..482c766 100644
+--- "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Scripts\\World\\Grass\\GrassManager.cs"
++++ b/Assets/Scripts/World/Grass/GrassManager.cs
+@@ -257,6 +257,13 @@ void BindTile(GrassTile tile)
+             compute.SetTexture(generateKernel, "_BiomeMap", t.BiomeTexture != null ? t.BiomeTexture : Texture2D.whiteTexture);
+             compute.SetBuffer(generateKernel, "_Exclusions", tile.exclusions); compute.SetInt("_ExclusionCount", tile.exclusionCount);
+             compute.SetInt("_CandidateCount", candidateCount);
++            var site = tile.uploadedMap.BaseSite;
++            // ConfigureFootprint cuts the pit 0.25 m inside the concrete foundation.
++            compute.SetVector("_BaseGrassSite", new Vector4(site.center.x, site.center.y,
++                Mathf.Max(0f, site.carveRadius) + 0.25f, site.valid ? 1f : 0f));
++            compute.SetVector("_BaseGrassEdge", new Vector4(Mathf.Max(0f, configuration.baseClearance),
++                Mathf.Max(0.1f, configuration.baseEdgeFade), Mathf.Max(0f, configuration.baseEdgeVariation),
++                Mathf.Max(0.001f, configuration.baseEdgeNoiseScale)));
+         }
+         void Generate(GrassTile tile, GrassPatch patch)
+         {
+@@ -399,6 +406,9 @@ public float ValidateRootsForValidation()
+                             if (map.Water[mx+i,my+j] > 0.01f || map.Roads[mx+i,my+j] > 0.01f || map.PoiMask[mx+i,my+j] > 0.01f)
+                                 throw new InvalidOperationException("Grass generated in a water/road/POI mask.");
+                         Vector3 world = tile.terrain.GameObject.transform.TransformPoint(blade.position);
++                        if (map.BaseSite.valid && Vector2.Distance(new Vector2(world.x, world.z), map.BaseSite.center) <
++                            Mathf.Max(0f, map.BaseSite.carveRadius) + 0.25f + Mathf.Max(0f, configuration.baseClearance) - 0.001f)
++                            throw new InvalidOperationException("Grass generated inside the base's concrete clearance.");
+                         foreach (GrassExclusionVolume volume in exclusionVolumes)
+                         {
+                             if (volume == null || !volume.isActiveAndEnabled) continue;
+warning: in the working copy of 'Artifacts\GrassBaseEdge\Before\Assets\Shaders\Grass\ProceduralGrass.compute', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Assets/Shaders/Grass/ProceduralGrass.compute', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Shaders\\Grass\\ProceduralGrass.compute" b/Assets/Shaders/Grass/ProceduralGrass.compute
+index 1ab2160..ed037c1 100644
+--- "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Shaders\\Grass\\ProceduralGrass.compute"
++++ b/Assets/Shaders/Grass/ProceduralGrass.compute
+@@ -36,6 +36,32 @@ float4 _LodDistances; // near, middle, far, transition width
+ float2 _DensityLods;
+ float2 _TerrainLodBlend;
+ float _ShadowDistance;
++float4 _BaseGrassSite; // world centre XZ, concrete radius, valid
++float4 _BaseGrassEdge; // clearance, density fade, outward variation, world noise scale
++
++float BaseEdgeNoise(float2 p)
++{
++    int2 cell = (int2)floor(p);
++    float2 f = frac(p);
++    f = f * f * (3 - 2 * f);
++    uint seed = _Seed ^ 0x6b8b4567u;
++    float a = GrassRandom(asuint(cell.x) ^ GrassHash(asuint(cell.y)) ^ seed);
++    float b = GrassRandom(asuint(cell.x + 1) ^ GrassHash(asuint(cell.y)) ^ seed);
++    float c = GrassRandom(asuint(cell.x) ^ GrassHash(asuint(cell.y + 1)) ^ seed);
++    float d = GrassRandom(asuint(cell.x + 1) ^ GrassHash(asuint(cell.y + 1)) ^ seed);
++    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
++}
++
++float BaseGrassDensity(float2 world)
++{
++    if (_BaseGrassSite.w < 0.5) return 1;
++    float edgeDistance = distance(world, _BaseGrassSite.xy) - _BaseGrassSite.z - _BaseGrassEdge.x;
++    if (edgeDistance <= 0) return 0;
++    if (edgeDistance >= _BaseGrassEdge.y + _BaseGrassEdge.z) return 1;
++    // World-space, seeded noise is continuous across tiles; variation only expands the safe edge.
++    float offset = BaseEdgeNoise(world * _BaseGrassEdge.w) * _BaseGrassEdge.z;
++    return smoothstep(0, _BaseGrassEdge.y, edgeDistance - offset);
++}
+ 
+ float2 GrassUV(float2 local) { return float2(local.x / _TileSize, 1 - local.y / _TileSize); }
+ float SurfaceHeight(float2 local)
+@@ -74,13 +100,14 @@ void Generate(uint id : SV_DispatchThreadID)
+     surface.w = min(surface.w, safeDensity);
+     float3 root = float3(local.x, SurfaceHeight(local) - 0.015, local.y);
+     float3 world = mul(_TileToWorld, float4(root, 1)).xyz;
++    surface.w *= BaseGrassDensity(world.xz);
+     bool excluded = false;
+     for (uint i = 0; i < _ExclusionCount; i++)
+     {
+         float4 minimum = _Exclusions[i * 2], maximum = _Exclusions[i * 2 + 1];
+         excluded = excluded || (all(world.xz >= minimum.xz) && all(world.xz <= maximum.xz));
+     }
+-    if (excluded || GrassRandom(seed + 3) > surface.w) { _Blades[id] = blade; return; }
++    if (excluded || surface.w <= 0 || GrassRandom(seed + 3) > surface.w) { _Blades[id] = blade; return; }
+     float clump = GrassRandom(GrassHash(asuint((int)floor(world.x / 3))) ^ asuint((int)floor(world.z / 3)) ^ _Seed);
+     float h = lerp(_HeightRange.x, _HeightRange.y, GrassRandom(seed + 4)) * lerp(0.8, 1.1, clump);
+     float w = lerp(_WidthRange.x, _WidthRange.y, GrassRandom(seed + 5));
+diff --git "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset" b/Assets/Settings/Grass/BaseGiratoriaGrass.asset
+index a7f623f..bce6bc5 100644
+--- "a/Artifacts\\GrassBaseEdge\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
++++ b/Assets/Settings/Grass/BaseGiratoriaGrass.asset
+@@ -36,6 +36,10 @@ MonoBehaviour:
+   maximumSlope: 32
+   slopeFade: 10
+   excludeProps: 1
++  baseClearance: 0.8
++  baseEdgeFade: 2
++  baseEdgeVariation: 1.5
++  baseEdgeNoiseScale: 0.18
+   rootColor: {r: 0.14, g: 0.25, b: 0.2, a: 1}
+   tipColor: {r: 0.48, g: 0.55, b: 0.36, a: 1}
+   biomeColorInfluence: 0.18
+warning: in the working copy of 'Artifacts\GrassBaseEdge\Before\docs\README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/README.md', LF will be replaced by CRLF the next time Git touches it
+diff --git "a/Artifacts\\GrassBaseEdge\\Before\\docs\\README.md" b/docs/README.md
+index a970d98..aa7b574 100644
+--- "a/Artifacts\\GrassBaseEdge\\Before\\docs\\README.md"
++++ b/docs/README.md
+@@ -26,6 +26,7 @@ Leviathan e um jogo de operacao individual de artilharia indireta. O jogador int
+ | [16 - Assets e cenario procedural](16-assets-e-cenario-procedural.md) | Curadoria dos downloads, bosques, pedras, postes, barreiras e sincronizacao da base |
+ | [17 - Varredura e limpeza](17-varredura-e-limpeza.md) | Dependencias, arquivo recuperavel, menos GC no terreno e colisao de props proximos |
+ | [18 - Polimento dieselpunk](18-polimento-visual-dieselpunk.md) | Paleta mineral, pintura e metal, props, vegetacao, agua e atmosfera |
++| [19 - Grama na borda da base](19-grama-na-borda-da-base.md) | Exclusao precisa, transicao irregular e seguranca do concreto |
+ | [Referencias visuais](referencias/README.md) | Imagens fornecidas pelo autor e como devem orientar o projeto |
+ 
+ ## Status das definicoes

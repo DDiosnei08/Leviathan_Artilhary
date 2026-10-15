@@ -1,0 +1,1734 @@
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\README.md" "b/C:\\ProjetoENTEC\\Leviathan2\\README.md"
+index 6b6c8d4..63af53e 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\README.md"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\README.md"
+@@ -38,5 +38,7 @@ volantes, alavancas, manivela e botoes sobre a mesa, com ponteiros analogicos.
+ Veja [estrutura e convencoes](docs/11-estrutura-do-projeto.md) para os caminhos completos.
+ Veja [varredura e limpeza](docs/17-varredura-e-limpeza.md) para o inventario de dependencias,
+ as correcoes de desempenho e os arquivos retirados de `Assets` de forma recuperavel.
++O [acabamento dieselpunk](docs/18-polimento-visual-dieselpunk.md) integra pintura,
++aco, latao, solo mineral, vegetacao contida, agua e atmosfera na cena atual.
+ Nao mover assets sem seus `.meta`; preferir a janela Project da Unity.
+ `Library`, `Temp`, `Logs`, `.csproj` e `.slnx` sao arquivos gerados, nao codigo do jogo.
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Aro.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Aro.mat"
+index 190e352..eeb3b09 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Aro.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Aro.mat"
+@@ -21,17 +21,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: Aro
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -114,11 +113,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.4
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -127,13 +129,19 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.025
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.2, g: 0.25, b: 0.24, a: 1}
++    - _BaseColor: {r: 0.2, g: 0.27, b: 0.28, a: 1}
+     - _Color: {r: 0.19999996, g: 0.24999997, b: 0.23999995, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Botoes.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Botoes.mat"
+index 7cb3a4e..e1bbf10 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Botoes.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Botoes.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: Botoes
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,11 +100,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.4
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -114,14 +116,20 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.025
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.15, g: 0.2, b: 0.18, a: 1}
++    - _BaseColor: {r: 0.2, g: 0.27, b: 0.28, a: 1}
+     - _Color: {r: 0.14999998, g: 0.19999996, b: 0.17999998, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &4272293261122200363
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_escuro.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_escuro.mat"
+index cb0e696..94af122 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_escuro.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_escuro.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Aco_escuro
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,11 +100,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.7
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -114,14 +116,20 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.09
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.11999995, g: 0.12999997, b: 0.13999996, a: 1}
++    - _BaseColor: {r: 0.19, g: 0.24, b: 0.27, a: 1}
+     - _Color: {r: 0.11999992, g: 0.12999994, b: 0.13999993, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &7424696937658863661
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_oxidado.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_oxidado.mat"
+index 6d434fa..57be604 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_oxidado.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Aco_oxidado.mat"
+@@ -21,17 +21,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Aco_oxidado
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -114,26 +113,35 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.3
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+-    - _Smoothness: 0.32
++    - _Smoothness: 0.19
+     - _SmoothnessTextureChannel: 0
+     - _SpecularHighlights: 1
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.15
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.29999998, g: 0.14999998, b: 0.079999976, a: 1}
++    - _BaseColor: {r: 0.39, g: 0.23, b: 0.16, a: 1}
+     - _Color: {r: 0.29999995, g: 0.14999995, b: 0.079999946, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Amarelo_Seguranca.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Amarelo_Seguranca.mat"
+index f3c10f6..ad17c8e 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Amarelo_Seguranca.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Amarelo_Seguranca.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Amarelo_Seguranca
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,11 +100,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.05
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -114,14 +116,20 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.06
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.85, g: 0.65, b: 0.049999982, a: 1}
++    - _BaseColor: {r: 0.88, g: 0.65, b: 0.2, a: 1}
+     - _Color: {r: 0.85, g: 0.65, b: 0.049999967, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &8111223052775017923
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Canhao_Verde_Escuro.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Canhao_Verde_Escuro.mat"
+index 68dadc5..84350de 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Canhao_Verde_Escuro.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Canhao_Verde_Escuro.mat"
+@@ -21,17 +21,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Canhao_Verde_Escuro
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -114,11 +113,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.3
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -127,13 +129,19 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.055
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.09999997, g: 0.13999996, b: 0.11999995, a: 1}
++    - _BaseColor: {r: 0.15, g: 0.25, b: 0.25, a: 1}
+     - _Color: {r: 0.09999994, g: 0.13999993, b: 0.11999992, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Concreto.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Concreto.mat"
+index cfb76e9..390803b 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Concreto.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Concreto.mat"
+@@ -21,17 +21,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Concreto
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -114,26 +113,35 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.15
++    - _Metallic: 0
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+-    - _Smoothness: 0.32
++    - _Smoothness: 0.08
+     - _SmoothnessTextureChannel: 0
+     - _SpecularHighlights: 1
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.45, g: 0.45, b: 0.42999998, a: 1}
++    - _BaseColor: {r: 0.48, g: 0.51, b: 0.51, a: 1}
+     - _Color: {r: 0.45, g: 0.45, b: 0.42999992, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Latao.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Latao.mat"
+index 5fcff09..9452c18 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Latao.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Latao.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Latao
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,27 +100,36 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.75
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+-    - _Smoothness: 0.32
++    - _Smoothness: 0.43
+     - _SmoothnessTextureChannel: 0
+     - _SpecularHighlights: 1
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.025
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.54999995, g: 0.39999998, b: 0.14999998, a: 1}
++    - _BaseColor: {r: 0.63, g: 0.49, b: 0.25, a: 1}
+     - _Color: {r: 0.5499999, g: 0.39999995, b: 0.14999995, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.38, b: 0.23, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &8037087757422130737
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Projetil_Latao.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Projetil_Latao.mat"
+index c8da083..4566097 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Projetil_Latao.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Projetil_Latao.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Projetil_Latao
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,27 +100,36 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.75
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+-    - _Smoothness: 0.32
++    - _Smoothness: 0.43
+     - _SmoothnessTextureChannel: 0
+     - _SpecularHighlights: 1
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.025
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.45, g: 0.32999998, b: 0.11999995, a: 1}
++    - _BaseColor: {r: 0.63, g: 0.49, b: 0.25, a: 1}
+     - _Color: {r: 0.45, g: 0.32999995, b: 0.11999992, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.38, b: 0.23, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &8770648889747485661
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Verde_Militar.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Verde_Militar.mat"
+index faf60ab..b753400 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\FBX_Verde_Militar.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\FBX_Verde_Militar.mat"
+@@ -21,17 +21,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: FBX_Verde_Militar
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -114,11 +113,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.2
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -127,13 +129,19 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.055
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.16999996, g: 0.19999996, b: 0.10999996, a: 1}
++    - _BaseColor: {r: 0.27, g: 0.35, b: 0.32, a: 1}
+     - _Color: {r: 0.16999993, g: 0.19999993, b: 0.10999993, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Instrumentos.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Instrumentos.mat"
+index 2a0caf5..fe598c0 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Instrumentos.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Instrumentos.mat"
+@@ -21,17 +21,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: Instrumentos
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -114,11 +113,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.2
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -127,13 +129,19 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.055
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.12, g: 0.19, b: 0.18, a: 1}
++    - _BaseColor: {r: 0.19, g: 0.29, b: 0.29, a: 1}
+     - _Color: {r: 0.11999995, g: 0.18999997, b: 0.17999998, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Mesa.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Mesa.mat"
+index 3bd278b..f219245 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Mesa.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Mesa.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: Mesa
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,11 +100,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.2
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -114,14 +116,20 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.055
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.25, g: 0.31, b: 0.28, a: 1}
++    - _BaseColor: {r: 0.3, g: 0.38, b: 0.36, a: 1}
+     - _Color: {r: 0.24999997, g: 0.30999997, b: 0.27999997, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &7001841399445828490
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Volantes.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Volantes.mat"
+index 56b9a17..fc7dd50 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\BaseGiratoria\\Volantes.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\BaseGiratoria\\Volantes.mat"
+@@ -8,17 +8,16 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: Volantes
+-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+   m_InvalidKeywords: []
+   m_LightmapFlags: 4
+-  m_EnableInstancingVariants: 0
++  m_EnableInstancingVariants: 1
+   m_DoubleSidedGI: 0
+   m_CustomRenderQueue: -1
+-  stringTagMap:
+-    RenderType: Opaque
++  stringTagMap: {}
+   disabledShaderPasses:
+   - MOTIONVECTORS
+   m_LockedProperties: 
+@@ -101,11 +100,14 @@ Material:
+     - _GlossMapScale: 0
+     - _Glossiness: 0
+     - _GlossyReflections: 0
+-    - _Metallic: 0.12
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.1
++    - _Metallic: 0.55
+     - _OcclusionStrength: 1
+     - _Parallax: 0.005
+     - _QueueOffset: 0
+     - _ReceiveShadows: 1
++    - _Saturation: 0.82
+     - _ScreenSpaceReflections: 1
+     - _ScreenSpaceReflectionsContributeTransparent: 1
+     - _Smoothness: 0.32
+@@ -114,14 +116,20 @@ Material:
+     - _SrcBlend: 1
+     - _SrcBlendAlpha: 1
+     - _Surface: 0
++    - _VertexColorStrength: 0
++    - _VertexMetalMask: 0
++    - _WearAmount: 0.06
++    - _WeatherScale: 1.7
+     - _WorkflowMode: 1
+     - _XRMotionVectorsPass: 1
+     - _ZWrite: 1
+     m_Colors:
+-    - _BaseColor: {r: 0.32, g: 0.39, b: 0.36, a: 1}
++    - _BaseColor: {r: 0.38, g: 0.46, b: 0.43, a: 1}
+     - _Color: {r: 0.31999996, g: 0.38999996, b: 0.35999998, a: 1}
+     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+ --- !u!114 &5331570880554518733
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Environment\\CuratedProps.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Environment\\CuratedProps.mat"
+index 4cde68c..4c980d4 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Environment\\CuratedProps.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Environment\\CuratedProps.mat"
+@@ -8,7 +8,7 @@ Material:
+   m_PrefabInstance: {fileID: 0}
+   m_PrefabAsset: {fileID: 0}
+   m_Name: CuratedProps
+-  m_Shader: {fileID: 4800000, guid: 97e54c9f8d089ac47a4e879a2864ede5, type: 3}
++  m_Shader: {fileID: 4800000, guid: 8e976977566da794f97599f32bf85b37, type: 3}
+   m_Parent: {fileID: 0}
+   m_ModifiedSerializedProperties: 0
+   m_ValidKeywords: []
+@@ -22,11 +22,27 @@ Material:
+   m_LockedProperties: 
+   m_SavedProperties:
+     serializedVersion: 3
+-    m_TexEnvs: []
++    m_TexEnvs:
++    - _BaseMap:
++        m_Texture: {fileID: 0}
++        m_Scale: {x: 1, y: 1}
++        m_Offset: {x: 0, y: 0}
+     m_Ints: []
+-    m_Floats: []
++    m_Floats:
++    - _GrainStrength: 0.065
++    - _GrimeStrength: 0.12
++    - _Metallic: 0
++    - _Saturation: 0.82
++    - _Smoothness: 0.12
++    - _VertexColorStrength: 1
++    - _VertexMetalMask: 0
++    - _WearAmount: 0
++    - _WeatherScale: 1.7
+     m_Colors:
+     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
++    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
++    - _GrimeColor: {r: 0.41, g: 0.39, b: 0.32, a: 1}
+     - _TreeWind: {r: 0, g: 0, b: 0, a: 0}
++    - _WearColor: {r: 0.37, g: 0.25, b: 0.18, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Terrain\\TerrainCartoon.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Terrain\\TerrainCartoon.mat"
+index 075ce23..4e3d123 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Terrain\\TerrainCartoon.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Terrain\\TerrainCartoon.mat"
+@@ -29,14 +29,19 @@ Material:
+         m_Offset: {x: 0, y: 0}
+     m_Ints: []
+     m_Floats:
+-    - _ColorIntensity: 1.08
+-    - _ShadowContrast: 0.7
++    - _BandSoftness: 0.13
+     - _Bands: 3
+-    - _BandSoftness: 0.08
+-    - _DetailScale: 0.025
+-    - _DetailStrength: 0.025
++    - _ColorIntensity: 1.02
++    - _DetailScale: 0.13
++    - _DetailStrength: 0.085
++    - _PatchScale: 0.011
++    - _PatchStrength: 0.22
++    - _ShadowContrast: 0.62
++    - _SlopeStrength: 0.27
+     m_Colors:
+     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+-    - _ShadowTint: {r: 0.58, g: 0.68, b: 0.74, a: 1}
++    - _MineralTint: {r: 0.47, g: 0.42, b: 0.34, a: 1}
++    - _ShadowTint: {r: 0.45, g: 0.56, b: 0.61, a: 1}
++    - _SlopeTint: {r: 0.36, g: 0.42, b: 0.46, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Vegetation\\TreeCartoon.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Vegetation\\TreeCartoon.mat"
+index dfcd548..4e02bd5 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Vegetation\\TreeCartoon.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Vegetation\\TreeCartoon.mat"
+@@ -24,9 +24,14 @@ Material:
+     serializedVersion: 3
+     m_TexEnvs: []
+     m_Ints: []
+-    m_Floats: []
++    m_Floats:
++    - _ColorVariation: 0.12
++    - _LeafTintStrength: 0.25
++    - _Saturation: 0.74
+     m_Colors:
+     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
++    - _LeafTint: {r: 0.78, g: 0.87, b: 0.78, a: 1}
++    - _ShadowTint: {r: 0.42, g: 0.54, b: 0.55, a: 1}
+     - _TreeWind: {r: 0.7, g: 0.3, b: 0.025, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Water\\WaterCartoon.mat" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Water\\WaterCartoon.mat"
+index 5294f23..a0e22cc 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Materials\\Water\\WaterCartoon.mat"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Materials\\Water\\WaterCartoon.mat"
+@@ -26,21 +26,24 @@ Material:
+     m_Ints: []
+     m_Floats:
+     - _DepthColorDistance: 12
+-    - _WaveHeight: 0.1
+-    - _WaveScale: 0.18
+-    - _WaveSpeed: 0.6
++    - _DetailFadeDistance: 450
++    - _FoamStrength: 0.52
++    - _FoamWidth: 1.5
++    - _FresnelStrength: 0.22
+     - _PatternScale: 0.16
+     - _PatternSpeed: 0.05
+-    - _PatternStrength: 0.3
+-    - _FoamWidth: 1.5
+-    - _FoamStrength: 0.7
+-    - _DetailFadeDistance: 450
++    - _PatternStrength: 0.19
+     - _ShadowContrast: 0.5
++    - _SpecularStrength: 0.32
++    - _WaveHeight: 0.075
++    - _WaveScale: 0.18
++    - _WaveSpeed: 0.6
+     m_Colors:
+-    - _ShallowColor: {r: 0.12, g: 0.67, b: 0.68, a: 1}
+-    - _DeepColor: {r: 0.055, g: 0.29, b: 0.48, a: 1}
+-    - _PatternColor: {r: 0.42, g: 0.88, b: 0.93, a: 1}
+-    - _FoamColor: {r: 0.85, g: 0.96, b: 0.93, a: 1}
+-    - _ShadowTint: {r: 0.6, g: 0.73, b: 0.8, a: 1}
++    - _DeepColor: {r: 0.065, g: 0.18, b: 0.24, a: 1}
++    - _FoamColor: {r: 0.78, g: 0.84, b: 0.77, a: 1}
++    - _PatternColor: {r: 0.48, g: 0.67, b: 0.67, a: 1}
++    - _ShadowTint: {r: 0.43, g: 0.56, b: 0.61, a: 1}
++    - _ShallowColor: {r: 0.16, g: 0.38, b: 0.38, a: 1}
++    - _SkyReflectionColor: {r: 0.48, g: 0.6, b: 0.64, a: 1}
+   m_BuildTextureStacks: []
+   m_AllowLocking: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
+index 36e97c7..eff5054 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scenes\\Leviathan_BaseGiratoria.unity"
+@@ -15,18 +15,18 @@ RenderSettings:
+   m_ObjectHideFlags: 0
+   serializedVersion: 10
+   m_Fog: 1
+-  m_FogColor: {r: 0.6, g: 0.73, b: 0.79, a: 1}
+-  m_FogMode: 2
++  m_FogColor: {r: 0.65, g: 0.71, b: 0.71, a: 1}
++  m_FogMode: 1
+   m_FogDensity: 0.00008
+-  m_LinearFogStart: 0
+-  m_LinearFogEnd: 300
+-  m_AmbientSkyColor: {r: 0.54, g: 0.67, b: 0.8, a: 1}
+-  m_AmbientEquatorColor: {r: 0.4, g: 0.47, b: 0.43, a: 1}
+-  m_AmbientGroundColor: {r: 0.23, g: 0.26, b: 0.22, a: 1}
++  m_LinearFogStart: 650
++  m_LinearFogEnd: 2800
++  m_AmbientSkyColor: {r: 0.51, g: 0.61, b: 0.66, a: 1}
++  m_AmbientEquatorColor: {r: 0.43, g: 0.47, b: 0.45, a: 1}
++  m_AmbientGroundColor: {r: 0.25, g: 0.27, b: 0.26, a: 1}
+   m_AmbientIntensity: 1
+   m_AmbientMode: 1
+   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
++  m_SkyboxMaterial: {fileID: 2100000, guid: c1f64a2044e4bbf40a6a735929745ad4, type: 2}
+   m_HaloStrength: 0.5
+   m_FlareStrength: 1
+   m_FlareFadeSpeed: 3
+@@ -37,7 +37,7 @@ RenderSettings:
+   m_ReflectionBounces: 1
+   m_ReflectionIntensity: 1
+   m_CustomReflection: {fileID: 0}
+-  m_Sun: {fileID: 0}
++  m_Sun: {fileID: 668874904}
+   m_UseRadianceAmbientProbe: 0
+ --- !u!157 &3
+ LightmapSettings:
+@@ -500,8 +500,8 @@ Light:
+   m_Enabled: 1
+   serializedVersion: 13
+   m_Type: 1
+-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+-  m_Intensity: 1.4
++  m_Color: {r: 1, g: 0.95, b: 0.85, a: 1}
++  m_Intensity: 1.35
+   m_Range: 10
+   m_SpotAngle: 30
+   m_InnerSpotAngle: 21.80208
+@@ -510,7 +510,7 @@ Light:
+     m_Type: 2
+     m_Resolution: -1
+     m_CustomResolution: -1
+-    m_Strength: 1
++    m_Strength: 0.82
+     m_Bias: 0.05
+     m_NormalBias: 0.4
+     m_NearPlane: 0.2
+@@ -563,7 +563,7 @@ Transform:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 668874903}
+   serializedVersion: 2
+-  m_LocalRotation: {x: 0.38791165, y: -0.27470842, z: 0.12230807, w: 0.8712638}
++  m_LocalRotation: {x: 0.31295618, y: -0.26062024, z: 0.08973874, w: 0.9088908}
+   m_LocalPosition: {x: 0, y: 0, z: 0}
+   m_LocalScale: {x: 1, y: 1, z: 1}
+   m_ConstrainProportionsScale: 0
+@@ -766,6 +766,7 @@ GameObject:
+   - component: {fileID: 1307170352}
+   - component: {fileID: 1307170353}
+   - component: {fileID: 1307170351}
++  - component: {fileID: 1307170355}
+   m_Layer: 0
+   m_Name: Camera Instrumentos
+   m_TagString: Untagged
+@@ -802,8 +803,8 @@ Camera:
+   m_GameObject: {fileID: 1307170350}
+   m_Enabled: 0
+   serializedVersion: 2
+-  m_ClearFlags: 2
+-  m_BackGroundColor: {r: 0.57, g: 0.74, b: 0.82, a: 1}
++  m_ClearFlags: 1
++  m_BackGroundColor: {r: 0.65, g: 0.71, b: 0.71, a: 1}
+   m_projectionMatrixMode: 1
+   m_GateFitMode: 2
+   m_FOVAxisMode: 0
+@@ -867,6 +868,99 @@ Transform:
+   m_Children: []
+   m_Father: {fileID: 0}
+   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
++--- !u!114 &1307170355
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1307170350}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
++  m_RenderShadows: 1
++  m_RequiresDepthTextureOption: 2
++  m_RequiresOpaqueTextureOption: 2
++  m_CameraType: 0
++  m_Cameras: []
++  m_RendererIndex: -1
++  m_VolumeLayerMask:
++    serializedVersion: 2
++    m_Bits: 1
++  m_VolumeTrigger: {fileID: 0}
++  m_VolumeFrameworkUpdateModeOption: 2
++  m_RenderPostProcessing: 1
++  m_Antialiasing: 0
++  m_AntialiasingQuality: 2
++  m_StopNaN: 0
++  m_Dithering: 0
++  m_ClearDepth: 1
++  m_AllowXRRendering: 1
++  m_AllowHDROutput: 1
++  m_UseScreenCoordOverride: 0
++  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
++  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
++  m_RequiresDepthTexture: 0
++  m_RequiresColorTexture: 0
++  m_TaaSettings:
++    m_Quality: 3
++    m_FrameInfluence: 0.1
++    m_JitterScale: 1
++    m_MipBias: 0
++    m_VarianceClampScale: 0.9
++    m_ContrastAdaptiveSharpening: 0
++  m_Version: 2
++--- !u!1 &1706506650
++GameObject:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  serializedVersion: 6
++  m_Component:
++  - component: {fileID: 1706506652}
++  - component: {fileID: 1706506651}
++  m_Layer: 0
++  m_Name: Atmosfera Dieselpunk
++  m_TagString: Untagged
++  m_Icon: {fileID: 0}
++  m_NavMeshLayer: 0
++  m_StaticEditorFlags: 0
++  m_IsActive: 1
++--- !u!114 &1706506651
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1706506650}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
++  m_IsGlobal: 1
++  priority: 2
++  blendDistance: 0
++  weight: 1
++  sharedProfile: {fileID: 11400000, guid: 827e2ac1cedb7cb42b56447d63c21098, type: 2}
++--- !u!4 &1706506652
++Transform:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1706506650}
++  serializedVersion: 2
++  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
++  m_LocalPosition: {x: 0, y: 0, z: 0}
++  m_LocalScale: {x: 1, y: 1, z: 1}
++  m_ConstrainProportionsScale: 0
++  m_Children: []
++  m_Father: {fileID: 0}
++  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+ --- !u!1 &1750613292
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -925,6 +1019,7 @@ GameObject:
+   - component: {fileID: 1927004543}
+   - component: {fileID: 1927004542}
+   - component: {fileID: 1927004544}
++  - component: {fileID: 1927004545}
+   m_Layer: 0
+   m_Name: Camera Geral
+   m_TagString: MainCamera
+@@ -941,8 +1036,8 @@ Camera:
+   m_GameObject: {fileID: 1927004541}
+   m_Enabled: 1
+   serializedVersion: 2
+-  m_ClearFlags: 2
+-  m_BackGroundColor: {r: 0.57, g: 0.74, b: 0.82, a: 1}
++  m_ClearFlags: 1
++  m_BackGroundColor: {r: 0.65, g: 0.71, b: 0.71, a: 1}
+   m_projectionMatrixMode: 1
+   m_GateFitMode: 2
+   m_FOVAxisMode: 0
+@@ -1006,6 +1101,50 @@ AudioListener:
+   m_PrefabAsset: {fileID: 0}
+   m_GameObject: {fileID: 1927004541}
+   m_Enabled: 1
++--- !u!114 &1927004545
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 1927004541}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
++  m_Name: 
++  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
++  m_RenderShadows: 1
++  m_RequiresDepthTextureOption: 2
++  m_RequiresOpaqueTextureOption: 2
++  m_CameraType: 0
++  m_Cameras: []
++  m_RendererIndex: -1
++  m_VolumeLayerMask:
++    serializedVersion: 2
++    m_Bits: 1
++  m_VolumeTrigger: {fileID: 0}
++  m_VolumeFrameworkUpdateModeOption: 2
++  m_RenderPostProcessing: 1
++  m_Antialiasing: 0
++  m_AntialiasingQuality: 2
++  m_StopNaN: 0
++  m_Dithering: 0
++  m_ClearDepth: 1
++  m_AllowXRRendering: 1
++  m_AllowHDROutput: 1
++  m_UseScreenCoordOverride: 0
++  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
++  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
++  m_RequiresDepthTexture: 0
++  m_RequiresColorTexture: 0
++  m_TaaSettings:
++    m_Quality: 3
++    m_FrameInfluence: 0.1
++    m_JitterScale: 1
++    m_MipBias: 0
++    m_VarianceClampScale: 0.9
++    m_ContrastAdaptiveSharpening: 0
++  m_Version: 2
+ --- !u!1 &2066190274
+ GameObject:
+   m_ObjectHideFlags: 0
+@@ -1034,8 +1173,8 @@ Camera:
+   m_GameObject: {fileID: 2066190274}
+   m_Enabled: 1
+   serializedVersion: 2
+-  m_ClearFlags: 4
+-  m_BackGroundColor: {r: 0.57, g: 0.74, b: 0.82, a: 1}
++  m_ClearFlags: 1
++  m_BackGroundColor: {r: 0.65, g: 0.71, b: 0.71, a: 1}
+   m_projectionMatrixMode: 1
+   m_GateFitMode: 2
+   m_FOVAxisMode: 0
+@@ -1122,7 +1261,7 @@ MonoBehaviour:
+     m_Bits: 1
+   m_VolumeTrigger: {fileID: 0}
+   m_VolumeFrameworkUpdateModeOption: 2
+-  m_RenderPostProcessing: 0
++  m_RenderPostProcessing: 1
+   m_Antialiasing: 1
+   m_AntialiasingQuality: 2
+   m_StopNaN: 0
+@@ -1158,3 +1297,4 @@ SceneRoots:
+   - {fileID: 668874905}
+   - {fileID: 135269767}
+   - {fileID: 1750613294}
++  - {fileID: 1706506652}
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs"
+index 1866683..991ad94 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryConfiguration.cs"
+@@ -10,6 +10,8 @@ public sealed class SceneryPrototype
+         public string label;
+         public SceneryRole role;
+         public Mesh mesh;
++        [Tooltip("Optional visual override; otherwise uses the shared scenery material.")]
++        public Material material;
+         public Vector2 sizeRange=new Vector2(1,3);
+     }
+ 
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
+index 0194e3b..49ef5c7 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Scripts\\World\\Vegetation\\WorldSceneryManager.cs"
+@@ -31,6 +31,8 @@ public Vector3 NearestRock(Vector3 from)
+         Matrix4x4[][] batches;
+         int[] batchCounts;
+         Material material;
++        Material[] prototypeMaterials;
++        readonly List<Material> ownedMaterials=new List<Material>();
+         Transform colliderRoot;
+         MeshCollider[] colliders;
+         CollisionCandidate[] collisionCandidates;
+@@ -43,6 +45,18 @@ void OnEnable()
+         {
+             if(terrain==null || configuration==null || configuration.material==null || configuration.prototypes==null) return;
+             material=new Material(configuration.material) {enableInstancing=true,hideFlags=HideFlags.HideAndDontSave};
++            ownedMaterials.Add(material);
++            prototypeMaterials=new Material[configuration.prototypes.Length];
++            for(int i=0;i<prototypeMaterials.Length;i++)
++            {
++                var source=configuration.prototypes[i]?.material;
++                if(source==null || source==configuration.material) {prototypeMaterials[i]=material;continue;}
++                for(int previous=0;previous<i;previous++)
++                    if(configuration.prototypes[previous]?.material==source) {prototypeMaterials[i]=prototypeMaterials[previous];break;}
++                if(prototypeMaterials[i]!=null) continue;
++                prototypeMaterials[i]=new Material(source) {enableInstancing=true,hideFlags=HideFlags.HideAndDontSave};
++                ownedMaterials.Add(prototypeMaterials[i]);
++            }
+             batches=new Matrix4x4[configuration.prototypes.Length*2][];batchCounts=new int[batches.Length];
+             for(int i=0;i<batches.Length;i++) batches[i]=new Matrix4x4[1023];
+             terrain.ChunkCreated+=Attach;foreach(var chunk in terrain.TerrainChunks.Values) Attach(chunk);
+@@ -232,7 +246,7 @@ void Render(ScriptableRenderContext context,Camera camera)
+         void Flush(int group,Camera camera)
+         {
+             int count=batchCounts[group];if(count==0) return;
+-            Graphics.DrawMeshInstanced(configuration.prototypes[group/2].mesh,0,material,batches[group],count,null,
++            Graphics.DrawMeshInstanced(configuration.prototypes[group/2].mesh,0,prototypeMaterials[group/2],batches[group],count,null,
+                 group%2==1 ? ShadowCastingMode.On : ShadowCastingMode.Off,true,gameObject.layer,camera,LightProbeUsage.Off);batchCounts[group]=0;
+         }
+         static uint CellHash(TerrainChunk chunk,int x,int y,int cells) => Hash(unchecked((uint)(chunk.Settings.noiseSettings.seed^(chunk.Coordinate.x*cells+x)*73856093^(chunk.Coordinate.y*cells+y)*19349663)));
+@@ -245,7 +259,8 @@ void OnDisable()
+             tiles.Clear();InstanceCount=VisibleCount=0;
+             DisableColliders();
+             if(colliderRoot!=null) {if(Application.IsPlaying(gameObject)) Destroy(colliderRoot.gameObject);else DestroyImmediate(colliderRoot.gameObject);colliderRoot=null;colliders=null;}
+-            if(material!=null) {if(Application.isPlaying) Destroy(material);else DestroyImmediate(material);material=null;}
++            foreach(var owned in ownedMaterials) if(owned!=null) {if(Application.isPlaying) Destroy(owned);else DestroyImmediate(owned);}
++            ownedMaterials.Clear();material=null;prototypeMaterials=null;
+             batches=null;batchCounts=null;collisionCandidates=null;
+         }
+         void OnDestroy() => OnDisable();
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
+index bc8521c..a7f623f 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Grass\\BaseGiratoriaGrass.asset"
+@@ -36,11 +36,11 @@ MonoBehaviour:
+   maximumSlope: 32
+   slopeFade: 10
+   excludeProps: 1
+-  rootColor: {r: 0.13, g: 0.26, b: 0.09, a: 1}
+-  tipColor: {r: 0.45, g: 0.66, b: 0.23, a: 1}
++  rootColor: {r: 0.14, g: 0.25, b: 0.2, a: 1}
++  tipColor: {r: 0.48, g: 0.55, b: 0.36, a: 1}
+   biomeColorInfluence: 0.18
+-  translucency: 0.35
+-  specular: 0.08
++  translucency: 0.26
++  specular: 0.045
+   roundedNormals: 0.6
+   viewThickening: 0.65
+   useWorldWeather: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
+index 9749056..9dce35a 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Terrain\\BaseGiratoriaTerrain.asset"
+@@ -154,13 +154,13 @@ MonoBehaviour:
+   riverCount: 2
+   connectPOIsWithRoads: 1
+   roadWidthCells: 0
+-  oceanColor: {r: 0.11, g: 0.43, b: 0.69, a: 1}
++  oceanColor: {r: 0.12, g: 0.25, b: 0.27, a: 1}
+   useTerrainColors: 1
+   surfacePalette:
+-    dryColor: {r: 0.42, g: 0.48, b: 0.28, a: 1}
+-    wetColor: {r: 0.25, g: 0.35, b: 0.27, a: 1}
+-    coldColor: {r: 0.53, g: 0.57, b: 0.58, a: 1}
+-    rockyColor: {r: 0.36, g: 0.35, b: 0.32, a: 1}
++    dryColor: {r: 0.49, g: 0.44, b: 0.34, a: 1}
++    wetColor: {r: 0.22, g: 0.33, b: 0.3, a: 1}
++    coldColor: {r: 0.57, g: 0.65, b: 0.66, a: 1}
++    rockyColor: {r: 0.34, g: 0.39, b: 0.43, a: 1}
+     dryMoistureThreshold: 0.3
+     wetMoistureThreshold: 0.68
+     coldTemperatureThreshold: 0.3
+@@ -168,70 +168,70 @@ MonoBehaviour:
+     climateBlendStrength: 0.35
+     rainDarkening: 0.22
+     rainWetColorBlend: 0.35
+-  roadMaterial: {fileID: 0}
++  roadMaterial: {fileID: 2100000, guid: ff11e1ee9b7d2964c986bb31ebdbbc5d, type: 2}
+   roadWidthMeters: 10
+   roadSurfaceLift: 0.35
+   terrainTypes:
+   - name: Lake
+     minHeight: 0
+     maxHeight: 0.13
+-    color: {r: 0.09, g: 0.28, b: 0.39, a: 1}
++    color: {r: 0.12, g: 0.25, b: 0.27, a: 1}
+     material: {fileID: 0}
+   - name: Mire
+     minHeight: 0.13
+     maxHeight: 0.24
+-    color: {r: 0.47, g: 0.44, b: 0.28, a: 1}
++    color: {r: 0.32, g: 0.35, b: 0.28, a: 1}
+     material: {fileID: 0}
+   - name: Lowland
+     minHeight: 0.24
+     maxHeight: 0.5
+-    color: {r: 0.34, g: 0.48, b: 0.34, a: 1}
++    color: {r: 0.35, g: 0.43, b: 0.36, a: 1}
+     material: {fileID: 0}
+   - name: Fields
+     minHeight: 0.5
+     maxHeight: 0.68
+-    color: {r: 0.4, g: 0.51, b: 0.29, a: 1}
++    color: {r: 0.48, g: 0.46, b: 0.33, a: 1}
+     material: {fileID: 0}
+   - name: Rocky Ridge
+     minHeight: 0.68
+     maxHeight: 0.84
+-    color: {r: 0.44, g: 0.42, b: 0.38, a: 1}
++    color: {r: 0.38, g: 0.42, b: 0.45, a: 1}
+     material: {fileID: 0}
+   - name: Mountain
+     minHeight: 0.84
+     maxHeight: 1
+-    color: {r: 0.72, g: 0.72, b: 0.75, a: 1}
++    color: {r: 0.64, g: 0.69, b: 0.69, a: 1}
+     material: {fileID: 0}
+   biomePresets:
+   - name: Great Lake
+     minHeight: 0
+     maxHeight: 0.13
+-    color: {r: 0.09, g: 0.28, b: 0.39, a: 1}
++    color: {r: 0.12, g: 0.25, b: 0.27, a: 1}
+     material: {fileID: 0}
+   - name: Trench Mire
+     minHeight: 0.13
+     maxHeight: 0.24
+-    color: {r: 0.47, g: 0.44, b: 0.28, a: 1}
++    color: {r: 0.32, g: 0.35, b: 0.28, a: 1}
+     material: {fileID: 0}
+   - name: Artillery Lowland
+     minHeight: 0.24
+     maxHeight: 0.5
+-    color: {r: 0.34, g: 0.48, b: 0.34, a: 1}
++    color: {r: 0.35, g: 0.43, b: 0.36, a: 1}
+     material: {fileID: 0}
+   - name: Shell Crater Fields
+     minHeight: 0.5
+     maxHeight: 0.68
+-    color: {r: 0.4, g: 0.51, b: 0.29, a: 1}
++    color: {r: 0.48, g: 0.46, b: 0.33, a: 1}
+     material: {fileID: 0}
+   - name: Rocky Ridge
+     minHeight: 0.68
+     maxHeight: 0.84
+-    color: {r: 0.44, g: 0.42, b: 0.38, a: 1}
++    color: {r: 0.38, g: 0.42, b: 0.45, a: 1}
+     material: {fileID: 0}
+   - name: War Mountains
+     minHeight: 0.84
+     maxHeight: 1
+-    color: {r: 0.72, g: 0.72, b: 0.75, a: 1}
++    color: {r: 0.64, g: 0.69, b: 0.69, a: 1}
+     material: {fileID: 0}
+   terrainMaterial: {fileID: 2100000, guid: ead44b04c334435792234fed8628f0cb, type: 2}
+   generateWaterSurfaces: 1
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Settings\\Vegetation\\WorldScenery.asset" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
+index 03bad9c..f4ad888 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Settings\\Vegetation\\WorldScenery.asset"
+@@ -17,30 +17,37 @@ MonoBehaviour:
+   - label: Stone A
+     role: 0
+     mesh: {fileID: 4300000, guid: bcc32e51556465a45a9a107ced30a3c1, type: 2}
++    material: {fileID: 2100000, guid: 094707722da3cdb42b85c7cb4096fe76, type: 2}
+     sizeRange: {x: 1.3, y: 4}
+   - label: Stone B
+     role: 0
+     mesh: {fileID: 4300000, guid: ef478b9180617634e8566397bdc9ee3d, type: 2}
++    material: {fileID: 2100000, guid: 094707722da3cdb42b85c7cb4096fe76, type: 2}
+     sizeRange: {x: 1.5, y: 5}
+   - label: Stone C
+     role: 0
+     mesh: {fileID: 4300000, guid: 2258c3746e2fdd64c93513fb17b5e946, type: 2}
++    material: {fileID: 2100000, guid: 094707722da3cdb42b85c7cb4096fe76, type: 2}
+     sizeRange: {x: 1.2, y: 3.5}
+   - label: Utility pole
+     role: 1
+     mesh: {fileID: 4300000, guid: c947310408ea5384a9938982ef1f7141, type: 2}
++    material: {fileID: 2100000, guid: 27206d6993340fb4aa41bb5d0d3185b5, type: 2}
+     sizeRange: {x: 8, y: 10}
+   - label: Concrete barrier
+     role: 2
+     mesh: {fileID: 4300000, guid: c1a7cfe614fe9b14f83168444eb7fc8e, type: 2}
++    material: {fileID: 2100000, guid: 5c11a5b9b1e4b38489dab5713614c8b9, type: 2}
+     sizeRange: {x: 3.5, y: 4}
+   - label: Sandbags
+     role: 2
+     mesh: {fileID: 4300000, guid: bde67223f0bd6934098f0911c2f52e79, type: 2}
++    material: {fileID: 2100000, guid: 73ec18e8266b3b3439ef1cbea7a2f5e5, type: 2}
+     sizeRange: {x: 2.7, y: 3}
+   - label: Supply crate
+     role: 3
+     mesh: {fileID: 4300000, guid: 93421585883c25342b72af65e76b0372, type: 2}
++    material: {fileID: 2100000, guid: 0cd794fed99912b47995c17f19c3ddd3, type: 2}
+     sizeRange: {x: 1.1, y: 1.7}
+   rockSpacing: 32
+   rockDensity: 0.32
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Environment\\CartoonCommon.hlsl" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\CartoonCommon.hlsl"
+index 2234da3..5a753fd 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Environment\\CartoonCommon.hlsl"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\CartoonCommon.hlsl"
+@@ -5,6 +5,31 @@
+ #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+ #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
+ 
++float SurfaceHash(float3 p)
++{
++    p = frac(p * 0.1031);
++    p += dot(p, p.yzx + 33.33);
++    return frac((p.x + p.y) * p.z);
++}
++
++float SurfaceNoise(float2 p)
++{
++    float2 cell = floor(p), f = frac(p);
++    float2 u = f * f * (3 - 2 * f);
++    return lerp(lerp(SurfaceHash(float3(cell, 0)), SurfaceHash(float3(cell + float2(1,0), 0)), u.x),
++        lerp(SurfaceHash(float3(cell + float2(0,1), 0)), SurfaceHash(float3(cell + 1, 0)), u.x), u.y);
++}
++
++float SurfaceNoise3D(float3 p)
++{
++    float3 cell = floor(p), f = frac(p), u = f * f * (3 - 2 * f);
++    float lower = lerp(lerp(SurfaceHash(cell), SurfaceHash(cell + float3(1,0,0)), u.x),
++        lerp(SurfaceHash(cell + float3(0,1,0)), SurfaceHash(cell + float3(1,1,0)), u.x), u.y);
++    float upper = lerp(lerp(SurfaceHash(cell + float3(0,0,1)), SurfaceHash(cell + float3(1,0,1)), u.x),
++        lerp(SurfaceHash(cell + float3(0,1,1)), SurfaceHash(cell + 1), u.x), u.y);
++    return lerp(lower, upper, u.z);
++}
++
+ half3 CartoonLighting(float3 positionWS, half3 normalWS, half3 albedo,
+     half3 shadowTint, half contrast, float bands, float softness)
+ {
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Environment\\CartoonTerrain.shader" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\CartoonTerrain.shader"
+index f2b9458..bbff24c 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Environment\\CartoonTerrain.shader"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\CartoonTerrain.shader"
+@@ -11,6 +11,11 @@ Shader "Leviathan/Cartoon Terrain"
+         _BandSoftness("Band Softness", Range(0.01,0.25)) = 0.08
+         _DetailScale("World Detail Scale", Range(0.001,0.5)) = 0.025
+         _DetailStrength("Detail Strength", Range(0,0.15)) = 0.025
++        _PatchScale("World Mineral Patch Scale", Range(0.001,0.1)) = 0.012
++        _PatchStrength("Mineral Patch Strength", Range(0,0.5)) = 0.18
++        _MineralTint("Mineral Tint", Color) = (0.42,0.43,0.36,1)
++        _SlopeTint("Exposed Rock Tint", Color) = (0.37,0.43,0.47,1)
++        _SlopeStrength("Exposed Rock Strength", Range(0,0.5)) = 0.22
+     }
+     SubShader
+     {
+@@ -30,6 +35,11 @@ Shader "Leviathan/Cartoon Terrain"
+             float _BandSoftness;
+             float _DetailScale;
+             float _DetailStrength;
++            half4 _MineralTint;
++            half4 _SlopeTint;
++            float _PatchScale;
++            float _PatchStrength;
++            float _SlopeStrength;
+         CBUFFER_END
+ 
+         #ifdef UNITY_DOTS_INSTANCING_ENABLED
+@@ -82,10 +92,16 @@ Shader "Leviathan/Cartoon Terrain"
+             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+             half3 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb * _BaseColor.rgb;
+             float2 p = input.positionWS.xz * _DetailScale;
+-            float detail = sin(p.x + sin(p.y * 0.7)) * sin(p.y * 0.83 + p.x * 0.27);
++            float detail = SurfaceNoise(p) * 2 - 1;
++            // Both frequencies are world anchored, including across different chunk LODs.
++            float patches = smoothstep(0.38, 0.72, SurfaceNoise(input.positionWS.xz * _PatchScale));
++            albedo = lerp(albedo, _MineralTint.rgb, patches * _PatchStrength);
++            half3 normal = normalize(input.normalWS);
++            float slope = smoothstep(0.025, 0.4, 1 - saturate(normal.y));
++            albedo = lerp(albedo, _SlopeTint.rgb, slope * _SlopeStrength);
+             float distanceFade = saturate(1 - distance(_WorldSpaceCameraPos, input.positionWS) / 600);
+             albedo *= _ColorIntensity * (1 + detail * _DetailStrength * distanceFade);
+-            half3 color = CartoonLighting(input.positionWS, normalize(input.normalWS), albedo,
++            half3 color = CartoonLighting(input.positionWS, normal, albedo,
+                 _ShadowTint.rgb, _ShadowContrast, _Bands, _BandSoftness);
+             return half4(MixFog(color, input.fog), 1);
+         }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Environment\\CartoonWater.shader" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\CartoonWater.shader"
+index 2c335ed..f0308b1 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Environment\\CartoonWater.shader"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Environment\\CartoonWater.shader"
+@@ -18,6 +18,9 @@ Shader "Leviathan/Cartoon Water"
+         _DetailFadeDistance("Detail Fade Distance (m)", Range(50,1500)) = 450
+         _ShadowTint("Shadow Tint", Color) = (0.6,0.73,0.8,1)
+         _ShadowContrast("Shadow Contrast", Range(0,1)) = 0.5
++        _SkyReflectionColor("Stylized Sky Reflection", Color) = (0.38,0.54,0.58,1)
++        _FresnelStrength("Sky Reflection Strength", Range(0,0.5)) = 0.18
++        _SpecularStrength("Sun Glint Strength", Range(0,1)) = 0.28
+     }
+     SubShader
+     {
+@@ -42,6 +45,9 @@ Shader "Leviathan/Cartoon Water"
+             float _FoamStrength;
+             float _DetailFadeDistance;
+             float _ShadowContrast;
++            half4 _SkyReflectionColor;
++            float _FresnelStrength;
++            float _SpecularStrength;
+         CBUFFER_END
+ 
+         #ifdef UNITY_DOTS_INSTANCING_ENABLED
+@@ -134,6 +140,13 @@ Shader "Leviathan/Cartoon Water"
+             albedo = lerp(albedo, _FoamColor.rgb, foam);
+             half3 color = CartoonLighting(input.positionWS, normalize(input.normalWS), albedo,
+                 _ShadowTint.rgb, _ShadowContrast, 3, 0.12);
++            half3 normal = normalize(input.normalWS);
++            half3 view = SafeNormalize(_WorldSpaceCameraPos - input.positionWS);
++            float fresnel = pow(1 - saturate(dot(normal, view)), 4) * _FresnelStrength;
++            color = lerp(color, _SkyReflectionColor.rgb, fresnel);
++            Light sun = GetMainLight();
++            float glint = pow(saturate(dot(normal, SafeNormalize(sun.direction + view))), 96);
++            color += glint * _SpecularStrength * sun.color * fade;
+             return half4(MixFog(color, input.fog), 1);
+         }
+         half4 WaterNormals(Varyings input) : SV_Target
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Grass\\GrassRender.hlsl" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Grass\\GrassRender.hlsl"
+index d4e8413..5be1260 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Grass\\GrassRender.hlsl"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Grass\\GrassRender.hlsl"
+@@ -132,7 +132,7 @@ half4 GrassForward(GrassVaryings input, FRONT_FACE_TYPE face : FRONT_FACE_SEMANT
+     half transmission = saturate(dot(-n, light.direction)) * _Appearance.y;
+     half3 view = normalize(_WorldSpaceCameraPos - input.positionWS);
+     half spec = pow(saturate(dot(n, normalize(light.direction + view))), 24) * _Appearance.z;
+-    half3 ambient = max(SampleSH(n), half3(0.12,0.14,0.11));
++    half3 ambient = max(SampleSH(n), half3(0.055,0.065,0.05));
+     half3 result = input.color * (ambient + light.color * (diffuse + transmission) * light.shadowAttenuation) + spec * light.color * light.shadowAttenuation;
+     return half4(MixFog(result, input.fog), 1);
+ }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Vegetation\\TreeCartoon.shader" "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Vegetation\\TreeCartoon.shader"
+index 5da9d13..b4d07cc 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\Assets\\Shaders\\Vegetation\\TreeCartoon.shader"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\Assets\\Shaders\\Vegetation\\TreeCartoon.shader"
+@@ -4,16 +4,22 @@ Shader "Leviathan/Cartoon Trees"
+     {
+         _BaseColor("Tint",Color)=(1,1,1,1)
+         _TreeWind("Wind direction / strength / speed",Vector)=(.7,.3,.025,1)
++        _LeafTint("Foliage Tint",Color)=(0.72,0.84,0.74,1)
++        _LeafTintStrength("Foliage Tint Strength",Range(0,1))=0.25
++        _Saturation("Color Saturation",Range(0,1.5))=0.75
++        _ColorVariation("Per Tree Variation",Range(0,0.25))=0.12
++        _ShadowTint("Shadow Tint",Color)=(0.4,0.5,0.53,1)
+     }
+     SubShader
+     {
+         Tags {"RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry"}
+         HLSLINCLUDE
+-        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+-        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
++        #include "../Environment/CartoonCommon.hlsl"
+         CBUFFER_START(UnityPerMaterial)
+             half4 _BaseColor;
+             float4 _TreeWind;
++            half4 _LeafTint, _ShadowTint;
++            float _LeafTintStrength, _Saturation, _ColorVariation;
+         CBUFFER_END
+         struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;half4 color:COLOR;UNITY_VERTEX_INPUT_INSTANCE_ID};
+         struct Varyings {float4 positionCS:SV_POSITION;float3 positionWS:TEXCOORD0;half3 normalWS:TEXCOORD1;half3 color:TEXCOORD2;half fog:TEXCOORD3;UNITY_VERTEX_INPUT_INSTANCE_ID};
+@@ -32,46 +38,40 @@ Shader "Leviathan/Cartoon Trees"
+             Varyings output;UNITY_TRANSFER_INSTANCE_ID(input,output);
+             output.positionWS=TreePosition(input);output.positionCS=TransformWorldToHClip(output.positionWS);
+             output.normalWS=TransformObjectToWorldNormal(input.normalOS);
+-            output.color=input.color.rgb*_BaseColor.rgb;output.fog=ComputeFogFactor(output.positionCS.z);return output;
++            half3 color=input.color.rgb;
++            half luminance=dot(color,half3(.2126,.7152,.0722));
++            color=lerp(luminance.xxx,color,_Saturation);
++            color*=lerp(1.0.xxx,_LeafTint.rgb,input.color.a*_LeafTintStrength);
++            float3 root=TransformObjectToWorld(float3(0,0,0));
++            color*=1+(SurfaceHash(root)*2-1)*_ColorVariation;
++            output.color=color*_BaseColor.rgb;output.fog=ComputeFogFactor(output.positionCS.z);return output;
+         }
+         half4 TreeFragment(Varyings input):SV_Target
+         {
+             UNITY_SETUP_INSTANCE_ID(input);
+             half3 n=normalize(input.normalWS);
+-            Light light=GetMainLight(TransformWorldToShadowCoord(input.positionWS));
+-            half diffuse=saturate(dot(n,light.direction)*.7+.3);
+-            half bands=lerp(.4,.7,smoothstep(.15,.3,diffuse))+ .3*smoothstep(.55,.75,diffuse);
+-            half3 color=input.color*(SampleSH(n)*.8+light.color*bands*lerp(.5,1,light.shadowAttenuation));
++            half3 color=CartoonLighting(input.positionWS,n,input.color,_ShadowTint.rgb,.65,3,.14);
+             return half4(MixFog(color,input.fog),1);
+         }
+-        float3 _LightDirection, _LightPosition;
+         Varyings TreeShadow(Attributes input)
+         {
+             Varyings output=TreeVertex(input);
+-            float3 direction=_LightDirection;
+-            #if defined(_CASTING_PUNCTUAL_LIGHT_SHADOW)
+-                direction=normalize(_LightPosition-output.positionWS);
+-            #endif
+-            output.positionCS=TransformWorldToHClip(ApplyShadowBias(output.positionWS,output.normalWS,direction));
+-            #if UNITY_REVERSED_Z
+-                output.positionCS.z=min(output.positionCS.z,UNITY_NEAR_CLIP_VALUE*output.positionCS.w);
+-            #else
+-                output.positionCS.z=max(output.positionCS.z,UNITY_NEAR_CLIP_VALUE*output.positionCS.w);
+-            #endif
++            output.positionCS=CartoonShadowPosition(output.positionWS,output.normalWS);
+             return output;
+         }
+         half4 TreeDepth(Varyings input):SV_Target {return 0;}
++        half4 TreeNormals(Varyings input):SV_Target {return CartoonDepthNormal(input.normalWS);}
+         ENDHLSL
+         Pass
+         {
+-            Name "UniversalForward" Tags {"LightMode"="UniversalForward"}
++            Name "UniversalForward" Tags {"LightMode"="UniversalForwardOnly"}
+             HLSLPROGRAM
+             #pragma target 3.5
+             #pragma vertex TreeVertex
+             #pragma fragment TreeFragment
+             #pragma multi_compile_instancing
+             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+-            #pragma multi_compile _ _SHADOWS_SOFT
++            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+             #pragma multi_compile_fog
+             ENDHLSL
+         }
+@@ -96,5 +96,16 @@ Shader "Leviathan/Cartoon Trees"
+             #pragma multi_compile_instancing
+             ENDHLSL
+         }
++        Pass
++        {
++            Name "DepthNormals" Tags {"LightMode"="DepthNormalsOnly"} ZWrite On
++            HLSLPROGRAM
++            #pragma target 3.5
++            #pragma vertex TreeVertex
++            #pragma fragment TreeNormals
++            #pragma multi_compile_instancing
++            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
++            ENDHLSL
++        }
+     }
+ }
+diff --git "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\docs\\README.md" "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\README.md"
+index 98e297b..a970d98 100644
+--- "a/C:\\ProjetoENTEC\\Leviathan2\\Artifacts\\DieselpunkPolish\\Before\\docs\\README.md"
++++ "b/C:\\ProjetoENTEC\\Leviathan2\\docs\\README.md"
+@@ -25,6 +25,7 @@ Leviathan e um jogo de operacao individual de artilharia indireta. O jogador int
+ | [15 - Ambiente, vegetacao e erosao](15-ambiente-vegetacao-e-erosao.md) | Grama mais densa, arvores, sulcos e base sobre terreno natural |
+ | [16 - Assets e cenario procedural](16-assets-e-cenario-procedural.md) | Curadoria dos downloads, bosques, pedras, postes, barreiras e sincronizacao da base |
+ | [17 - Varredura e limpeza](17-varredura-e-limpeza.md) | Dependencias, arquivo recuperavel, menos GC no terreno e colisao de props proximos |
++| [18 - Polimento dieselpunk](18-polimento-visual-dieselpunk.md) | Paleta mineral, pintura e metal, props, vegetacao, agua e atmosfera |
+ | [Referencias visuais](referencias/README.md) | Imagens fornecidas pelo autor e como devem orientar o projeto |
+ 
+ ## Status das definicoes
